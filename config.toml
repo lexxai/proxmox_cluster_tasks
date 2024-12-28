@@ -1,5 +1,12 @@
-[api_handlers]
- version = "/api/v1/version"
+DEBUG=false
 
-[cli_commands]
- version = "app --version"
+[API]
+ TOKEN_ID=""
+ TOKEN_SECRET=""
+ URL=""
+
+[API_HANDLERS]
+ VERSION = "/api2/json/version"
+
+[CLI_COMMANDS]
+ VERSION = "pvesh get /version"

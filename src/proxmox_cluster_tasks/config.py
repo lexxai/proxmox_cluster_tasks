@@ -8,21 +8,29 @@ from dotenv import load_dotenv
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
+
 class ConfigLoader:
-    def __init__(self, file_path: Path = None, env_var_prefix: str = "" ):
-        self.file_path = file_path or Path(__file__).parent.parent.parent /"config.toml"
+    def __init__(self, file_path: Path = None, env_var_prefix: str = ""):
+        self.file_path = (
+            file_path or Path(__file__).parent.parent.parent / "config.toml"
+        )
         self.env_var_prefix = env_var_prefix
         self.settings = self.load_config()
 
-    def load_config(self):
+    def load_config(self) -> dict:
+        config = {}
         if self.file_path.exists() is False:
-            raise Exception(f"Config file not found {self.file_path}")
-        with self.file_path.open("rb") as f:
-            config = toml.load(f)
-        config = self.override_with_env_vars(config)
+            logger.error(f"Config file not found {self.file_path}")
+            return config
+        try:
+            with self.file_path.open("rb") as f:
+                config = toml.load(f)
+            config = self.override_with_env_vars(config)
+        except toml.TOMLDecodeError:
+            logger.error("Error of parsing config file")
         return config
 
-    def override_with_env_vars(self, config):
+    def override_with_env_vars(self, config: dict) -> dict:
         """Override settings with environment variables only if the value is not None."""
         load_dotenv()
         for section, values in config.items():
@@ -45,6 +53,7 @@ class ConfigLoader:
         except KeyError:
             return default
         return value
+
 
 configuration = ConfigLoader()
 
