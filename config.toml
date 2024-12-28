@@ -1,0 +1,5 @@
+[api_handlers]
+ version = "/api/v1/version"
+
+[cli_commands]
+ version = "app --version"

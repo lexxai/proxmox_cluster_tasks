@@ -1,14 +1,21 @@
 [tool.poetry]
 name = "proxmox-cluster-tasks"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = ["lexxai <lexxai@gmail.com>"]
 readme = "README.md"
+packages = [{include = "proxmox_cluster_tasks", from = "src"}]
+
 
 [tool.poetry.dependencies]
 python = "^3.12"
-
+python-dotenv = "^1.0.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+proxmox-cluster-tasks = "proxmox_cluster_tasks.cli:main"
+
+# Correct placement for package inclusion
