@@ -60,68 +60,72 @@ class APIHandler(AbstractHandler):
         return client
 
     @staticmethod
-    def get_authorization():
+    def get_authorization() -> str | None:
         token_id = configuration.get("API.TOKEN_ID")
         token_secret = configuration.get("API.TOKEN_SECRET")
+        if not all([token_id, token_secret]):
+            logger.error("API token not found")
+            return None
         authorization = f"PVEAPIToken={token_id}={token_secret}"
         return authorization
 
-    def process(self, input_data: dict | None = None) -> dict:
-        # print(f"Processing API data: {input_data}")
+    def process_data(self, input_data: dict | None = None) -> dict:
         method = input_data.get("method", "GET").upper()
         entry_point = input_data.get("entry_point")
-        data = input_data.get("data")
         if entry_point is None:
             return {
-                "result": None,
                 "message": "API endpoint not found",
-                "status_code": None,
             }
+        data = input_data.get("data")
+        params = input_data.get("params")
         entry_point_fmt = entry_point.format(TARGETNODE=input_data.get("TARGETNODE"))
         url = "".join([self.api_node_url, entry_point_fmt])
-        result = None
-        response = self.client.request(method=method, url=url, data=data)
+        return {"method": method, "url": url, "data": data, "params": params}
+
+    def process(self, input_data: dict | None = None) -> dict:
+        result = {
+            "result": None,
+            "status_code": None,
+        }
+        if self.client is None:
+            self.client = self.connect()
+        process_data = self.process_data(input_data)
+        if process_data and "message" in process_data:
+            result.update({"message": process_data.get("message")})
+            return result
+        response = self.client.request(**process_data)
         if response.status_code < 400:
             result = response.json()
-        # API-specific logic here
         return {"result": result, "status_code": response.status_code}
 
     async def aprocess(self, input_data: dict | None = None) -> dict:
-        # print(f"Processing API data: {input_data}")
-        method = input_data.get("method", "GET").upper()
-        entry_point = input_data.get("entry_point")
-        data = input_data.get("data")
-        params = input_data.get("params")
-        if entry_point is None:
-            return {
-                "result": None,
-                "message": "API endpoint not found",
-                "status_code": None,
-            }
-        entry_point_fmt = entry_point.format(TARGETNODE=input_data.get("TARGETNODE"))
-        url = "".join([self.api_node_url, entry_point_fmt])
-        result = None
-        response = await self.client.request(
-            method=method, url=url, data=data, params=params
-        )
+        result = {
+            "result": None,
+            "status_code": None,
+        }
+        if self.client is None:
+            self.client = await self.aconnect()
+        process_data = self.process_data(input_data)
+        if process_data and "message" in process_data:
+            result.update({"message": process_data.get("message")})
+            return result
+        response = await self.client.request(**process_data)
         if response.status_code < 400:
             result = response.json()
-        # API-specific logic here
         return {"result": result, "status_code": response.status_code}
 
-    def get_version(self):
+    def get_version_data(self) -> dict:
         input_data = {
             "entry_point": self.entry_points.get("VERSION"),
             "method": "GET",
         }
-        return self.process(input_data)
+        return input_data
+
+    def get_version(self):
+        return self.process(self.get_version_data())
 
     async def aget_version(self):
-        input_data = {
-            "entry_point": self.entry_points.get("VERSION"),
-            "method": "GET",
-        }
-        return await self.aprocess(input_data)
+        return await self.aprocess(self.get_version_data())
 
 
 if __name__ == "__main__":
