@@ -49,6 +49,8 @@ class CLIHandler(AbstractHandler):
         except subprocess.CalledProcessError as e:
             return {"result": None, "status_code": e.returncode}
 
+    # VERSION
+
     def get_version_data(self) -> dict:
         command = self.commands.get("VERSION")
         return {"command": command}
@@ -58,6 +60,18 @@ class CLIHandler(AbstractHandler):
 
     async def aget_version(self) -> dict:
         return await self.aprocess(self.get_version_data())
+
+    # HA_GROUPS
+    # GET HA_GROUPS
+    def get_ha_groups_data(self) -> dict:
+        command = self.commands.get("HA_GROUPS")
+        return {"command": command}
+
+    def get_ha_groups(self):
+        return self.process(self.get_ha_groups_data())
+
+    async def aget_ha_groups(self):
+        return await self.aprocess(self.get_ha_groups_data())
 
 
 if __name__ == "__main__":
@@ -79,6 +93,6 @@ if __name__ == "__main__":
         asyncio.create_task(ping())
         async with CLIHandler() as handler:
             logger.info(await handler.aget_version())
-            # logger.info(await handler.aget_ha_groups())
+            logger.info(await handler.aget_ha_groups())
 
     asyncio.run(amain())
