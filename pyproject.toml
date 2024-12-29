@@ -9,7 +9,8 @@ packages = [{include = "proxmox_cluster_tasks", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.12"
-python-dotenv = "^1.0.1"
+python-dotenv = "==1.0.1"
+httpx = {extras = ["http2"], version = "^0.28.1"}
 
 [build-system]
 requires = ["poetry-core"]
