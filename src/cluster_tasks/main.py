@@ -7,11 +7,17 @@ logger = logging.getLogger("CT")
 
 def cluster_tasks(handler: AbstractHandler):
     with handler as h:
-        version = h.get_version()
-    logger.info(f"API version: {version} {type(version)}")
+        try:
+            version = h.get_version()
+            logger.info(f"API version: {version} {type(version)}")
+        except Exception as e:
+            logger.error(f"ERROR cluster_tasks: {e}")
 
 
 async def acluster_tasks(handler: AbstractHandler):
     async with handler as h:
-        version = await h.aget_version()
-        logger.info(f"API version: {version} {type(version)}")
+        try:
+            version = await h.aget_version()
+            logger.info(f"API version: {version} {type(version)}")
+        except Exception as e:
+            logger.error(f"ERROR acluster_tasks: {e}")

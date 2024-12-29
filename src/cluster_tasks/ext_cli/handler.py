@@ -1,5 +1,4 @@
 import logging
-from asyncio import subprocess as asubprocess
 import subprocess
 
 from cluster_tasks.config import configuration
@@ -17,36 +16,38 @@ class CLIHandler(AbstractHandler):
 
     def process(self, input_data: dict | None = None):
         if input_data is None:
-            return {"result": None}
-
+            return {"result": None, "status_code": -1}
         command = input_data.get("command")
         if command is None:
-            return {"result": None}
-
-        process = subprocess.run(
-            command, shell=True, capture_output=True, text=True, check=True
-        )
-        result = process.stdout.strip()
-        return {"result": result, "status_code": process.returncode}
+            return {"result": None, "status_code": -1}
+        try:
+            process = subprocess.run(
+                command, shell=True, capture_output=True, text=True, check=True
+            )
+            result = process.stdout.strip()
+            return {"result": result, "status_code": process.returncode}
+        except subprocess.CalledProcessError as e:
+            return {"result": None, "status_code": e.returncode}
 
     async def aprocess(self, input_data: dict | None = None):
         if input_data is None:
-            return {"result": None}
-
+            return {"result": None, "status_code": -1}
         command = input_data.get("command")
         if command is None:
-            return {"result": None}
-
-        process = await asubprocess.create_subprocess_shell(
-            command, stdout=asubprocess.PIPE, stderr=asubprocess.PIPE
-        )
-        stdout, stderr = await process.communicate()
-        if process.returncode != 0:
-            raise subprocess.CalledProcessError(
-                returncode=process.returncode, cmd=command, output=stderr
+            return {"result": None, "status_code": -1}
+        try:
+            process = await asyncio.create_subprocess_shell(
+                command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
-        result = stdout.decode("utf-8").strip()
-        return {"result": result, "status_code": process.returncode}
+            stdout, stderr = await process.communicate()
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    returncode=process.returncode, cmd=command, output=stderr
+                )
+            result = stdout.decode("utf-8").strip()
+            return {"result": result, "status_code": process.returncode}
+        except subprocess.CalledProcessError as e:
+            return {"result": None, "status_code": e.returncode}
 
     def get_version_data(self) -> dict:
         command = self.commands.get("VERSION")
