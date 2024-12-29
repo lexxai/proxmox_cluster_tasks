@@ -13,6 +13,6 @@ STATUS = "/api2/json/nodes/${TARGETNODE}/status"
 HA_GROUPS = "/api2/json/cluster/ha/groups"
 
 [CLI_COMMANDS]
-VERSION = "pvesh get /version"
-HA_GROUPS = "pvesh get /cluster/ha/groups"
+VERSION = "echo pvesh get /version"
+HA_GROUPS = "echo pvesh get /cluster/ha/groups"
 
