@@ -29,8 +29,42 @@ class ConfigLoader:
             logger.error("Error of parsing config file")
         return config
 
+    @staticmethod
+    def convert_to_bool(value: str) -> bool | str:
+        """
+        Convert a string value to a boolean if possible.
+
+        Args:
+            value (str): The string to convert.
+
+        Returns:
+            bool | str: The boolean value if conversion is successful,
+                        otherwise the original string.
+        """
+        value = value.strip()
+        match value.lower():
+            case "true":
+                return True
+            case "false":
+                return False
+            case _:
+                return value
+
     def override_with_env_vars(self, config: dict) -> dict:
-        """Override settings with environment variables only if the value is not None."""
+        """
+        Override configuration values with environment variables.
+
+        For each configuration section and key, check if there is an environment
+        variable with the same name (with a prefix if specified). If the
+        environment variable exists, its value is used instead of the
+        configuration value. Boolean values are converted to boolean type.
+
+        Args:
+            config (dict): The configuration dictionary to override.
+
+        Returns:
+            dict: The configuration dictionary with overridden values.
+        """
         load_dotenv()
         for section, values in config.items():
             # print(f"override_with_env_vars: {section} - {values}")
@@ -40,24 +74,14 @@ class ConfigLoader:
                     env_value = os.getenv(env_key)
                     # print(f"override_with_env_vars: {env_key} - {env_value}")
                     if env_value is not None:
-                        env_value = env_value.strip()
-                        match env_value.lower():
-                            case "true":
-                                env_value = True
-                            case "false":
-                                env_value = False
+                        env_value = self.convert_to_bool(env_value)
                         config[section][key] = env_value
             else:
                 env_key = f"{self.env_var_prefix}{section.upper()}"
                 env_value = os.getenv(env_key)
                 # print(f"override_with_env_vars: {env_key} - {env_value}")
                 if env_value is not None:
-                    env_value = env_value.strip()
-                    match env_value.lower():
-                        case "true":
-                            env_value = True
-                        case "false":
-                            env_value = False
+                    env_value = self.convert_to_bool(env_value)
                     config[section] = env_value
         return config
 
