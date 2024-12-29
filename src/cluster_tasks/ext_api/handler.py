@@ -89,7 +89,7 @@ class APIHandler(AbstractHandler):
         params = input_data.get("params")
         entry_point_fmt = entry_point.format(TARGETNODE=input_data.get("TARGETNODE"))
         url = "".join([self.api_node_url, entry_point_fmt])
-        logger.debug(f"{method=} {url=} {data=} {params=}")
+        logger.debug(f"{method=} {entry_point_fmt=} {data=} {params=}")
         return {"method": method, "url": url, "data": data, "params": params}
 
     def process(self, input_data: dict | None = None) -> dict:

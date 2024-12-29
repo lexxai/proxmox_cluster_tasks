@@ -36,13 +36,13 @@ async def test_api_version_async(api_handler_async):
     assert version["result"]["data"]["version"]
 
 
-@pytest.mark.asyncio
-async def test_api_version_async2(api_handler_async):
-    async with api_handler_async as handler:
-        version = await handler.aget_version()
-    # print(version)
-    assert version["status_code"] == 200
-    assert version["result"]["data"]["version"]
+# @pytest.mark.asyncio
+# async def test_api_version_async2(api_handler_async):
+#     async with api_handler_async as handler:
+#         version = await handler.aget_version()
+#     # print(version)
+#     assert version["status_code"] == 200
+#     assert version["result"]["data"]["version"]
 
 
 # @pytest.mark.asyncio

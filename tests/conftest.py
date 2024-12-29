@@ -48,5 +48,5 @@ def api_handler_async() -> APIHandler:
 
 # @pytest.fixture(scope="session")
 # async def api_handler_async() -> APIHandler:
-#     with APIHandler() as handler:
+#     async with APIHandler() as handler:
 #         yield handler
