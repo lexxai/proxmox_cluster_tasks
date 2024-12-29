@@ -7,6 +7,10 @@ class AbstractHandler(ABC):
     def __init__(self):
         super().__init__()
 
+    def close(self): ...
+
+    async def aclose(self): ...
+
     def __enter__(self):
         return self
 
