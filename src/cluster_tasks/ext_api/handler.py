@@ -6,7 +6,7 @@ from cluster_tasks.ext_abs.base import AbstractHandler
 from cluster_tasks.config import configuration
 
 
-logger = logging.getLogger("CT.{__name__}")
+logger = logging.getLogger(f"CT.{__name__}")
 
 
 class APIHandler(AbstractHandler):
@@ -18,7 +18,18 @@ class APIHandler(AbstractHandler):
         self.api_node_url: str = configuration.get("API.NODE_URL")
         self.client = None
 
+    def close(self):
+        if self.client is not None:
+            self.client.close()
+            self.client = None
+
+    async def aclose(self):
+        if self.client is not None:
+            await self.client.aclose()
+            self.client = None
+
     def __enter__(self):
+        # print("API Enter")
         self.client = self.connect()
         return self
 
@@ -28,14 +39,13 @@ class APIHandler(AbstractHandler):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.client.close()
-        self.client = None
+        # print("API Exit")
+        self.close()
         return True
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         logger.debug("API Async Exit")
-        await self.client.aclose()
-        self.client = None
+        await self.aclose()
         return True
 
     def connect(self, headers=None):

@@ -1,5 +1,9 @@
+import logging
+
 from cluster_tasks.config import configuration
 from cluster_tasks.ext_abs.base import AbstractHandler
+
+logger = logging.getLogger(f"CT.{__name__}")
 
 
 class CLIHandler(AbstractHandler):
