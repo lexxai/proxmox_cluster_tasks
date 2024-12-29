@@ -69,7 +69,14 @@ if __name__ == "__main__":
 
     import asyncio
 
+    async def ping():
+        for _ in range(10):
+            print("Ping ...")
+            await asyncio.sleep(1)
+
     async def amain():
+        # test for blocking
+        asyncio.create_task(ping())
         async with CLIHandler() as handler:
             logger.info(await handler.aget_version())
             # logger.info(await handler.aget_ha_groups())
