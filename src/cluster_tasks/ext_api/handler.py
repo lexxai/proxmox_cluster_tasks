@@ -79,6 +79,7 @@ class APIHandler(AbstractHandler):
         params = input_data.get("params")
         entry_point_fmt = entry_point.format(TARGETNODE=input_data.get("TARGETNODE"))
         url = "".join([self.api_node_url, entry_point_fmt])
+        logger.debug(f"{method=} {url=} {data=} {params=}")
         return {"method": method, "url": url, "data": data, "params": params}
 
     def process(self, input_data: dict | None = None) -> dict:
@@ -113,6 +114,7 @@ class APIHandler(AbstractHandler):
             result = response.json()
         return {"result": result, "status_code": response.status_code}
 
+    # GET VERSION
     def get_version_data(self) -> dict:
         input_data = {
             "entry_point": self.entry_points.get("VERSION"),
@@ -126,16 +128,34 @@ class APIHandler(AbstractHandler):
     async def aget_version(self):
         return await self.aprocess(self.get_version_data())
 
+    # HA_GROUPS
+    # GET HA_GROUPS
+    def get_ha_groups_data(self) -> dict:
+        input_data = {
+            "entry_point": self.entry_points.get("HA_GROUPS"),
+            "method": "GET",
+        }
+        return input_data
+
+    def get_ha_groups(self):
+        return self.process(self.get_ha_groups_data())
+
+    async def aget_ha_groups(self):
+        return await self.aprocess(self.get_ha_groups_data())
+
 
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.DEBUG)
-    with APIHandler() as api_handler:
-        print(api_handler.get_version())
+    logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
+    logger.addHandler(logging.StreamHandler())
+    logger.info(configuration.get("NODES"))
+    # with APIHandler() as api_handler:
+    #     logger.info(api_handler.get_version())
 
     import asyncio
 
     async def amain():
         async with APIHandler() as api_handler:
-            print(await api_handler.aget_version())
+            logger.info(await api_handler.aget_version())
+            logger.info(await api_handler.aget_ha_groups())
 
     asyncio.run(amain())
