@@ -33,13 +33,32 @@ class ConfigLoader:
         """Override settings with environment variables only if the value is not None."""
         load_dotenv()
         for section, values in config.items():
+            # print(f"override_with_env_vars: {section} - {values}")
             if isinstance(values, dict):
                 for key, value in values.items():
                     env_key = f"{self.env_var_prefix}{section.upper()}_{key.upper()}"
                     env_value = os.getenv(env_key)
-                    logger.debug(f"override_with_env_vars: {env_key} - {env_value}")
+                    # print(f"override_with_env_vars: {env_key} - {env_value}")
                     if env_value is not None:
+                        env_value = env_value.strip()
+                        match env_value.lower():
+                            case "true":
+                                env_value = True
+                            case "false":
+                                env_value = False
                         config[section][key] = env_value
+            else:
+                env_key = f"{self.env_var_prefix}{section.upper()}"
+                env_value = os.getenv(env_key)
+                # print(f"override_with_env_vars: {env_key} - {env_value}")
+                if env_value is not None:
+                    env_value = env_value.strip()
+                    match env_value.lower():
+                        case "true":
+                            env_value = True
+                        case "false":
+                            env_value = False
+                    config[section] = env_value
         return config
 
     def get(self, key, default=None):
