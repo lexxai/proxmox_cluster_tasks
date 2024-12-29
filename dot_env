@@ -4,3 +4,6 @@ API_NODE_URL="https://example.com:8006"
 
 # API_HANDLERS_VERSION=...
 # CLI_COMMANDS_VERSION=...
+
+NODES=["c01", "c02", "c03", "c04", "c05"]
+DEBUG=False
