@@ -23,6 +23,7 @@ class APIHandler(AbstractHandler):
         return self
 
     async def __aenter__(self):
+        logger.debug("API Async Enter")
         self.client = await self.aconnect()
         return self
 
@@ -32,6 +33,7 @@ class APIHandler(AbstractHandler):
         return True
 
     async def __aexit__(self, exc_type, exc_value, traceback):
+        logger.debug("API Async Exit")
         await self.client.aclose()
         self.client = None
         return True
