@@ -23,8 +23,17 @@ class APIHandler(AbstractHandler):
         self.client = self.connect()
         return self
 
+    async def __aenter__(self):
+        self.client = await self.aconnect()
+        return self
+
     def __exit__(self, exc_type, exc_value, traceback):
         self.client.close()
+        self.client = None
+        return True
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self.client.aclose()
         self.client = None
         return True
 
@@ -37,6 +46,17 @@ class APIHandler(AbstractHandler):
             _headers.update(headers)
         # print(_headers)
         client = httpx.Client(http2=True, headers=_headers)
+        return client
+
+    async def aconnect(self, headers=None):
+        _headers = {
+            "Authorization": self.get_authorization(),
+            "content-type": "application/json",
+        }
+        if headers:
+            _headers.update(headers)
+        # print(_headers)
+        client = httpx.AsyncClient(http2=True, headers=_headers)
         return client
 
     @staticmethod
@@ -66,6 +86,29 @@ class APIHandler(AbstractHandler):
         # API-specific logic here
         return {"result": result, "status_code": response.status_code}
 
+    async def aprocess(self, input_data: dict | None = None) -> dict:
+        # print(f"Processing API data: {input_data}")
+        method = input_data.get("method", "GET").upper()
+        entry_point = input_data.get("entry_point")
+        data = input_data.get("data")
+        params = input_data.get("params")
+        if entry_point is None:
+            return {
+                "result": None,
+                "message": "API endpoint not found",
+                "status_code": None,
+            }
+        entry_point_fmt = entry_point.format(TARGETNODE=input_data.get("TARGETNODE"))
+        url = "".join([self.api_node_url, entry_point_fmt])
+        result = None
+        response = await self.client.request(
+            method=method, url=url, data=data, params=params
+        )
+        if response.status_code < 400:
+            result = response.json()
+        # API-specific logic here
+        return {"result": result, "status_code": response.status_code}
+
     def get_version(self):
         input_data = {
             "entry_point": self.entry_points.get("VERSION"),
@@ -73,8 +116,23 @@ class APIHandler(AbstractHandler):
         }
         return self.process(input_data)
 
+    async def aget_version(self):
+        input_data = {
+            "entry_point": self.entry_points.get("VERSION"),
+            "method": "GET",
+        }
+        return await self.aprocess(input_data)
+
 
 if __name__ == "__main__":
     # logging.basicConfig(level=logging.DEBUG)
     with APIHandler() as api_handler:
         print(api_handler.get_version())
+
+    import asyncio
+
+    async def amain():
+        async with APIHandler() as api_handler:
+            print(await api_handler.aget_version())
+
+    asyncio.run(amain())
