@@ -5,8 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("CT.{__name__}")
 
 
 class ConfigLoader:

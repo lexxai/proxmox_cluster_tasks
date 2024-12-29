@@ -3,11 +3,12 @@ DEBUG = false
 [API]
  TOKEN_ID = ""
  TOKEN_SECRET = ""
- URL = ""
+ NODE_URL = ""
 
 [API_HANDLERS]
  TICKET = "/api2/json/access/ticket"
  VERSION = "/api2/json/version"
+ STATUS = "/api2/json/nodes/${TARGETNODE}/status"
 
 [CLI_COMMANDS]
  VERSION = "pvesh get /version"
