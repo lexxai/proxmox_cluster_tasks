@@ -1,5 +1,4 @@
 import logging
-from pyexpat.errors import messages
 
 import httpx
 
@@ -73,9 +72,7 @@ class APIHandler(AbstractHandler):
         method = input_data.get("method", "GET").upper()
         entry_point = input_data.get("entry_point")
         if entry_point is None:
-            return {
-                "message": "API endpoint not found",
-            }
+            return {"message": "API endpoint not found"}
         data = input_data.get("data")
         params = input_data.get("params")
         entry_point_fmt = entry_point.format(TARGETNODE=input_data.get("TARGETNODE"))
