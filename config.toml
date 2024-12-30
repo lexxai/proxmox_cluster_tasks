@@ -9,7 +9,7 @@ NODE_URL = ""
 [API_HANDLERS]
 TICKET = "/api2/json/access/ticket"
 VERSION = "/api2/json/version"
-STATUS = "/api2/json/nodes/${TARGETNODE}/status"
+STATUS = "/api2/json/nodes/{TARGETNODE}/status"
 HA_GROUPS = "/api2/json/cluster/ha/groups"
 
 [CLI_COMMANDS]

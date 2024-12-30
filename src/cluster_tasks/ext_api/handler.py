@@ -1,4 +1,5 @@
 import logging
+from importlib.metadata import entry_points
 
 import httpx
 
@@ -87,9 +88,8 @@ class APIHandler(AbstractHandler):
             return {"message": "API endpoint not found"}
         data = input_data.get("data")
         params = input_data.get("params")
-        entry_point_fmt = entry_point.format(TARGETNODE=input_data.get("TARGETNODE"))
-        url = "".join([self.api_node_url, entry_point_fmt])
-        logger.debug(f"{method=} {entry_point_fmt=} {data=} {params=}")
+        url = "".join([self.api_node_url, entry_point])
+        logger.debug(f"{method=} {entry_point=} {data=} {params=}")
         return {"method": method, "url": url, "data": data, "params": params}
 
     def process(self, input_data: dict | None = None) -> dict:
@@ -132,12 +132,6 @@ class APIHandler(AbstractHandler):
         }
         return input_data
 
-    def get_version(self):
-        return self.process(self.get_version_data())
-
-    async def aget_version(self):
-        return await self.aprocess(self.get_version_data())
-
     # HA_GROUPS
     # GET HA_GROUPS
     def get_ha_groups_data(self) -> dict:
@@ -147,11 +141,16 @@ class APIHandler(AbstractHandler):
         }
         return input_data
 
-    def get_ha_groups(self):
-        return self.process(self.get_ha_groups_data())
-
-    async def aget_ha_groups(self):
-        return await self.aprocess(self.get_ha_groups_data())
+    # STATUS
+    # GET STATUS
+    def get_status_data(self, target_node: str) -> dict:
+        entry_point = self.entry_points.get("STATUS")
+        entry_point = entry_point.format(TARGETNODE=target_node)
+        input_data = {
+            "entry_point": entry_point,
+            "method": "GET",
+        }
+        return input_data
 
 
 if __name__ == "__main__":
@@ -166,6 +165,12 @@ if __name__ == "__main__":
     async def amain():
         async with APIHandler() as api_handler:
             logger.info(await api_handler.aget_version())
-            logger.info(await api_handler.aget_ha_groups())
+            # logger.info(await api_handler.aget_ha_groups())
+            tasks = []
+            for node in configuration.get("NODES", [])[:3]:
+                logger.info(node)
+                tasks.append(api_handler.aget_status(node))
+            results = await asyncio.gather(*tasks)
+            logger.info(results)
 
     asyncio.run(amain())

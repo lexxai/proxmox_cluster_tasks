@@ -50,16 +50,9 @@ class CLIHandler(AbstractHandler):
             return {"result": None, "status_code": e.returncode}
 
     # VERSION
-
     def get_version_data(self) -> dict:
         command = self.commands.get("VERSION")
         return {"command": command}
-
-    def get_version(self) -> dict:
-        return self.process(self.get_version_data())
-
-    async def aget_version(self) -> dict:
-        return await self.aprocess(self.get_version_data())
 
     # HA_GROUPS
     # GET HA_GROUPS
@@ -67,11 +60,15 @@ class CLIHandler(AbstractHandler):
         command = self.commands.get("HA_GROUPS")
         return {"command": command}
 
-    def get_ha_groups(self):
-        return self.process(self.get_ha_groups_data())
-
-    async def aget_ha_groups(self):
-        return await self.aprocess(self.get_ha_groups_data())
+    # STATUS
+    # GET STATUS
+    def get_status_data(self, target_node: str) -> dict:
+        command = self.commands.get("STATUS")
+        command = command.format(TARGETNODE=target_node)
+        input_data = {
+            "command": command,
+        }
+        return input_data
 
 
 if __name__ == "__main__":
