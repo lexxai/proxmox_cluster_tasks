@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from datetime import timedelta
 
 from cluster_tasks.config import configuration
 from cluster_tasks.ext_api.handler import APIHandler
@@ -10,6 +11,28 @@ logger = logging.getLogger(f"CT.{__name__}")
 logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
 logger.addHandler(logging.StreamHandler())
 logger.info(configuration.get("NODES"))
+
+
+def human_readable_size(size_in_bytes):
+    """
+    Converts a size in bytes to a human-readable format.
+
+    Args:
+        size_in_bytes (int): Size in bytes.
+
+    Returns:
+        str: Human-readable size.
+    """
+    if size_in_bytes is None:
+        return "Unknown"
+
+    units = ["B", "KB", "MB", "GB", "TB", "PB"]
+    size = float(size_in_bytes)
+    for unit in units:
+        if size < 1024:
+            return f"{size:.2f} {unit}"
+        size /= 1024
+    return f"{size:.2f} PB"
 
 
 async def debug_get_ha_groups(api_handler: APIHandler):
@@ -43,7 +66,16 @@ async def debug_get_status(api_handler: APIHandler):
             data = result.get("result", {})
             if data:
                 data = data.get("data", {})
-                data = sorted(data.items())
+                data = {
+                    "kversion": data.get("kversion", {}),
+                    "cpus": data.get("cpuinfo", {}).get("cpus", {}),
+                    "cpus_model": data.get("cpuinfo", {}).get("model", {}),
+                    "memory_total": human_readable_size(
+                        data.get("memory", {}).get("total", 0)
+                    ),
+                    "uptime": str(timedelta(seconds=data.get("uptime", 0))),
+                }
+                # data = data.get("boot-info", {})
         else:
             data = None
         logger.info(f"Node: {node}, Result: {data}")
