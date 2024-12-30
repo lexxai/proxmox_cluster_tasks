@@ -3,6 +3,7 @@ from abc import abstractmethod
 
 import httpx
 
+from cluster_tasks.backends.http_ha_groups import BackendHttpHAGroups
 from cluster_tasks.config import configuration
 from cluster_tasks.ext_abs.backends import Backend
 
@@ -15,6 +16,7 @@ class BackendAbstractHTTP(Backend):
         self, base_url=None, token_id=None, token_secret=None, verify_ssl=None
     ):
         super().__init__()
+        self.entry_points: dict = configuration.get("API_HANDLERS")
         self.api_node_url = base_url or configuration.get("API.NODE_URL")
         self.token_id = token_id or configuration.get("API.TOKEN_ID")
         self.token_secret = token_secret or configuration.get("API.TOKEN_SECRET")
@@ -59,6 +61,9 @@ class BackendAbstractHTTP(Backend):
 
     @abstractmethod
     def process(self, input_data: dict | None = None) -> dict: ...
+
+    @abstractmethod
+    async def aprocess(self, input_data: dict | None = None) -> dict: ...
 
 
 class BackendHTTP(BackendAbstractHTTP):
@@ -135,3 +140,9 @@ class BackendAsyncHTTP(BackendAbstractHTTP):
         if response.status_code < 400:
             result.update(response.json())
         return {"result": result, "status_code": response.status_code}
+
+
+class API_HttpBackend:
+    def __init__(self, backend=None):
+        self.backend = backend or BackendHTTP()
+        self.ha_groups = BackendHttpHAGroups(self.backend)
