@@ -50,6 +50,13 @@ class ConfigLoader:
             case _:
                 return value
 
+    @staticmethod
+    def convert_to_list(value: any) -> list | str:
+        if not isinstance(value, str) or (value.startswith("[") is False):
+            return value
+        values = value.strip(" []").split(",")
+        return [v.strip(" \"'") for v in values]
+
     def override_with_env_vars(self, config: dict) -> dict:
         """
         Override configuration values with environment variables.
@@ -82,6 +89,7 @@ class ConfigLoader:
                 # print(f"override_with_env_vars: {env_key} - {env_value}")
                 if env_value is not None:
                     env_value = self.convert_to_bool(env_value)
+                    env_value = self.convert_to_list(env_value)
                     config[section] = env_value
         return config
 
