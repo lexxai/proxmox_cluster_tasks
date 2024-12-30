@@ -1,5 +1,4 @@
 import logging
-from importlib.metadata import entry_points
 
 import httpx
 
@@ -93,10 +92,7 @@ class APIHandler(AbstractHandler):
         return {"method": method, "url": url, "data": data, "params": params}
 
     def process(self, input_data: dict | None = None) -> dict:
-        result = {
-            "result": None,
-            "status_code": None,
-        }
+        result = {}
         if self.client is None:
             self.client = self.connect()
         process_data = self.process_data(input_data)
@@ -105,14 +101,11 @@ class APIHandler(AbstractHandler):
             return result
         response = self.client.request(**process_data)
         if response.status_code < 400:
-            result = response.json()
+            result.update(response.json())
         return {"result": result, "status_code": response.status_code}
 
     async def aprocess(self, input_data: dict | None = None) -> dict:
-        result = {
-            "result": None,
-            "status_code": None,
-        }
+        result = {}
         if self.client is None:
             self.client = await self.aconnect()
         process_data = self.process_data(input_data)
@@ -121,7 +114,7 @@ class APIHandler(AbstractHandler):
             return result
         response = await self.client.request(**process_data)
         if response.status_code < 400:
-            result = response.json()
+            result.update(response.json())
         return {"result": result, "status_code": response.status_code}
 
     # GET VERSION
@@ -151,26 +144,3 @@ class APIHandler(AbstractHandler):
             "method": "GET",
         }
         return input_data
-
-
-if __name__ == "__main__":
-    logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
-    logger.addHandler(logging.StreamHandler())
-    logger.info(configuration.get("NODES"))
-    # with APIHandler() as api_handler:
-    #     logger.info(api_handler.get_version())
-
-    import asyncio
-
-    async def amain():
-        async with APIHandler() as api_handler:
-            logger.info(await api_handler.aget_version())
-            # logger.info(await api_handler.aget_ha_groups())
-            tasks = []
-            for node in configuration.get("NODES", [])[:3]:
-                logger.info(node)
-                tasks.append(api_handler.aget_status(node))
-            results = await asyncio.gather(*tasks)
-            logger.info(results)
-
-    asyncio.run(amain())
