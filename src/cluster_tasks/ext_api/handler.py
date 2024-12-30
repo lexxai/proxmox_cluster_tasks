@@ -16,6 +16,7 @@ class APIHandler(AbstractHandler):
         super().__init__()
         self.entry_points: dict = configuration.get("API_HANDLERS")
         self.api_node_url: str = configuration.get("API.NODE_URL")
+        self.api_verify_ssl: bool = configuration.get("API.VERIFY_SSL", True) or True
         self.client = None
 
     def close(self):
@@ -56,7 +57,8 @@ class APIHandler(AbstractHandler):
         if headers:
             _headers.update(headers)
         # print(_headers)
-        client = httpx.Client(http2=True, headers=_headers)
+        verify_ssl = self.api_verify_ssl
+        client = httpx.Client(http2=True, headers=_headers, verify=verify_ssl)
         return client
 
     async def aconnect(self, headers=None):

@@ -5,6 +5,7 @@ NODES = []
 TOKEN_ID = ""
 TOKEN_SECRET = ""
 NODE_URL = ""
+VERIFY_SSL = true
 
 [API_HANDLERS]
 TICKET = "/api2/json/access/ticket"
@@ -16,4 +17,6 @@ HA_GROUPS = "/api2/json/cluster/ha/groups"
 VERSION = "pvesh get /version"
 #VERSION = "sleep 5"
 HA_GROUPS = "pvesh get /cluster/ha/groups"
+HA_GROUPS_CREATE = "pvesh create /cluster/ha/groups --group={NAME} --nodes={NODES} --comment={COMMENT} --nofailback={NOFAILBACK} --restricted={RESTRICTED}"
+
 
