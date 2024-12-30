@@ -146,3 +146,9 @@ class API_HttpBackend:
     def __init__(self, backend=None):
         self.backend = backend or BackendHTTP()
         self.ha_groups = BackendHttpHAGroups(self.backend)
+
+
+class API_AsyncHttpBackend:
+    def __init__(self, backend=None):
+        self.backend = backend or BackendAsyncHTTP()
+        self.ha_groups = BackendAbstractHTTP(self.backend)
