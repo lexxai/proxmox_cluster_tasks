@@ -50,6 +50,41 @@ class AbstractHandler(ABC):
         return await self.aprocess(self.get_ha_groups_data())
 
     @abstractmethod
+    def create_ha_group_data(
+        self,
+        name: str,
+        nodes: list[str],
+        comment: str = None,
+        nofailback: bool = None,
+        restricted: bool = None,
+    ) -> dict:
+        return {}
+
+    def create_ha_group(
+        self,
+        name: str,
+        nodes: list[str],
+        comment: str = None,
+        nofailback: bool = None,
+        restricted: bool = None,
+    ):
+        return self.process(
+            self.create_ha_group_data(name, nodes, comment, nofailback, restricted)
+        )
+
+    async def acreate_ha_group(
+        self,
+        name: str,
+        nodes: list[str],
+        comment: str = None,
+        nofailback: bool = None,
+        restricted: bool = None,
+    ):
+        return await self.aprocess(
+            self.create_ha_group_data(name, nodes, comment, nofailback, restricted)
+        )
+
+    @abstractmethod
     def get_status_data(self, target_node: str) -> dict:
         return {}
 
