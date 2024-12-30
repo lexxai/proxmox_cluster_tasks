@@ -82,10 +82,10 @@ async def debug_get_status(api_handler: APIHandler):
 
 
 async def async_main():
-    async with APIHandler() as api_handler:
-        logger.info(await api_handler.aget_version())
-        await debug_get_ha_groups(api_handler)
-        await debug_get_status(api_handler)
+    async with APIHandler() as handler:
+        logger.info(await handler.aget_version())
+        await debug_get_ha_groups(handler)
+        await debug_get_status(handler)
 
 
 if __name__ == "__main__":
