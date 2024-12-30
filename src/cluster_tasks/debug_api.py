@@ -6,7 +6,7 @@ from cluster_tasks.config import configuration
 from cluster_tasks.ext_api.handler import APIHandler
 
 
-logger = logging.getLogger(f"CT.{__name__}")
+logger = logging.getLogger(f"CT")
 
 logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
 logger.addHandler(logging.StreamHandler())
@@ -81,11 +81,22 @@ async def debug_get_status(api_handler: APIHandler):
         logger.info(f"Node: {node}, Result: {data}")
 
 
+async def debug_create_ha_group(handler: APIHandler):
+    result = await handler.acreate_ha_group("test-gr-02-03f-04", ["c03", "c02", "c04"])
+    logger.info(result)
+
+
 async def async_main():
     async with APIHandler() as handler:
-        logger.info(await handler.aget_version())
-        await debug_get_ha_groups(handler)
-        await debug_get_status(handler)
+        try:
+            logger.info(await handler.aget_version())
+            await debug_get_ha_groups(handler)
+            await debug_create_ha_group(handler)
+            await debug_get_ha_groups(handler)
+
+            # await debug_get_status(handler)
+        except Exception as e:
+            logger.error(f"ERROR async_main: {e}")
 
 
 if __name__ == "__main__":
