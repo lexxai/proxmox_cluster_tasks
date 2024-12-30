@@ -62,7 +62,7 @@ class APIHandler(AbstractHandler):
     async def aconnect(self, headers=None):
         _headers = {
             "Authorization": self.get_authorization(),
-            "content-type": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
         }
         if headers:
             _headers.update(headers)
@@ -131,6 +131,22 @@ class APIHandler(AbstractHandler):
         input_data = {
             "entry_point": self.entry_points.get("HA_GROUPS"),
             "method": "GET",
+        }
+        return input_data
+
+    def create_ha_group_data(
+        self,
+        name: str,
+        nodes: list[str],
+        comment: str = None,
+        nofailback: bool = None,
+        restricted: bool = None,
+    ) -> dict:
+        nodes = ",".join(nodes)
+        input_data = {
+            "entry_point": self.entry_points.get("HA_GROUPS"),
+            "method": "POST",
+            "data": {"group": name, "nodes": nodes},
         }
         return input_data
 
