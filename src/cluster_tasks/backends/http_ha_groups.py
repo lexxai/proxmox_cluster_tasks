@@ -30,19 +30,6 @@ class BackendAbstractHttpHAGroups(BackendAbstractHAGroups):
         }
         return input_data
 
-    @abstractmethod
-    def get(self): ...
-
-    @abstractmethod
-    def create(
-        self,
-        name: str,
-        nodes: list[str],
-        comment: str = None,
-        nofailback: bool = None,
-        restricted: bool = None,
-    ): ...
-
 
 class BackendHttpHAGroups(BackendAbstractHttpHAGroups):
 

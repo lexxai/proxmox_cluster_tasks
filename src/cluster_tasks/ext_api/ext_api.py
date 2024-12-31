@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from pyexpat.errors import messages
 
 from cluster_tasks.backends.abstract_backends import (
     AbstractBackend,
@@ -14,7 +13,6 @@ from cluster_tasks.backends.http_backend import (
 )
 from cluster_tasks.backends.http_ha_groups import (
     BackendHttpHAGroups,
-    BackendAsyncHttpHAGroups,
 )
 from cluster_tasks.backends.registry import BackendRegistry
 from cluster_tasks.config import configuration
@@ -48,26 +46,9 @@ class AbstractExtApi:
         implementation_cls = BackendRegistry.get(entry_backend, type(self.backend))
         logger.debug(f"Mapping {entry_backend} to {implementation_cls.__name__}")
         return implementation_cls(self.backend)
-        # group_cls: type[BackendAbstractEndpoints] = self._class_mapping.get(
-        #     entry_backend, {}
-        # ).get(type(self._backend))
-        # if group_cls is None:
-        #     message = (
-        #         f"No class implementation for backend type {type(self.backend).__name__}. "
-        #         f"Please extend the '{entry_backend}' property to support this backend type."
-        #     )
-        #     logger.error(message)
-        #     raise NotImplementedError(message)
-        # logger.debug(f"Mapping {entry_backend} to {group_cls.__name__}")
-        # return group_cls(self._backend)
 
 
 class ExtApi(AbstractExtApi):
-    _class_mapping = {
-        "ha_groups": {
-            BackendHTTP: BackendHttpHAGroups,
-        }
-    }
 
     def __init__(self, backend: AbstractBackend = None):
         super().__init__(backend=backend)
@@ -85,11 +66,6 @@ class ExtApi(AbstractExtApi):
 
 
 class ExtApiAsync(AbstractExtApi):
-    # _class_mapping = {
-    #     "ha_groups": {
-    #         BackendAsyncHTTP: BackendAsyncHttpHAGroups,
-    #     }
-    # }
 
     def __init__(self, backend: AbstractAsyncBackend = None):
         super().__init__(backend=backend)

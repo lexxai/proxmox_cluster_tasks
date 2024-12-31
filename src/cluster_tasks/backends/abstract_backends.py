@@ -50,4 +50,16 @@ class BackendAbstractEndpoints(ABC):
         self.backend = backend
 
 
-class BackendAbstractHAGroups(BackendAbstractEndpoints): ...
+class BackendAbstractHAGroups(BackendAbstractEndpoints):
+    @abstractmethod
+    def get(self): ...
+
+    @abstractmethod
+    def create(
+        self,
+        name: str,
+        nodes: list[str],
+        comment: str = None,
+        nofailback: bool = None,
+        restricted: bool = None,
+    ): ...
