@@ -74,11 +74,13 @@ class ExtApi(AbstractExtApi):
         self.default_backend_class = BackendHTTP
 
     def __enter__(self):
-        self.backend.connect()
+        logger.debug("ExtApi enter")
+        self.backend.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.backend.close()
+        self.backend.__exit__(exc_type, exc_value, traceback)
+        logger.debug("ExtApi exit")
         return False
 
 
@@ -91,32 +93,44 @@ class ExtApiAsync(AbstractExtApi):
 
     def __init__(self, backend: AbstractAsyncBackend = None):
         super().__init__(backend=backend)
+        self._backend: AbstractAsyncBackend | None = backend
         self.default_backend_class = BackendAsyncHTTP
 
+    @property
+    def backend(self) -> AbstractAsyncBackend:
+        if self._backend is None:
+            self._backend = self.default_backend_class()
+        return self._backend
+
     async def __aenter__(self):
-        await self.backend.aconnect()
+        logger.debug("ExtApiAsync aenter")
+        await self.backend.__aenter__()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
         await self.backend.aclose()
-        return False
+        logger.debug("ExtApiAsync aexit")
+        return True
 
 
 # Usage Example
 if __name__ == "__main__":
+    logger = logging.getLogger(f"CT")
     logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
     logger.addHandler(logging.StreamHandler())
     try:
         backend = BackendHTTP()
         with ExtApi(backend) as api:
-            print(api.ha_groups.get())
+            logger.info(api.ha_groups.get())
+            logger.info(api.ha_groups.get())
     except Exception as e:
         logger.error(e)
 
     async def async_main():
         backend = BackendAsyncHTTP()
         async with ExtApiAsync(backend) as api:
-            print(await api.ha_groups.get())
+            logger.info(await api.ha_groups.get())
+            logger.info(await api.ha_groups.get())
 
     try:
         asyncio.run(async_main())

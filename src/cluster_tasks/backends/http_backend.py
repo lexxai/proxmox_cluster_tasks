@@ -65,12 +65,12 @@ class BackendAbstractHTTP:
 class BackendHTTP(BackendAbstractHTTP, AbstractBackend):
 
     def __enter__(self):
-        # print("API Enter")
+        logger.debug("BackendHTTP Enter")
         self.client = self.connect()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        # print("API Exit")
+        logger.debug("BackendHTTP Exit")
         self.close()
         return True
 
@@ -78,8 +78,10 @@ class BackendHTTP(BackendAbstractHTTP, AbstractBackend):
         if self.client is not None:
             self.client.close()
             self.client = None
+            logger.debug("BackendHTTP HTTP Client closed")
 
     def connect(self, *args, **kwargs):
+        logger.debug("HTTP Client connecting")
         headers = kwargs.get("headers", None)
         verify_ssl = self.api_verify_ssl
         client = httpx.Client(
@@ -104,12 +106,12 @@ class BackendHTTP(BackendAbstractHTTP, AbstractBackend):
 class BackendAsyncHTTP(BackendAbstractHTTP, AbstractAsyncBackend):
 
     async def __aenter__(self):
-        logger.debug("API Async Enter")
+        logger.debug("BackendAsyncHTTP Enter")
         self.client = await self.aconnect()
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        logger.debug("API Async Exit")
+        logger.debug("BackendAsyncHTTP Exit")
         await self.aclose()
         return True
 
@@ -117,8 +119,10 @@ class BackendAsyncHTTP(BackendAbstractHTTP, AbstractAsyncBackend):
         if self.client is not None:
             await self.client.aclose()
             self.client = None
+            logger.debug("HTTP Client async closed")
 
     async def aconnect(self, *args, **kwargs):
+        logger.debug("HTTP Client async connecting")
         headers = kwargs.get("headers", None)
         verify_ssl = self.api_verify_ssl
         client = httpx.AsyncClient(
