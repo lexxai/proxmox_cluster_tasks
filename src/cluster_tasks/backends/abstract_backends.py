@@ -41,3 +41,6 @@ class AbstractAsyncBackend(ABC):
 
     @abstractmethod
     async def aprocess(self, input_data: dict | None = None) -> dict: ...
+
+
+class BackendAbstractHAGroups(ABC): ...

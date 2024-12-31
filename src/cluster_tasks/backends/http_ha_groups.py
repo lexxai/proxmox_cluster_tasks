@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 
+from cluster_tasks.backends.abstract_backends import BackendAbstractHAGroups
 
-class BackendAbstractHttpHAGroups(ABC):
+
+class BackendAbstractHttpHAGroups(BackendAbstractHAGroups):
     def __init__(self, backend):
         self.backend = backend
 
