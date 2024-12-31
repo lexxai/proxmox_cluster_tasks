@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 
 from cluster_tasks.backends.abstract_backends import BackendAbstractHAGroups
+from cluster_tasks.backends.http_backend import BackendHTTP, BackendAsyncHTTP
+from cluster_tasks.backends.registry import BackendRegistry
 
 
 class BackendAbstractHttpHAGroups(BackendAbstractHAGroups):
@@ -76,3 +78,8 @@ class BackendAsyncHttpHAGroups(BackendAbstractHttpHAGroups):
         return await self.backend.aprocess(
             self.create_data(name, nodes, comment, nofailback, restricted)
         )
+
+
+# Register backend mappings
+BackendRegistry.register("ha_groups", BackendHTTP, BackendHttpHAGroups)
+BackendRegistry.register("ha_groups", BackendAsyncHTTP, BackendAsyncHttpHAGroups)
