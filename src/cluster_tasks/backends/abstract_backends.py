@@ -8,7 +8,9 @@ class AbstractBackend(ABC):
     def __init__(self):
         super().__init__()
 
-    # def close(self): ...
+    def connect(self, *args, **kwargs): ...
+
+    def close(self): ...
 
     def __enter__(self):
         return self
@@ -26,6 +28,10 @@ class AbstractAsyncBackend(ABC):
 
     def __init__(self):
         super().__init__()
+
+    async def aconnect(self, *args, **kwargs): ...
+
+    async def aclose(self): ...
 
     async def __aenter__(self):
         return self

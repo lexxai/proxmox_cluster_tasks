@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from cluster_tasks.backends.http_backend import BackendHTTP, BackendAbstractHTTP
-
 
 class BackendAbstractHttpHAGroups(ABC):
     def __init__(self, backend):

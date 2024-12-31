@@ -2,7 +2,10 @@ import logging
 
 import httpx
 
-from cluster_tasks.backends.backends import AbstractBackend, AbstractAsyncBackend
+from cluster_tasks.backends.abstract_backends import (
+    AbstractBackend,
+    AbstractAsyncBackend,
+)
 from cluster_tasks.config import configuration
 
 # from cluster_tasks.ext_abs.backends import Backend, AsyncBackend
@@ -76,7 +79,8 @@ class BackendHTTP(BackendAbstractHTTP, AbstractBackend):
             self.client.close()
             self.client = None
 
-    def connect(self, headers=None):
+    def connect(self, *args, **kwargs):
+        headers = kwargs.get("headers", None)
         verify_ssl = self.api_verify_ssl
         client = httpx.Client(
             http2=True, headers=self.get_headers(headers), verify=verify_ssl
@@ -114,7 +118,8 @@ class BackendAsyncHTTP(BackendAbstractHTTP, AbstractAsyncBackend):
             await self.client.aclose()
             self.client = None
 
-    async def aconnect(self, headers=None):
+    async def aconnect(self, *args, **kwargs):
+        headers = kwargs.get("headers", None)
         verify_ssl = self.api_verify_ssl
         client = httpx.AsyncClient(
             http2=True, headers=self.get_headers(headers), verify=verify_ssl

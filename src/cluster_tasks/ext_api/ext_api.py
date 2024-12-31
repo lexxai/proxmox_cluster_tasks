@@ -1,26 +1,41 @@
 import asyncio
 
-from cluster_tasks.backends.backends import AbstractBackend, AbstractAsyncBackend
+from cluster_tasks.backends.abstract_backends import (
+    AbstractBackend,
+    AbstractAsyncBackend,
+)
 from cluster_tasks.backends.http_backend import (
     BackendHTTP,
     BackendAsyncHTTP,
 )
 from cluster_tasks.backends.http_ha_groups import (
+    BackendAbstractHttpHAGroups,
     BackendHttpHAGroups,
     BackendAsyncHttpHAGroups,
 )
 
 
-class API:
+class ExtApi:
     def __init__(self, backend: AbstractBackend = None):
         self._backend = backend
-        self.ha_groups = BackendHttpHAGroups(self.backend)
+        self._ha_groups = None
 
     @property
     def backend(self):
         if self._backend is None:
             self._backend = BackendHTTP()
         return self._backend
+
+    @property
+    def ha_groups(self):
+        if self._ha_groups is None:
+            if isinstance(self.backend, BackendHTTP):
+                self._ha_groups = BackendHttpHAGroups(self.backend)
+            else:
+                raise NotImplementedError(
+                    f"No HA groups implementation for backend type: {type(self.backend)}"
+                )
+        return self._ha_groups
 
     def __enter__(self):
         self.backend.connect()
@@ -31,16 +46,27 @@ class API:
         return False
 
 
-class API_Async:
+class ExtApiAsync:
     def __init__(self, backend: AbstractAsyncBackend = None):
         self._backend = backend
-        self.ha_groups = BackendAsyncHttpHAGroups(self.backend)
+        self._ha_groups = None
 
     @property
     def backend(self):
         if self._backend is None:
             self._backend = BackendAsyncHTTP()
         return self._backend
+
+    @property
+    def ha_groups(self):
+        if self._ha_groups is None:
+            if isinstance(self.backend, BackendAsyncHTTP):
+                self._ha_groups = BackendAsyncHttpHAGroups(self.backend)
+            else:
+                raise NotImplementedError(
+                    f"No HA groups implementation for backend type: {type(self.backend)}"
+                )
+        return self._ha_groups
 
     async def __aenter__(self):
         await self.backend.aconnect()
@@ -51,14 +77,15 @@ class API_Async:
         return False
 
 
+# Usage Example
 if __name__ == "__main__":
     backend = BackendHTTP()
-    with API(backend) as api:
+    with ExtApi(backend) as api:
         print(api.ha_groups.get())
 
     async def async_main():
         backend = BackendAsyncHTTP()
-        async with API_Async(backend) as api:
+        async with ExtApiAsync(backend) as api:
             print(await api.ha_groups.get())
 
     asyncio.run(async_main())
