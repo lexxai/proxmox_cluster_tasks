@@ -58,12 +58,6 @@ class BackendAbstractHTTP(Backend):
         logger.debug(f"{method=} {entry_point=} {data=} {params=}")
         return {"method": method, "url": url, "data": data, "params": params}
 
-    @abstractmethod
-    def process(self, input_data: dict | None = None) -> dict: ...
-
-    # @abstractmethod
-    # async def aprocess(self, input_data: dict | None = None) -> dict: ...
-
 
 class BackendHTTP(BackendAbstractHTTP):
 
