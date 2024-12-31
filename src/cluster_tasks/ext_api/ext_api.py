@@ -1,5 +1,6 @@
 import asyncio
-from email.policy import default
+import logging
+from pyexpat.errors import messages
 
 from cluster_tasks.backends.abstract_backends import (
     AbstractBackend,
@@ -15,10 +16,15 @@ from cluster_tasks.backends.http_ha_groups import (
     BackendHttpHAGroups,
     BackendAsyncHttpHAGroups,
 )
+from cluster_tasks.config import configuration
+
+logger = logging.getLogger(f"CT.{__name__}")
 
 
 class AbstractExtApi:
-    _class_mapping = {"ha_groups": {AbstractBackend: BackendAbstractEndpoints}}
+    _class_mapping: dict[
+        str, dict[type[AbstractBackend], type[BackendAbstractEndpoints]]
+    ] = {"ha_groups": {AbstractBackend: BackendAbstractEndpoints}}
 
     def __init__(self, backend: AbstractBackend = None):
         self._backend: AbstractBackend | None = backend
@@ -38,12 +44,17 @@ class AbstractExtApi:
         return self._ha_groups
 
     def get_mapping(self, entry_backend: str) -> BackendAbstractEndpoints:
-        group_cls = self._class_mapping.get(entry_backend, {}).get(type(self._backend))
+        group_cls: type[BackendAbstractEndpoints] = self._class_mapping.get(
+            entry_backend, {}
+        ).get(type(self._backend))
         if group_cls is None:
-            raise NotImplementedError(
+            message = (
                 f"No class implementation for backend type {type(self.backend).__name__}. "
                 f"Please extend the '{entry_backend}' property to support this backend type."
             )
+            logger.error(message)
+            raise NotImplementedError(message)
+        logger.debug(f"Mapping {entry_backend} to {group_cls.__name__}")
         return group_cls(self._backend)
 
 
@@ -89,6 +100,9 @@ class ExtApiAsync(AbstractExtApi):
 
 # Usage Example
 if __name__ == "__main__":
+    logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
+    logger.addHandler(logging.StreamHandler())
+
     backend = BackendHTTP()
     with ExtApi(backend) as api:
         print(api.ha_groups.get())
