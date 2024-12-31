@@ -4,11 +4,11 @@ from abc import ABC, abstractmethod
 logger = logging.getLogger(f"CT.{__name__}")
 
 
-class Backend(ABC):
+class AbstractBackend(ABC):
     def __init__(self):
         super().__init__()
 
-    def close(self): ...
+    # def close(self): ...
 
     def __enter__(self):
         return self
@@ -20,12 +20,12 @@ class Backend(ABC):
     def process(self, input_data: dict | None = None) -> dict: ...
 
 
-class AsyncBackend(ABC):
+#
+#
+class AbstractAsyncBackend(ABC):
 
     def __init__(self):
         super().__init__()
-
-    async def aclose(self): ...
 
     async def __aenter__(self):
         return self

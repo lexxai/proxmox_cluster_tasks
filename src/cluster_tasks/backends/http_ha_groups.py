@@ -4,7 +4,7 @@ from cluster_tasks.backends.http_backend import BackendHTTP, BackendAbstractHTTP
 
 
 class BackendAbstractHttpHAGroups(ABC):
-    def __init__(self, backend: BackendAbstractHTTP):
+    def __init__(self, backend):
         self.backend = backend
 
     def get_data(self) -> dict:

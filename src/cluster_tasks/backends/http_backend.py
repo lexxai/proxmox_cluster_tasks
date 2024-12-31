@@ -1,16 +1,16 @@
 import logging
-from abc import abstractmethod
 
 import httpx
 
+from cluster_tasks.backends.backends import AbstractBackend, AbstractAsyncBackend
 from cluster_tasks.config import configuration
-from cluster_tasks.ext_abs.backends import Backend
 
+# from cluster_tasks.ext_abs.backends import Backend, AsyncBackend
 
 logger = logging.getLogger(f"CT.{__name__}")
 
 
-class BackendAbstractHTTP(Backend):
+class BackendAbstractHTTP:
     def __init__(
         self, base_url=None, token_id=None, token_secret=None, verify_ssl=None
     ):
@@ -59,7 +59,7 @@ class BackendAbstractHTTP(Backend):
         return {"method": method, "url": url, "data": data, "params": params}
 
 
-class BackendHTTP(BackendAbstractHTTP):
+class BackendHTTP(BackendAbstractHTTP, AbstractBackend):
 
     def __enter__(self):
         # print("API Enter")
@@ -97,7 +97,7 @@ class BackendHTTP(BackendAbstractHTTP):
         return {"result": result, "status_code": response.status_code}
 
 
-class BackendAsyncHTTP(BackendAbstractHTTP):
+class BackendAsyncHTTP(BackendAbstractHTTP, AbstractAsyncBackend):
 
     async def __aenter__(self):
         logger.debug("API Async Enter")

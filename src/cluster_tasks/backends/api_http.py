@@ -1,5 +1,6 @@
 import asyncio
 
+from cluster_tasks.backends.backends import AbstractBackend, AbstractAsyncBackend
 from cluster_tasks.backends.http_backend import (
     BackendHTTP,
     BackendAsyncHTTP,
@@ -10,10 +11,16 @@ from cluster_tasks.backends.http_ha_groups import (
 )
 
 
-class API_HttpBackend:
-    def __init__(self, backend=None):
-        self.backend = backend or BackendHTTP()
+class API:
+    def __init__(self, backend: AbstractBackend = None):
+        self._backend = backend
         self.ha_groups = BackendHttpHAGroups(self.backend)
+
+    @property
+    def backend(self):
+        if self._backend is None:
+            self._backend = BackendHTTP()
+        return self._backend
 
     def __enter__(self):
         self.backend.connect()
@@ -24,10 +31,16 @@ class API_HttpBackend:
         return False
 
 
-class API_AsyncHttpBackend:
-    def __init__(self, backend=None):
-        self.backend = backend or BackendAsyncHTTP()
+class API_Async:
+    def __init__(self, backend: AbstractAsyncBackend = None):
+        self._backend = backend
         self.ha_groups = BackendAsyncHttpHAGroups(self.backend)
+
+    @property
+    def backend(self):
+        if self._backend is None:
+            self._backend = BackendAsyncHTTP()
+        return self._backend
 
     async def __aenter__(self):
         await self.backend.aconnect()
@@ -39,11 +52,13 @@ class API_AsyncHttpBackend:
 
 
 if __name__ == "__main__":
-    with API_HttpBackend() as api:
+    backend = BackendHTTP()
+    with API(backend) as api:
         print(api.ha_groups.get())
 
     async def async_main():
-        async with API_AsyncHttpBackend() as api:
+        backend = BackendAsyncHTTP()
+        async with API_Async(backend) as api:
             print(await api.ha_groups.get())
 
     asyncio.run(async_main())
