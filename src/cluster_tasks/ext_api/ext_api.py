@@ -1,9 +1,11 @@
 import asyncio
+from email.policy import default
 
 from cluster_tasks.backends.abstract_backends import (
     AbstractBackend,
     AbstractAsyncBackend,
     BackendAbstractHAGroups,
+    BackendAbstractEndpoints,
 )
 from cluster_tasks.backends.http_backend import (
     BackendHTTP,
@@ -15,29 +17,46 @@ from cluster_tasks.backends.http_ha_groups import (
 )
 
 
-class ExtApi:
+class AbstractExtApi:
+    _class_mapping = {"ha_groups": {AbstractBackend: BackendAbstractEndpoints}}
+
     def __init__(self, backend: AbstractBackend = None):
         self._backend: AbstractBackend | None = backend
         self._ha_groups: BackendAbstractHAGroups | None = None
+        self.default_backend_class = AbstractBackend
 
     @property
     def backend(self) -> AbstractBackend:
         if self._backend is None:
-            self._backend = BackendHTTP()
+            self._backend = self.default_backend_class()
         return self._backend
 
     @property
     def ha_groups(self) -> BackendAbstractHAGroups:
         if self._ha_groups is None:
-            if isinstance(self.backend, BackendHTTP):
-                self._ha_groups = BackendHttpHAGroups(self.backend)
-            else:
-                raise NotImplementedError(
-                    f"No HA groups implementation for backend type {type(self.backend).__name__}. "
-                    "Please extend the 'ha_groups' property to support this backend type."
-                )
-
+            self._ha_groups = self.get_mapping("ha_groups")
         return self._ha_groups
+
+    def get_mapping(self, entry_backend: str) -> BackendAbstractEndpoints:
+        group_cls = self._class_mapping.get(entry_backend, {}).get(type(self._backend))
+        if group_cls is None:
+            raise NotImplementedError(
+                f"No class implementation for backend type {type(self.backend).__name__}. "
+                f"Please extend the '{entry_backend}' property to support this backend type."
+            )
+        return group_cls(self._backend)
+
+
+class ExtApi(AbstractExtApi):
+    _class_mapping = {
+        "ha_groups": {
+            BackendHTTP: BackendHttpHAGroups,
+        }
+    }
+
+    def __init__(self, backend: AbstractBackend = None):
+        super().__init__(backend=backend)
+        self.default_backend_class = BackendHTTP
 
     def __enter__(self):
         self.backend.connect()
@@ -48,29 +67,16 @@ class ExtApi:
         return False
 
 
-class ExtApiAsync:
+class ExtApiAsync(AbstractExtApi):
+    _class_mapping = {
+        "ha_groups": {
+            BackendAsyncHTTP: BackendAsyncHttpHAGroups,
+        }
+    }
+
     def __init__(self, backend: AbstractAsyncBackend = None):
-        self._backend: AbstractAsyncBackend | None = backend
-        self._ha_groups: BackendAbstractHAGroups | None = None
-
-    @property
-    def backend(self) -> AbstractAsyncBackend:
-        if self._backend is None:
-            self._backend = BackendAsyncHTTP()
-        return self._backend
-
-    @property
-    def ha_groups(self) -> BackendAbstractHAGroups:
-        if self._ha_groups is None:
-            if isinstance(self.backend, BackendAsyncHTTP):
-                self._ha_groups = BackendAsyncHttpHAGroups(self.backend)
-            else:
-                raise NotImplementedError(
-                    f"No HA groups implementation for backend type {type(self.backend).__name__}. "
-                    "Please extend the 'ha_groups' property to support this backend type."
-                )
-
-        return self._ha_groups
+        super().__init__(backend=backend)
+        self.default_backend_class = BackendAsyncHTTP
 
     async def __aenter__(self):
         await self.backend.aconnect()

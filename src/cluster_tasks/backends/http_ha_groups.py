@@ -4,8 +4,6 @@ from cluster_tasks.backends.abstract_backends import BackendAbstractHAGroups
 
 
 class BackendAbstractHttpHAGroups(BackendAbstractHAGroups):
-    def __init__(self, backend):
-        self.backend = backend
 
     def get_data(self) -> dict:
         input_data = {

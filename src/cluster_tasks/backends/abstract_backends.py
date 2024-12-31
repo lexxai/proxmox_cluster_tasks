@@ -7,6 +7,7 @@ logger = logging.getLogger(f"CT.{__name__}")
 class AbstractBackend(ABC):
     def __init__(self):
         super().__init__()
+        self.entry_points: dict = {}
 
     def connect(self, *args, **kwargs): ...
 
@@ -43,4 +44,10 @@ class AbstractAsyncBackend(ABC):
     async def aprocess(self, input_data: dict | None = None) -> dict: ...
 
 
-class BackendAbstractHAGroups(ABC): ...
+class BackendAbstractEndpoints(ABC):
+    def __init__(self, backend: AbstractBackend = None):
+        super().__init__()
+        self.backend = backend
+
+
+class BackendAbstractHAGroups(BackendAbstractEndpoints): ...
