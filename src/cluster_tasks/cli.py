@@ -1,7 +1,6 @@
 import logging
 
-from cluster_tasks.config import configuration
-from cluster_tasks.ext_abs.base import AbstractHandler
+from config.config import configuration
 from cluster_tasks.ext_cli.handler import CLIHandler
 from cluster_tasks.main import cluster_tasks
 

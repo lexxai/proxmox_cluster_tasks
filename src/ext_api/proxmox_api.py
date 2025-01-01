@@ -1,6 +1,7 @@
-from importlib.metadata import entry_points
+import asyncio
+import logging
 
-from cluster_tasks.config import configuration
+from config.config import configuration
 from ext_api.backends.registry import register_backends, get_backends_names
 from ext_api.backends.backend_registry import (
     BackendRegistry,
@@ -95,6 +96,8 @@ class ProxmoxSSHBackend:
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger("CT")
+
     # Register backend with the registry
     try:
         register_backends()
@@ -111,3 +114,22 @@ if __name__ == "__main__":
             print(response)
     except Exception as e:
         print(f"ERROR: {e}")
+
+    async def async_main():
+        # Register backend with the registry
+        try:
+            # Now you can use ProxmoxAPI with the backend you registered
+            api = ProxmoxAPI(
+                backend_type="async",
+                backend_name="https",
+            )
+
+            async with api as proxmox:
+                response = await proxmox.async_request(
+                    "get", "version", params={"node": "c01"}
+                )
+                print(response)
+        except Exception as e:
+            print(f"ERROR: {e}")
+
+    asyncio.run(async_main())

@@ -119,5 +119,5 @@ class ConfigLoader:
 configuration = ConfigLoader()
 
 if __name__ == "__main__":
-    print(configuration.settings)
+    # print(configuration.settings)
     print(configuration.get("NODES"))

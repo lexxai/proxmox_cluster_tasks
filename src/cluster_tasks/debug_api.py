@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import timedelta
 
-from cluster_tasks.config import configuration
+from config.config import configuration
 from cluster_tasks._api.handler import APIHandler
 
 

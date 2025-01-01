@@ -1,7 +1,7 @@
 import logging
 import subprocess
 
-from cluster_tasks.config import configuration
+from config.config import configuration
 from cluster_tasks.ext_abs.base import AbstractHandler
 
 logger = logging.getLogger(f"CT.{__name__}")

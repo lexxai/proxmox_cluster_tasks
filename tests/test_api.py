@@ -1,8 +1,5 @@
-import logging
-
 import pytest
 
-from cluster_tasks.config import configuration
 
 # logger = logging.getLogger("CT")
 # logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")

@@ -3,7 +3,7 @@ import logging
 import httpx
 
 from cluster_tasks.ext_abs.base import AbstractHandler
-from cluster_tasks.config import configuration
+from config.config import configuration
 
 
 logger = logging.getLogger(f"CT.{__name__}")

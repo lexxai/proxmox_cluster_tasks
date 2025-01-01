@@ -1,10 +1,7 @@
 import logging
-from collections.abc import Awaitable
 
 import pytest
-import pytest_asyncio
 
-from cluster_tasks.config import configuration
 from cluster_tasks._api.handler import APIHandler
 
 
