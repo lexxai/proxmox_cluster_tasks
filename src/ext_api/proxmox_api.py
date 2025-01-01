@@ -1,13 +1,14 @@
-import asyncio
 import logging
 
 from config.config import configuration
 from ext_api.backends.backend_abstract import ProxmoxBackend
-from ext_api.backends.registry import register_backends, get_backends_names
+from ext_api.backends.registry import register_backends
 from ext_api.backends.backend_registry import (
     BackendRegistry,
     BackendType,
 )
+
+logger = logging.getLogger(f"CT.{__name__}")
 
 
 class ProxmoxAPI:
@@ -16,7 +17,7 @@ class ProxmoxAPI:
         base_url: str = None,
         entry_point: str = None,
         token: str = None,
-        backend_type: str | BackendType = BackendType.SYNC,
+        backend_type: str | BackendType | None = BackendType.SYNC,
         backend_name: str = "https",
         backend: ProxmoxBackend | None = None,
     ):
@@ -35,7 +36,14 @@ class ProxmoxAPI:
             )
         self.backend_name = backend_name.strip().lower() if backend_name else None
         # Verify backend_name is registered
-        self._backend = backend or self._create_backend()
+        if backend is not None:
+            backend_name, backend_type = BackendRegistry.get_name_type(backend)
+            if all([backend_name, backend_type]):
+                self.backend_name = backend_name
+                self.backend_type = backend_type
+                self._backend = backend
+        else:
+            self._backend = self._create_backend()
 
     def _create_backend(self) -> ProxmoxBackend:
         """Factory method to create the appropriate backend."""
@@ -97,14 +105,16 @@ class ProxmoxSSHBackend:
     pass
 
 
+# TEST JUST
 if __name__ == "__main__":
+    import asyncio
+
     logger = logging.getLogger("CT")
     node = configuration.get("NODES", [])[0]
 
     # Register backend with the registry
     try:
-        register_backends()
-        print(get_backends_names())
+        register_backends("https")
 
         # Now you can use ProxmoxAPI with the backend you registered
         api = ProxmoxAPI(

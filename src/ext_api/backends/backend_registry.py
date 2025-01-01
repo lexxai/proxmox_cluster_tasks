@@ -30,3 +30,25 @@ class BackendRegistry:
         """Retrieve a registered backend class by name."""
         key = BackendKey(name, backend_type)
         return cls.registered_backends.get(key)
+
+    @classmethod
+    def get_backends_names(cls):
+        return list({key.name for key in cls.registered_backends.keys()})
+
+    @classmethod
+    def get_backends_types(cls):
+        return list({key.backend_type for key in cls.registered_backends.keys()})
+
+    @classmethod
+    def get_backends(cls):
+        return cls.registered_backends
+
+    @classmethod
+    def clear(cls):
+        cls.registered_backends.clear()
+
+    @classmethod
+    def get_name_type(cls, backend) -> tuple[str, BackendType] | None:
+        for key, value in cls.registered_backends.items():
+            if value == backend:
+                return (key.name, key.backend_type)

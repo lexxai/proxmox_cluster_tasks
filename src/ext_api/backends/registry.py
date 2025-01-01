@@ -66,10 +66,11 @@ def register_backends(names: list[str] | str = None):
                 logger.error(f"Unknown backend: {name}")
 
 
-def get_backends_names():
-    return list({key.name for key in BackendRegistry.registered_backends.keys()})
-
+# def get_backends_names():
+#     return list({key.name for key in BackendRegistry.registered_backends.keys()})
+#
 
 if __name__ == "__main__":
     register_backends(["https", "cli"])
-    print(get_backends_names())
+    print(BackendRegistry.get_backends_names())
+    print(BackendRegistry.get_backends_types())
