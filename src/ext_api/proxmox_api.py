@@ -134,6 +134,8 @@ if __name__ == "__main__":
                 backend_type="async",
                 backend_name="https",
             )
+            response = await api.async_request("get", "version")
+            print(response)
 
             async with api as proxmox:
                 response = await proxmox.async_request("get", "version")
