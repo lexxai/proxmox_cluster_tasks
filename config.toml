@@ -5,7 +5,11 @@ NODES = []
 TOKEN_ID = ""
 TOKEN_SECRET = ""
 BASE_URL = ""
+ENTRY_POINT = "/api2/json"
 VERIFY_SSL = true
+
+[CLI]
+ENTRY_POINT = "pvesh"
 
 #[API_HANDLERS]
 #TICKET = "/api2/json/access/ticket"

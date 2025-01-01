@@ -1,8 +1,13 @@
-from cluster_tasks.proxmox_api.backends.abstract_backend import ProxmoxBackend
+import paramiko  # for Sync SSH
+import asyncssh  # for Async SSH
 
 
-class ProxmoxSSHBackend(ProxmoxBackend):
-    def __init__(self, base_url: str, token: str):
+from ext_api.backends.backend_cli import ProxmoxCLIBackend, ProxmoxAsyncCLIBackend
+
+
+class ProxmoxSSHBackend(ProxmoxCLIBackend):
+    def __init__(self, base_url: str, token: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.base_url = base_url
         self.token = token
 
@@ -15,14 +20,20 @@ class ProxmoxSSHBackend(ProxmoxBackend):
         pass
 
     def request(
-        self, method: str, endpoint: str, params: dict = None, data: dict = None
+        self,
+        method: str = None,
+        endpoint: str = None,
+        params: dict = None,
+        data: dict = None,
+        **kwargs
     ):
         # Implement CLI command execution here
         return {"status": "success", "data": "Sync SSH result"}
 
 
-class ProxmoxAsyncSSHBackend(ProxmoxBackend):
-    def __init__(self, base_url: str, token: str):
+class ProxmoxAsyncSSHBackend(ProxmoxAsyncCLIBackend):
+    def __init__(self, base_url: str, token: str, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.base_url = base_url
         self.token = token
 
@@ -35,7 +46,12 @@ class ProxmoxAsyncSSHBackend(ProxmoxBackend):
         pass
 
     async def async_request(
-        self, method: str, endpoint: str, params: dict = None, data: dict = None
+        self,
+        method: str = None,
+        endpoint: str = None,
+        params: dict = None,
+        data: dict = None,
+        **kwargs
     ):
         # Implement async SSH command execution here
         return {"status": "success", "data": "Async SSH result"}

@@ -1,28 +1,27 @@
-from cluster_tasks.proxmox_api.backends.abstract_backend import ProxmoxBackend
+from ext_api.backends.backend_abstract import ProxmoxBackend
 
 
-class ProxmoxHTTPSBackend(ProxmoxBackend):
-    def __init__(self, base_url: str, token: str, backend_type: str):
+class ProxmoxCLIBackend(ProxmoxBackend):
+    def __init__(self, base_url: str, token: str):
         self.base_url = base_url
         self.token = token
-        self.backend_type = backend_type
 
     def __enter__(self):
-        # Open HTTPS session or perform necessary setup
-        ...
+        # Setup CLI context (e.g., open SSH connection)
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Cleanup HTTPS session
-        ...
+        # Cleanup CLI context (e.g., close SSH connection)
+        pass
 
     def request(
         self, method: str, endpoint: str, params: dict = None, data: dict = None
     ):
-        # Handle the synchronous HTTPS request
-        return {"status": "success", "data": "Sync HTTPS result"}
+        # Implement CLI command execution here
+        return {"status": "success", "data": "CLI result"}
 
 
-class ProxmoxAsyncHTTPSBackend(ProxmoxBackend):
+class ProxmoxAsyncCLIBackend(ProxmoxBackend):
     def __init__(self, base_url: str, token: str):
         self.base_url = base_url
         self.token = token
@@ -39,4 +38,4 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxBackend):
         self, method: str, endpoint: str, params: dict = None, data: dict = None
     ):
         # Implement async SSH command execution here
-        return {"status": "success", "data": "Async SSH result"}
+        return {"status": "success", "data": "Async CLI result"}

@@ -1,6 +1,8 @@
+from importlib.metadata import entry_points
+
 from cluster_tasks.config import configuration
-from cluster_tasks.proxmox_api.backends.registry import register_backends
-from cluster_tasks.proxmox_api.backends.backend_registry import (
+from ext_api.backends.registry import register_backends, get_backends_names
+from ext_api.backends.backend_registry import (
     BackendRegistry,
     BackendType,
 )
@@ -10,21 +12,26 @@ class ProxmoxAPI:
     def __init__(
         self,
         base_url: str = None,
+        entry_point: str = None,
         token: str = None,
         backend_type: [str, BackendType] = BackendType.SYNC,
         backend_name: str = "https",
     ):
-        self.base_url = base_url
+        self.base_url = base_url or configuration.get("API.BASE_URL")
+        self.entry_point = entry_point or configuration.get("API.ENTRY_POINT")
         self.token = token or configuration.get("API.TOKEN")
+
         try:
             self.backend_type = (
-                BackendType(backend_type.lower())
+                BackendType(backend_type.strip().lower())
                 if isinstance(backend_type, str)
                 else backend_type
             )
         except ValueError:
-            self.backend_type = BackendType.SYNC
-        self.backend_name = backend_name.lower()
+            raise ValueError(
+                f"Unsupported backend type: {backend_type}, available: {[k.lower() for k in BackendType.__members__]}"
+            )
+        self.backend_name = backend_name.strip().lower()
 
         # Verify backend_name is registered
         self._backend = self._create_backend()
@@ -33,8 +40,14 @@ class ProxmoxAPI:
         """Factory method to create the appropriate backend."""
         backend_cls = BackendRegistry.get_backend(self.backend_name, self.backend_type)
         if backend_cls:
-            return backend_cls(self.base_url, self.token, self.backend_type)
-        raise ValueError(f"Unsupported backend: {self.backend_name}")
+            return backend_cls(
+                base_url=self.base_url,
+                entry_point=self.entry_point,
+                token=self.token,
+            )
+        raise ValueError(
+            f"Unsupported backend: {self.backend_name} of this type: {self.backend_type}"
+        )
 
     def __enter__(self):
         """Enter context for synchronous backends."""
@@ -66,7 +79,7 @@ class ProxmoxAPI:
         """Make a synchronous request."""
         if self.backend_type != "sync":
             raise RuntimeError("This instance is configured for asynchronous requests.")
-        return self._backend.request(method, endpoint, params, data)
+        return self._backend.request(method, endpoint, params)
 
     async def async_request(
         self, method: str, endpoint: str, params: dict = None, data: dict = None
@@ -83,16 +96,18 @@ class ProxmoxSSHBackend:
 
 if __name__ == "__main__":
     # Register backend with the registry
-    register_backends()
+    try:
+        register_backends()
+        print(get_backends_names())
 
-    # Now you can use ProxmoxAPI with the backend you registered
-    api = ProxmoxAPI(
-        base_url="https://proxmox.local",
-        token="your_token",
-        backend_type="async",
-        backend_name="https",
-    )
+        # Now you can use ProxmoxAPI with the backend you registered
+        api = ProxmoxAPI(
+            backend_type="sync",
+            backend_name="https",
+        )
 
-    with api as proxmox:
-        response = proxmox.request("GET", "nodes/{node}", params={"node": "my_node"})
-        print(response)
+        with api as proxmox:
+            response = proxmox.request("get", "version", params={"node": "c01"})
+            print(response)
+    except Exception as e:
+        print(f"ERROR: {e}")
