@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import unquote
 
 from ext_api.backends.backend_abstract import ProxmoxBackend
 
@@ -116,7 +117,7 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
             )
             one_time = True
         try:
-            url = self.format_url(endpoint)
+            url = self.format_url(endpoint, params)
             response = await self._client.request(method, url, data=data)
             response.raise_for_status()
             return response.json()

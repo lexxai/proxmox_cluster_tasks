@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 from config.config import configuration
+from ext_api.backends.backend_abstract import ProxmoxBackend
 from ext_api.backends.registry import register_backends, get_backends_names
 from ext_api.backends.backend_registry import (
     BackendRegistry,
@@ -15,13 +16,13 @@ class ProxmoxAPI:
         base_url: str = None,
         entry_point: str = None,
         token: str = None,
-        backend_type: [str, BackendType] = BackendType.SYNC,
+        backend_type: str | BackendType = BackendType.SYNC,
         backend_name: str = "https",
+        backend: ProxmoxBackend | None = None,
     ):
         self.base_url = base_url or configuration.get("API.BASE_URL")
         self.entry_point = entry_point or configuration.get("API.ENTRY_POINT")
         self.token = token or configuration.get("API.TOKEN")
-
         try:
             self.backend_type = (
                 BackendType(backend_type.strip().lower())
@@ -32,14 +33,15 @@ class ProxmoxAPI:
             raise ValueError(
                 f"Unsupported backend type: {backend_type}, available: {[k.lower() for k in BackendType.__members__]}"
             )
-        self.backend_name = backend_name.strip().lower()
-
+        self.backend_name = backend_name.strip().lower() if backend_name else None
         # Verify backend_name is registered
-        self._backend = self._create_backend()
+        self._backend = backend or self._create_backend()
 
-    def _create_backend(self):
+    def _create_backend(self) -> ProxmoxBackend:
         """Factory method to create the appropriate backend."""
-        backend_cls = BackendRegistry.get_backend(self.backend_name, self.backend_type)
+        backend_cls: type[ProxmoxBackend] = BackendRegistry.get_backend(
+            self.backend_name, self.backend_type
+        )
         if backend_cls:
             return backend_cls(
                 base_url=self.base_url,
@@ -54,41 +56,41 @@ class ProxmoxAPI:
         """Enter context for synchronous backends."""
         if self.backend_type != BackendType.SYNC:
             raise RuntimeError("Use 'async with' for asynchronous backends.")
-        self._backend.__enter__()
+        if hasattr(self._backend, "__enter__"):
+            self._backend.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit context for synchronous backends."""
         if self.backend_type == BackendType.SYNC:
-            self._backend.__exit__(exc_type, exc_val, exc_tb)
+            if hasattr(self._backend, "__exit__"):
+                self._backend.__exit__(exc_type, exc_val, exc_tb)
 
     async def __aenter__(self):
         """Enter context for asynchronous backends."""
         if self.backend_type != BackendType.ASYNC:
             raise RuntimeError("Use 'with' for synchronous backends.")
-        await self._backend.__aenter__()
+        if hasattr(self._backend, "__aenter__"):
+            await self._backend.__aenter__()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Exit context for asynchronous backends."""
         if self.backend_type == BackendType.ASYNC:
-            await self._backend.__aexit__(exc_type, exc_val, exc_tb)
+            if hasattr(self._backend, "__aexit__"):
+                await self._backend.__aexit__(exc_type, exc_val, exc_tb)
 
-    def request(
-        self, method: str, endpoint: str, params: dict = None, data: dict = None
-    ):
+    def request(self, *args, **kwargs):
         """Make a synchronous request."""
         if self.backend_type != "sync":
             raise RuntimeError("This instance is configured for asynchronous requests.")
-        return self._backend.request(method, endpoint, params)
+        return self._backend.request(*args, **kwargs)
 
-    async def async_request(
-        self, method: str, endpoint: str, params: dict = None, data: dict = None
-    ):
+    async def async_request(self, *args, **kwargs):
         """Make an asynchronous request."""
         if self.backend_type != "async":
             raise RuntimeError("This instance is configured for synchronous requests.")
-        return await self._backend.async_request(method, endpoint, params, data)
+        return await self._backend.async_request(*args, **kwargs)
 
 
 class ProxmoxSSHBackend:
@@ -97,6 +99,7 @@ class ProxmoxSSHBackend:
 
 if __name__ == "__main__":
     logger = logging.getLogger("CT")
+    node = configuration.get("NODES", [])[0]
 
     # Register backend with the registry
     try:
@@ -110,13 +113,21 @@ if __name__ == "__main__":
         )
 
         with api as proxmox:
-            response = proxmox.request("get", "version", params={"node": "c01"})
+            response = proxmox.request("get", "version")
             print(response)
+            response = proxmox.request(
+                "get",
+                "nodes/{node}/status",
+                params={"node": node},
+            )
+            print(response)
+
     except Exception as e:
         print(f"ERROR: {e}")
 
     async def async_main():
         # Register backend with the registry
+
         try:
             # Now you can use ProxmoxAPI with the backend you registered
             api = ProxmoxAPI(
@@ -125,8 +136,12 @@ if __name__ == "__main__":
             )
 
             async with api as proxmox:
+                response = await proxmox.async_request("get", "version")
+                print(response)
                 response = await proxmox.async_request(
-                    "get", "version", params={"node": "c01"}
+                    "get",
+                    "nodes/{node}/status",
+                    params={"node": node},
                 )
                 print(response)
         except Exception as e:

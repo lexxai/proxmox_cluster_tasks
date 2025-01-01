@@ -2,8 +2,8 @@ from ext_api.backends.backend_registry import (
     BackendRegistry,
     BackendType,
 )
-from ext_api.backends.backend_cli import ProxmoxCLIBackend
-from ext_api.backends.backend_https import ProxmoxHTTPSBackend
+from ext_api.backends.backend_cli import ProxmoxCLIBackend, ProxmoxAsyncCLIBackend
+from ext_api.backends.backend_https import ProxmoxHTTPSBackend, ProxmoxAsyncHTTPSBackend
 from ext_api.backends.backend_ssh import (
     ProxmoxSSHBackend,
     ProxmoxAsyncSSHBackend,
@@ -12,9 +12,11 @@ from ext_api.backends.backend_ssh import (
 
 def register_backends():
     BackendRegistry.register_backend("https", BackendType.SYNC, ProxmoxHTTPSBackend)
-    BackendRegistry.register_backend("https", BackendType.ASYNC, ProxmoxHTTPSBackend)
+    BackendRegistry.register_backend(
+        "https", BackendType.ASYNC, ProxmoxAsyncHTTPSBackend
+    )
     BackendRegistry.register_backend("cli", BackendType.SYNC, ProxmoxCLIBackend)
-    BackendRegistry.register_backend("cli", BackendType.ASYNC, ProxmoxCLIBackend)
+    BackendRegistry.register_backend("cli", BackendType.ASYNC, ProxmoxAsyncCLIBackend)
     BackendRegistry.register_backend("ssh", BackendType.SYNC, ProxmoxSSHBackend)
     BackendRegistry.register_backend("ssh", BackendType.ASYNC, ProxmoxAsyncSSHBackend)
 
