@@ -1,16 +1,41 @@
 import logging
-from urllib.parse import unquote
-
-from ext_api.backends.backend_abstract import ProxmoxBackend
 
 import httpx
+
+from ext_api.backends.backend_abstract import ProxmoxBackend
 
 
 logger = logging.getLogger("CT.{__name__}")
 
 
+"""
+Proxmox backends for http/https protocols.
+
+This module contains the classes for backends that communicate with the Proxmox API using the
+http/https protocols.
+
+The ProxmoxHTTPBaseBackend class is a base class for the ProxmoxHTTPSBackend and ProxmoxHTTPBackend
+classes. It contains the common methods for both classes.
+
+The ProxmoxHTTPSBackend class is a backend that communicates with the Proxmox API using the
+https protocol.
+
+The ProxmoxHTTPBackend class is a backend that communicates with the Proxmox API using the
+http protocol.
+"""
+
+
 class ProxmoxHTTPBaseBackend(ProxmoxBackend):
     def __init__(self, base_url: str, entry_point: str, token: str, *args, **kwargs):
+        """
+        Initialize a ProxmoxHTTPBaseBackend instance.
+        Args:
+            base_url (str): The base URL for the Proxmox API.
+            entry_point (str): The entry point for the Proxmox API.
+            token (str): The token used for authentication with the Proxmox API.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+        """
         super().__init__(*args, **kwargs)
         self.base_url = base_url
         self.entry_point = entry_point.strip("/")
@@ -33,6 +58,15 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
 
 
 class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
+    """
+    Initialize a ProxmoxHTTPSBackend instance.
+    Args:
+    base_url (str): The base URL for the Proxmox API.
+    entry_point (str): The entry point for the Proxmox API.
+    token (str): The token used for authentication with the Proxmox API.
+    *args: Additional positional arguments.
+    **kwargs: Additional keyword arguments.
+    """
 
     def connect(self):
         self._client = httpx.Client(headers=self.build_headers(), http2=True)

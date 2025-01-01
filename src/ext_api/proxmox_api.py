@@ -2,6 +2,7 @@ import logging
 
 from config.config import configuration
 from ext_api.backends.backend_abstract import ProxmoxBackend
+from ext_api.backends.backend_https import ProxmoxHTTPSBackend
 from ext_api.backends.registry import register_backends
 from ext_api.backends.backend_registry import (
     BackendRegistry,
@@ -14,16 +15,12 @@ logger = logging.getLogger(f"CT.{__name__}")
 class ProxmoxAPI:
     def __init__(
         self,
-        base_url: str = None,
-        entry_point: str = None,
-        token: str = None,
         backend_type: str | BackendType | None = BackendType.SYNC,
         backend_name: str = "https",
         backend: ProxmoxBackend | None = None,
+        **kwargs,
     ):
-        self.base_url = base_url or configuration.get("API.BASE_URL")
-        self.entry_point = entry_point or configuration.get("API.ENTRY_POINT")
-        self.token = token or configuration.get("API.TOKEN")
+
         try:
             self.backend_type = (
                 BackendType(backend_type.strip().lower())
@@ -36,6 +33,7 @@ class ProxmoxAPI:
             )
         self.backend_name = backend_name.strip().lower() if backend_name else None
         # Verify backend_name is registered
+        logger.debug(f"Backend : {backend}")
         if backend is not None:
             backend_name, backend_type = BackendRegistry.get_name_type(backend)
             if all([backend_name, backend_type]):
@@ -43,18 +41,23 @@ class ProxmoxAPI:
                 self.backend_type = backend_type
                 self._backend = backend
         else:
-            self._backend = self._create_backend()
+            self._backend = self._create_backend(**kwargs)
 
-    def _create_backend(self) -> ProxmoxBackend:
+    def _create_backend(self, **kwargs) -> ProxmoxBackend:
         """Factory method to create the appropriate backend."""
+        logger.info(
+            f"Creating backend: {self.backend_name} of type: {self.backend_type}"
+        )
+        base_url = kwargs.get("base_url") or configuration.get("API.BASE_URL")
+        entry_point = kwargs.get("entry_point") or configuration.get("API.ENTRY_POINT")
+        token = kwargs.get("token") or configuration.get("API.TOKEN")
+
         backend_cls: type[ProxmoxBackend] = BackendRegistry.get_backend(
             self.backend_name, self.backend_type
         )
         if backend_cls:
             return backend_cls(
-                base_url=self.base_url,
-                entry_point=self.entry_point,
-                token=self.token,
+                base_url=base_url, entry_point=entry_point, token=token, **kwargs
             )
         raise ValueError(
             f"Unsupported backend: {self.backend_name} of this type: {self.backend_type}"
@@ -110,17 +113,22 @@ if __name__ == "__main__":
     import asyncio
 
     logger = logging.getLogger("CT")
+    logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
+    logger.addHandler(logging.StreamHandler())
+
     node = configuration.get("NODES", [])[0]
 
     # Register backend with the registry
     try:
         register_backends("https")
 
+        # backend = None
         # Now you can use ProxmoxAPI with the backend you registered
-        api = ProxmoxAPI(
-            backend_type="sync",
-            backend_name="https",
+        # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
+        backend = ProxmoxHTTPSBackend(
+            base_url="https://111:8006", token="root@pam!", entry_point="/api2/json"
         )
+        api = ProxmoxAPI(backend=backend)
 
         with api as proxmox:
             response = proxmox.request("get", "version")
@@ -159,4 +167,4 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"ERROR: {e}")
 
-    asyncio.run(async_main())
+    # asyncio.run(async_main())
