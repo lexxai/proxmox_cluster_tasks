@@ -26,7 +26,15 @@ http protocol.
 
 
 class ProxmoxHTTPBaseBackend(ProxmoxBackend):
-    def __init__(self, base_url: str, entry_point: str, token: str, *args, **kwargs):
+    def __init__(
+        self,
+        base_url: str,
+        entry_point: str,
+        token: str,
+        verify_ssl: bool = True,
+        *args,
+        **kwargs,
+    ):
         """
         Initialize a ProxmoxHTTPBaseBackend instance.
         Args:
@@ -40,6 +48,7 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         self.base_url = base_url
         self.entry_point = entry_point.strip("/")
         self.token = token
+        self.verify_ssl = verify_ssl
         self._client: httpx.Client | httpx.AsyncClient | None = None
 
     def build_headers(self, token: str | None = None):
@@ -69,7 +78,10 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
     """
 
     def connect(self):
-        self._client = httpx.Client(headers=self.build_headers(), http2=True)
+        # logger.debug(f"Connecting to Proxmox API... {self.verify_ssl=}")
+        self._client = httpx.Client(
+            headers=self.build_headers(), http2=True, verify=self.verify_ssl
+        )
 
     def close(self):
         if self._client:
@@ -116,7 +128,9 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
 class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
 
     async def connect(self):
-        self._client = httpx.AsyncClient(headers=self.build_headers(), http2=True)
+        self._client = httpx.AsyncClient(
+            headers=self.build_headers(), http2=True, verify=self.verity_ssl
+        )
 
     async def close(self):
         if self._client:

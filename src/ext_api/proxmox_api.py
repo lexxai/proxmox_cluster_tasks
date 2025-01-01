@@ -1,8 +1,9 @@
 import logging
 
+from nacl.pwhash.argon2i import verify
+
 from config.config import configuration
 from ext_api.backends.backend_abstract import ProxmoxBackend
-from ext_api.backends.backend_https import ProxmoxHTTPSBackend, ProxmoxAsyncHTTPSBackend
 from ext_api.backends.registry import register_backends
 from ext_api.backends.backend_registry import (
     BackendRegistry,
@@ -47,11 +48,15 @@ class ProxmoxAPI:
             f"Creating backend: {self.backend_name} of type: {self.backend_type}"
         )
         if self.backend_name == "https":
+            verify_ssl: bool = kwargs.get(
+                "verify_ssl", configuration.get("API.VERIFY_SSL")
+            )
             params = {
                 "base_url": kwargs.get("base_url") or configuration.get("API.BASE_URL"),
                 "entry_point": kwargs.get("entry_point")
                 or configuration.get("API.ENTRY_POINT"),
                 "token": kwargs.get("token") or configuration.get("API.TOKEN"),
+                "verify_ssl": verify_ssl,
             }
         else:
             params = {}
@@ -129,7 +134,7 @@ if __name__ == "__main__":
         # Now you can use ProxmoxAPI with the backend you registered
         # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
 
-        api = ProxmoxAPI(token="ss")
+        api = ProxmoxAPI()
 
         with api as proxmox:
             response = proxmox.request("get", "version")
