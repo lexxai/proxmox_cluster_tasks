@@ -66,7 +66,7 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
         if not self._client:
             self.connect()
             logger.warning(
-                "HTTP client session is not initialized. Use 'with' context to start a session. Creating client in runtime"
+                "HTTP client session is not initialized. Use 'with' context to start a session. Creating onetime client instance."
             )
             one_time = True
         try:
@@ -113,7 +113,7 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
         if not self._client:
             await self.connect()
             logger.warning(
-                "HTTP client session is not initialized. Use 'with' context to start a session. Creating client in runtime"
+                "HTTP client session is not initialized. Use 'with' context to start a session. Creating onetime client instance."
             )
             one_time = True
         try:
