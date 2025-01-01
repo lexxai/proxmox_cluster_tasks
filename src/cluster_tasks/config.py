@@ -15,6 +15,17 @@ class ConfigLoader:
         )
         self.env_var_prefix = env_var_prefix
         self.settings = self.load_config()
+        self.build_token()
+
+    def build_token(self):
+        if "API" not in self.settings:
+            return
+        token_id = self.get("API.TOKEN_ID")
+        token_secret = self.get("API.TOKEN_SECRET")
+        token = [token_id, token_secret]
+        if not all(token):
+            return
+        self.settings["API"]["TOKEN"] = "=".join(token)
 
     def load_config(self) -> dict:
         config = {}
@@ -109,4 +120,5 @@ configuration = ConfigLoader()
 
 if __name__ == "__main__":
     print(configuration.settings)
-    print(configuration.get("api_handlers.version"))
+    print(configuration.get("API_HANDLERS.VERSION"))
+    print(configuration.get("API.TOKEN"))
