@@ -47,19 +47,26 @@ class ProxmoxAPI:
         logger.debug(
             f"Creating backend: {self.backend_name} of type: {self.backend_type}"
         )
-        if self.backend_name == "https":
-            verify_ssl: bool = kwargs.get(
-                "verify_ssl", configuration.get("API.VERIFY_SSL")
-            )
-            params = {
-                "base_url": kwargs.get("base_url") or configuration.get("API.BASE_URL"),
-                "entry_point": kwargs.get("entry_point")
-                or configuration.get("API.ENTRY_POINT"),
-                "token": kwargs.get("token") or configuration.get("API.TOKEN"),
-                "verify_ssl": verify_ssl,
-            }
-        else:
-            params = {}
+        match self.backend_name:
+            case "https":
+                verify_ssl: bool = kwargs.get(
+                    "verify_ssl", configuration.get("API.VERIFY_SSL")
+                )
+                params = {
+                    "base_url": kwargs.get("base_url")
+                    or configuration.get("API.BASE_URL"),
+                    "entry_point": kwargs.get("entry_point")
+                    or configuration.get("API.ENTRY_POINT"),
+                    "token": kwargs.get("token") or configuration.get("API.TOKEN"),
+                    "verify_ssl": verify_ssl,
+                }
+            case "cli":
+                params = {
+                    "entry_point": kwargs.get("entry_point")
+                    or configuration.get("CLI.ENTRY_POINT"),
+                }
+            case _:
+                params = {}
 
         backend_cls: type[ProxmoxBackend] = BackendRegistry.get_backend(
             self.backend_name, self.backend_type
@@ -128,13 +135,13 @@ if __name__ == "__main__":
 
     # Register backend with the registry
     try:
-        register_backends("https")
+        register_backends("cli")
 
         # backend = None
         # Now you can use ProxmoxAPI with the backend you registered
         # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
 
-        api = ProxmoxAPI()
+        api = ProxmoxAPI(backend_name="cli")
 
         with api as proxmox:
             response = proxmox.request("get", "version")
