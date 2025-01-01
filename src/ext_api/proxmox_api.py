@@ -129,7 +129,26 @@ if __name__ == "__main__":
 
     logger = logging.getLogger("CT")
     logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
-    logger.addHandler(logging.StreamHandler())
+
+    class ColoredFormatter(logging.Formatter):
+        # Define color codes
+        COLORS = {
+            "DEBUG": "\033[94m",  # Blue
+            "INFO": "\033[92m",  # Green
+            "ERROR": "\033[91m",  # Red
+            "RESET": "\033[0m",  # Reset color
+        }
+
+        def format(self, record):
+            log_color = self.COLORS.get(record.levelname, self.COLORS["RESET"])
+            message = super().format(record)
+            return f"{log_color}{message}{self.COLORS['RESET']}"
+
+    # Setup colored logger
+    handler = logging.StreamHandler()
+    handler.setFormatter(ColoredFormatter("%(levelname)s: %(message)s"))
+    logger.addHandler(handler)
+    # logger.addHandler(logging.StreamHandler())
 
     node = configuration.get("NODES", [])[0]
 
