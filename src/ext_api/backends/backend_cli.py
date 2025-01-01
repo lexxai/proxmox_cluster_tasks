@@ -34,6 +34,7 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         command = [self.entry_point, method, endpoint]
         if data:
             command.extend([f"--{k}={v}" for k, v in data.items()])
+        command.append("--output-format=json")
         command = " ".join(command)
         logger.debug("Formatted command: %s", command)
         return command

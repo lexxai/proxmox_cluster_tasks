@@ -74,7 +74,6 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         **kwargs,
     ):
         command = self.format_command(endpoint, params, method, data)
-        command = f"{command} --output-format=json"
         stdin, stdout, stderr = self._client.exec_command(command)
         exit_status = stdout.channel.recv_exit_status()
         output = stdout.read()
