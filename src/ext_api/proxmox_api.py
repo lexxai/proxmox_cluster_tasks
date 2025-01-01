@@ -175,7 +175,7 @@ if __name__ == "__main__":
         # Now you can use ProxmoxAPI with the backend you registered
         # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
 
-        api = ProxmoxAPI(backend_name="ssh")
+        api = ProxmoxAPI(backend_name="cli")
 
         with api as proxmox:
             response = proxmox.request("get", "version")
@@ -200,28 +200,28 @@ if __name__ == "__main__":
             # Now you can use ProxmoxAPI with the backend you registered
             api = ProxmoxAPI(
                 backend_type="async",
-                backend_name="cli",
+                backend_name="ssh",
             )
-            response = await api.async_request("get", "version")
-            logger.info(response)
+            # response = await api.async_request("get", "version")
+            # logger.info(response)
 
             async with api as proxmox:
                 response = await proxmox.async_request("get", "version")
                 logger.info(response)
-                response = await proxmox.async_request(
-                    "post",
-                    "/cluster/ha/groups",
-                    params={},
-                    data={"group": "test-group", "nodes": "c01:100,c02,c03"},
-                )
-                logger.info(response)
-                response = await proxmox.async_request(
-                    "get",
-                    "/cluster/ha/groups",
-                    params={},
-                )
-                logger.info(response)
+                # response = await proxmox.async_request(
+                #     "post",
+                #     "/cluster/ha/groups",
+                #     params={},
+                #     data={"group": "test-group", "nodes": "c01:100,c02,c03"},
+                # )
+                # logger.info(response)
+                # response = await proxmox.async_request(
+                #     "get",
+                #     "/cluster/ha/groups",
+                #     params={},
+                # )
+                # logger.info(response)
         except Exception as e:
             logger.error(f"ERROR: {e}")
 
-    # asyncio.run(async_main())
+    asyncio.run(async_main())

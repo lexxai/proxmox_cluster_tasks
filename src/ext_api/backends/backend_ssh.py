@@ -1,5 +1,4 @@
 import json
-from http.client import responses
 
 import paramiko  # for Sync SSH
 import asyncssh  # for Async SSH
@@ -9,10 +8,11 @@ from ext_api.backends.backend_cli import (
     ProxmoxCLIBackend,
     ProxmoxAsyncCLIBackend,
     logger,
+    ProxmoxCLIBaseBackend,
 )
 
 
-class ProxmoxSSHBaseBackend(ProxmoxCLIBackend):
+class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
     def __init__(
         self,
         hostname: str,
@@ -90,19 +90,20 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         return {"response": json.loads(output.decode()), "status_code": exit_status}
 
 
-class ProxmoxAsyncSSHBackend(ProxmoxAsyncCLIBackend):
-    def __init__(self, base_url: str, token: str, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.base_url = base_url
-        self.token = token
+class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
 
     async def __aenter__(self):
         # Setup async SSH context
+        self._client = await asyncssh.connect(
+            self.hostname, username=self.username, password=self.password
+        )
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        # Cleanup async SSH context
-        pass
+        if self._client:
+            self._client.close()
+            await self._client.wait_closed()
+            self._client = None
 
     async def async_request(
         self,
@@ -113,4 +114,23 @@ class ProxmoxAsyncSSHBackend(ProxmoxAsyncCLIBackend):
         **kwargs,
     ):
         # Implement async SSH command execution here
-        return {"status": "success", "data": "Async SSH result"}
+        if not self._client:
+            raise RuntimeError("Async SSH Connection not opened")
+
+        command = self.format_command(endpoint, params, method, data)
+        try:
+            result = await self._client.run(command, check=True)
+        except asyncssh.ProcessError as e:
+            logger.error(f"Async SSH Error: {e}")
+            return {"response": {}, "status_code": e.exit_status}
+        output, error, exit_status = result.stdout, result.stderr, result.exit_status
+        if error:
+            logger.error(f"SSH Error: {error.decode()}")
+            return {"response": {}, "status_code": exit_status}
+        decoded = output.strip()
+        try:
+            json.loads(decoded)
+        except json.JSONDecodeError:
+            logger.error(f"SSH Error of decode JSON result: {decoded}")
+            return {"response": decoded, "status_code": exit_status}
+        return {"response": json.loads(output.decode()), "status_code": exit_status}
