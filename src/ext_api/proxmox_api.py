@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
     # Register backend with the registry
     try:
-        register_backends("cli")
+        register_backends()
 
         # backend = None
         # Now you can use ProxmoxAPI with the backend you registered
@@ -182,7 +182,7 @@ if __name__ == "__main__":
             # Now you can use ProxmoxAPI with the backend you registered
             api = ProxmoxAPI(
                 backend_type="async",
-                backend_name="https",
+                backend_name="cli",
             )
             response = await api.async_request("get", "version")
             logger.info(response)
@@ -199,4 +199,4 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"ERROR: {e}")
 
-    # asyncio.run(async_main())
+    asyncio.run(async_main())
