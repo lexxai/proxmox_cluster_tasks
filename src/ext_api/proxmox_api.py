@@ -160,18 +160,18 @@ if __name__ == "__main__":
         # Now you can use ProxmoxAPI with the backend you registered
         # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
 
-        api = ProxmoxAPI(backend_name="cli")
+        api = ProxmoxAPI(backend_name="ssh")
 
         with api as proxmox:
             response = proxmox.request("get", "version")
             logger.info(response)
-            response = proxmox.request(
-                "create",
-                "/cluster/ha/groups",
-                params={"node": node},
-                data={"name": "test-node"},
-            )
-            logger.info(response)
+            # response = proxmox.request(
+            #     "create",
+            #     "/cluster/ha/groups",
+            #     params={"node": node},
+            #     data={"name": "test-node"},
+            # )
+            # logger.info(response)
 
     except Exception as e:
         logger.error(f"ERROR: {e}")
@@ -209,4 +209,4 @@ if __name__ == "__main__":
         except Exception as e:
             logger.error(f"ERROR: {e}")
 
-    asyncio.run(async_main())
+    # asyncio.run(async_main())

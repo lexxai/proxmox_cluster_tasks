@@ -1,23 +1,67 @@
+import json
+from http.client import responses
+
 import paramiko  # for Sync SSH
 import asyncssh  # for Async SSH
 
 
-from ext_api.backends.backend_cli import ProxmoxCLIBackend, ProxmoxAsyncCLIBackend
+from ext_api.backends.backend_cli import (
+    ProxmoxCLIBackend,
+    ProxmoxAsyncCLIBackend,
+    logger,
+)
 
 
-class ProxmoxSSHBackend(ProxmoxCLIBackend):
-    def __init__(self, base_url: str, token: str, *args, **kwargs):
+class ProxmoxSSHBaseBackend(ProxmoxCLIBackend):
+    def __init__(
+        self,
+        hostname: str,
+        username: str,
+        password: str = None,
+        key_filename: str = None,
+        port: int = 22,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
-        self.base_url = base_url
-        self.token = token
+        self.hostname = hostname
+        self.port = port or 22
+        self.username = username
+        self.password = password
+        self.key_filename = key_filename
+        self._client = None
+
+
+class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
+
+    def connect(self):
+        # logger.debug(f"Connecting to Proxmox API... {self.verify_ssl=}")
+        self._client = paramiko.SSHClient()
+        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self._client.load_system_host_keys()
+        self._client.connect(
+            self.hostname,
+            port=self.port,
+            username=self.username,
+            password=self.password,
+            key_filename=self.key_filename,
+        )
+        # use System Agent
+        s = self._client.get_transport().open_session()
+        paramiko.agent.AgentRequestHandler(s)
+
+    def close(self):
+        if self._client:
+            self._client.close()
+            self._client = None
 
     def __enter__(self):
-        # Setup CLI context (e.g., open SSH connection)
+        self.connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Cleanup CLI context (e.g., close SSH connection)
-        pass
+        self.close()
+        return True
 
     def request(
         self,
@@ -25,10 +69,17 @@ class ProxmoxSSHBackend(ProxmoxCLIBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
-        **kwargs
+        **kwargs,
     ):
-        # Implement CLI command execution here
-        return {"status": "success", "data": "Sync SSH result"}
+        command = self.format_command(endpoint, params, method, data)
+        stdin, stdout, stderr = self._client.exec_command(command)
+        exit_status = stdout.channel.recv_exit_status()
+        output = stdout.read()
+        error = stderr.read()
+        if error:
+            logger.error(f"SSH Error: {error.decode()}")
+            return {"response": {}, "status_code": exit_status}
+        return {"response": json.loads(output.decode()), "status_code": exit_status}
 
 
 class ProxmoxAsyncSSHBackend(ProxmoxAsyncCLIBackend):
@@ -51,7 +102,7 @@ class ProxmoxAsyncSSHBackend(ProxmoxAsyncCLIBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
-        **kwargs
+        **kwargs,
     ):
         # Implement async SSH command execution here
         return {"status": "success", "data": "Async SSH result"}
