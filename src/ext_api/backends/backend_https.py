@@ -133,7 +133,7 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
 
     async def connect(self):
         self._client = httpx.AsyncClient(
-            headers=self.build_headers(), http2=True, verify=self.verity_ssl
+            headers=self.build_headers(), http2=True, verify=self.verify_ssl
         )
 
     async def close(self):
