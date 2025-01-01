@@ -1,18 +1,29 @@
-from cluster_tasks.proxmox_api.backends.backend_registry import BackendRegistry
+from cluster_tasks.config import configuration
+from cluster_tasks.proxmox_api.backends.backend_registry import (
+    BackendRegistry,
+    BackendType,
+)
 from cluster_tasks.proxmox_api.backends.registry import register_backends
 
 
 class ProxmoxAPI:
     def __init__(
         self,
-        base_url: str,
-        token: str,
-        backend_type: str = "sync",
+        base_url: str = None,
+        token: str = None,
+        backend_type: [str, BackendType] = BackendType.SYNC,
         backend_name: str = "https",
     ):
         self.base_url = base_url
-        self.token = token
-        self.backend_type = backend_type.lower()
+        self.token = token or configuration.get("API.TOKEN")
+        try:
+            self.backend_type = (
+                BackendType(backend_type.lower())
+                if isinstance(backend_type, str)
+                else backend_type
+            )
+        except ValueError:
+            self.backend_type = BackendType.SYNC
         self.backend_name = backend_name.lower()
 
         # Verify backend_name is registered
