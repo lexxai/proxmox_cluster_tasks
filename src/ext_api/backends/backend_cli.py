@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import subprocess
 
 from ext_api.backends.backend_abstract import ProxmoxBackend
 
@@ -15,12 +17,16 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         super().__init__(*args, **kwargs)
         self.entry_point = entry_point.strip("/")
 
-    def format_url(self, endpoint: str, params: dict = None, method: str = None) -> str:
+    def format_command(
+        self, endpoint: str, params: dict = None, method: str = None
+    ) -> str:
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.strip("/")
         if params:
             endpoint = endpoint.format(**params)
-        return f"{self.entry_point} {method.strip().lower()} {endpoint.lstrip('/')}"
+        command = f"{self.entry_point} {method.strip().lower()} {endpoint.lstrip('/')}"
+        logger.debug("Formatted command: %s", command)
+        return command
 
 
 class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
@@ -34,10 +40,16 @@ class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
         *args,
         **kwargs,
     ):
-        url = self.format_url(endpoint, params, method)
+        command = self.format_command(endpoint, params, method)
 
-        # Implement CLI command execution here
-        return {"url": url}
+        try:
+            process = subprocess.run(
+                command, shell=True, capture_output=True, text=True, check=True
+            )
+            result = process.stdout.strip()
+            return {"response": result, "status_code": process.returncode}
+        except subprocess.CalledProcessError as e:
+            return {"response": None, "status_code": e.returncode}
 
 
 class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
@@ -51,5 +63,20 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
         *args,
         **kwargs,
     ):
-        # Implement async SSH command execution here
-        return {"status": "success", "data": "Async CLI result"}
+        command = self.format_command(endpoint, params, method)
+
+        if command is None:
+            return {"response": None, "status_code": -1}
+        try:
+            process = await asyncio.create_subprocess_shell(
+                command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+            )
+            stdout, stderr = await process.communicate()
+            if process.returncode != 0:
+                raise subprocess.CalledProcessError(
+                    returncode=process.returncode, cmd=command, output=stderr
+                )
+            result = stdout.decode("utf-8").strip()
+            return {"response": result, "status_code": process.returncode}
+        except subprocess.CalledProcessError as e:
+            return {"response": None, "status_code": e.returncode}
