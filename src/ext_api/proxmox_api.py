@@ -164,16 +164,16 @@ if __name__ == "__main__":
 
         with api as proxmox:
             response = proxmox.request("get", "version")
-            print(response)
+            logger.info(response)
             response = proxmox.request(
                 "get",
                 "nodes/{node}/status",
                 params={"node": node},
             )
-            print(response)
+            logger.info(response)
 
     except Exception as e:
-        print(f"ERROR: {e}")
+        logger.error(f"ERROR: {e}")
 
     async def async_main():
         # Register backend with the registry
@@ -185,18 +185,18 @@ if __name__ == "__main__":
                 backend_name="https",
             )
             response = await api.async_request("get", "version")
-            print(response)
+            logger.info(response)
 
             async with api as proxmox:
                 response = await proxmox.async_request("get", "version")
-                print(response)
+                logger.info(response)
                 response = await proxmox.async_request(
                     "get",
                     "nodes/{node}/status",
                     params={"node": node},
                 )
-                print(response)
+                logger.info(response)
         except Exception as e:
-            print(f"ERROR: {e}")
+            logger.error(f"ERROR: {e}")
 
     # asyncio.run(async_main())
