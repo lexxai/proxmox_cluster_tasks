@@ -119,7 +119,11 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
             url = self.format_url(endpoint, params)
             response = self._client.request(method, url, data=data)
             response.raise_for_status()
-            return response.json()
+            result = {
+                "response": response.json(),
+                "status_code": response.status_code,
+            }
+            return result
         finally:
             if one_time:
                 self.close()
@@ -168,7 +172,11 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
             url = self.format_url(endpoint, params)
             response = await self._client.request(method, url, data=data)
             response.raise_for_status()
-            return response.json()
+            result = {
+                "response": response.json(),
+                "status_code": response.status_code,
+            }
+            return result
         finally:
             if one_time:
                 await self.close()
