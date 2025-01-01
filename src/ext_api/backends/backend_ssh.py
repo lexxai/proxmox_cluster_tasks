@@ -1,15 +1,15 @@
 import json
+import logging
 
 import paramiko  # for Sync SSH
 import asyncssh  # for Async SSH
 
 
 from ext_api.backends.backend_cli import (
-    ProxmoxCLIBackend,
-    ProxmoxAsyncCLIBackend,
-    logger,
     ProxmoxCLIBaseBackend,
 )
+
+logger = logging.getLogger(f"CT.{__name__}")
 
 
 class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
@@ -25,13 +25,15 @@ class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.hostname = hostname
-        self.port = port or 22
-        self.username = username
-        self.password = password
-        self.key_filename = key_filename
-        self.agent = agent
-        self._client = None
+        self.hostname: str = hostname
+        self.port: int = port or 22
+        self.username: str = username
+        self.password: str = password
+        self.key_filename: str = key_filename
+        self.agent: bool = agent
+        self._client: (
+            paramiko.client.SSHClient | asyncssh.SSHClientConnection | None
+        ) = None
 
 
 class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
@@ -94,9 +96,16 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
 
     async def __aenter__(self):
         # Setup async SSH context
-        self._client = await asyncssh.connect(
-            self.hostname, username=self.username, password=self.password
-        )
+        params = {
+            "host": self.hostname,
+            "username": self.username,
+            "password": self.password,
+            "port": self.port,
+        }
+        if self.key_filename:
+            params["client_keys"] = [self.key_filename]
+
+        self._client = await asyncssh.connect(**params)
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
