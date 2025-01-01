@@ -15,12 +15,11 @@ logger = logging.getLogger(f"CT.{__name__}")
 class ProxmoxAPI:
     def __init__(
         self,
+        backend: ProxmoxBackend | None = None,
         backend_type: str | BackendType | None = BackendType.SYNC,
         backend_name: str = "https",
-        backend: ProxmoxBackend | None = None,
         **kwargs,
     ):
-
         try:
             self.backend_type = (
                 BackendType(backend_type.strip().lower())
@@ -33,7 +32,6 @@ class ProxmoxAPI:
             )
         self.backend_name = backend_name.strip().lower() if backend_name else None
         # Verify backend_name is registered
-        logger.debug(f"Backend : {backend}")
         if backend is not None:
             backend_name, backend_type = BackendRegistry.get_name_type(backend)
             if all([backend_name, backend_type]):
@@ -126,7 +124,9 @@ if __name__ == "__main__":
         # Now you can use ProxmoxAPI with the backend you registered
         # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
         backend = ProxmoxHTTPSBackend(
-            base_url="https://111:8006", token="root@pam!", entry_point="/api2/json"
+            base_url=configuration.get("API.BASE_URL"),
+            token=configuration.get("API.TOKEN"),
+            entry_point=configuration.get("API.ENTRY_POINT"),
         )
         api = ProxmoxAPI(backend=backend)
 

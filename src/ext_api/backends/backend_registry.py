@@ -48,7 +48,8 @@ class BackendRegistry:
         cls.registered_backends.clear()
 
     @classmethod
-    def get_name_type(cls, backend) -> tuple[str, BackendType] | None:
+    def get_name_type(cls, backend) -> tuple[str, BackendType] | tuple[None, None]:
         for key, value in cls.registered_backends.items():
-            if value == backend:
+            if isinstance(backend, value):
                 return (key.name, key.backend_type)
+        return None, None
