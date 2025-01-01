@@ -4,7 +4,10 @@ from cluster_tasks.proxmox_api.backends.backend_registry import (
 )
 from cluster_tasks.proxmox_api.backends.backend_cli import ProxmoxCLIBackend
 from cluster_tasks.proxmox_api.backends.backend_https import ProxmoxHTTPSBackend
-from cluster_tasks.proxmox_api.proxmox_api import ProxmoxSSHBackend
+from cluster_tasks.proxmox_api.backends.backend_ssh import (
+    ProxmoxSSHBackend,
+    ProxmoxAsyncSSHBackend,
+)
 
 
 def register_backends():
@@ -13,4 +16,4 @@ def register_backends():
     BackendRegistry.register_backend("ssh", BackendType.SYNC, ProxmoxSSHBackend)
     BackendRegistry.register_backend("https", BackendType.ASYNC, ProxmoxHTTPSBackend)
     BackendRegistry.register_backend("cli", BackendType.ASYNC, ProxmoxCLIBackend)
-    BackendRegistry.register_backend("ssh", BackendType.ASYNC, ProxmoxSSHBackend)
+    BackendRegistry.register_backend("ssh", BackendType.ASYNC, ProxmoxAsyncSSHBackend)
