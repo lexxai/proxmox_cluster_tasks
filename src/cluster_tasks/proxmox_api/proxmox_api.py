@@ -1,5 +1,5 @@
-from cluster_tasks.ext_api.backends.backend_https import ProxmoxHTTPSBackend
-from cluster_tasks.ext_api.backends.registry import BackendRegistry
+from cluster_tasks.proxmox_api.backends.backend_registry import BackendRegistry
+from cluster_tasks.proxmox_api.backends.registry import register_backends
 
 
 class ProxmoxAPI:
@@ -20,7 +20,7 @@ class ProxmoxAPI:
 
     def _create_backend(self):
         """Factory method to create the appropriate backend."""
-        backend_cls = BackendRegistry.get_backend(self.backend_name)
+        backend_cls = BackendRegistry.get_backend(self.backend_name, self.backend_type)
         if backend_cls:
             return backend_cls(self.base_url, self.token, self.backend_type)
         raise ValueError(f"Unsupported backend: {self.backend_name}")
@@ -66,9 +66,13 @@ class ProxmoxAPI:
         return await self._backend.async_request(method, endpoint, params, data)
 
 
+class ProxmoxSSHBackend:
+    pass
+
+
 if __name__ == "__main__":
     # Register backend with the registry
-    BackendRegistry.register_backend("https", ProxmoxHTTPSBackend)
+    register_backends()
 
     # Now you can use ProxmoxAPI with the backend you registered
     api = ProxmoxAPI(
