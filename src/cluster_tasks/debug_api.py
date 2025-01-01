@@ -3,7 +3,7 @@ import logging
 from datetime import timedelta
 
 from cluster_tasks.config import configuration
-from cluster_tasks.ext_api.handler import APIHandler
+from cluster_tasks._api.handler import APIHandler
 
 
 logger = logging.getLogger(f"CT")

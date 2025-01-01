@@ -5,7 +5,7 @@ import pytest
 import pytest_asyncio
 
 from cluster_tasks.config import configuration
-from cluster_tasks.ext_api.handler import APIHandler
+from cluster_tasks._api.handler import APIHandler
 
 
 class CTLoggerFilter(logging.Filter):

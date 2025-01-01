@@ -3,7 +3,7 @@ import logging
 
 from cluster_tasks.config import configuration
 from cluster_tasks.ext_abs.base import AbstractHandler
-from cluster_tasks.ext_api.handler import APIHandler
+from cluster_tasks._api.handler import APIHandler
 from cluster_tasks.ext_cli.handler import CLIHandler
 from cluster_tasks.main import acluster_tasks
 
