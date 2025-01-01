@@ -1,9 +1,9 @@
 from cluster_tasks.config import configuration
+from cluster_tasks.proxmox_api.backends.registry import register_backends
 from cluster_tasks.proxmox_api.backends.backend_registry import (
     BackendRegistry,
     BackendType,
 )
-from cluster_tasks.proxmox_api.backends.registry import register_backends
 
 
 class ProxmoxAPI:
@@ -38,26 +38,26 @@ class ProxmoxAPI:
 
     def __enter__(self):
         """Enter context for synchronous backends."""
-        if self.backend_type != "sync":
+        if self.backend_type != BackendType.SYNC:
             raise RuntimeError("Use 'async with' for asynchronous backends.")
         self._backend.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Exit context for synchronous backends."""
-        if self.backend_type == "sync":
+        if self.backend_type == BackendType.SYNC:
             self._backend.__exit__(exc_type, exc_val, exc_tb)
 
     async def __aenter__(self):
         """Enter context for asynchronous backends."""
-        if self.backend_type != "async":
+        if self.backend_type != BackendType.ASYNC:
             raise RuntimeError("Use 'with' for synchronous backends.")
         await self._backend.__aenter__()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Exit context for asynchronous backends."""
-        if self.backend_type == "async":
+        if self.backend_type == BackendType.ASYNC:
             await self._backend.__aexit__(exc_type, exc_val, exc_tb)
 
     def request(
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     api = ProxmoxAPI(
         base_url="https://proxmox.local",
         token="your_token",
-        backend_type="sync",
+        backend_type="async",
         backend_name="https",
     )
 
