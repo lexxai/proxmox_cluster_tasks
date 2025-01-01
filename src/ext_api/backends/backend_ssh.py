@@ -133,4 +133,4 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         except json.JSONDecodeError:
             logger.error(f"SSH Error of decode JSON result: {decoded}")
             return {"response": decoded, "status_code": exit_status}
-        return {"response": json.loads(output.decode()), "status_code": exit_status}
+        return {"response": json.loads(decoded), "status_code": exit_status}
