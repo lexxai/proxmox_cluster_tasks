@@ -19,6 +19,7 @@ class ProxmoxSSHBaseBackend(ProxmoxCLIBackend):
         username: str,
         password: str = None,
         key_filename: str = None,
+        agent: bool = False,
         port: int = 22,
         *args,
         **kwargs,
@@ -29,13 +30,13 @@ class ProxmoxSSHBaseBackend(ProxmoxCLIBackend):
         self.username = username
         self.password = password
         self.key_filename = key_filename
+        self.agent = agent
         self._client = None
 
 
 class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
 
     def connect(self):
-        # logger.debug(f"Connecting to Proxmox API... {self.verify_ssl=}")
         self._client = paramiko.SSHClient()
         self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self._client.load_system_host_keys()
@@ -43,12 +44,13 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
             self.hostname,
             port=self.port,
             username=self.username,
-            password=self.password,
-            key_filename=self.key_filename,
+            password=self.password or None,
+            key_filename=self.key_filename or None,
         )
-        # use System Agent
-        s = self._client.get_transport().open_session()
-        paramiko.agent.AgentRequestHandler(s)
+        if self.agent:
+            # use System Agent
+            s = self._client.get_transport().open_session()
+            paramiko.agent.AgentRequestHandler(s)
 
     def close(self):
         if self._client:
@@ -72,6 +74,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         **kwargs,
     ):
         command = self.format_command(endpoint, params, method, data)
+        command = f"{command} --output-format=json"
         stdin, stdout, stderr = self._client.exec_command(command)
         exit_status = stdout.channel.recv_exit_status()
         output = stdout.read()
@@ -79,6 +82,12 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         if error:
             logger.error(f"SSH Error: {error.decode()}")
             return {"response": {}, "status_code": exit_status}
+        decoded = output.decode().strip()
+        try:
+            json.loads(decoded)
+        except json.JSONDecodeError:
+            logger.error(f"SSH Error of decode JSON result: {decoded}")
+            return {"response": decoded, "status_code": exit_status}
         return {"response": json.loads(output.decode()), "status_code": exit_status}
 
 

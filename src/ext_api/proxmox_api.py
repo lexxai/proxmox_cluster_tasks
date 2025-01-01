@@ -65,6 +65,21 @@ class ProxmoxAPI:
                     "entry_point": kwargs.get("entry_point")
                     or configuration.get("CLI.ENTRY_POINT"),
                 }
+            case "ssh":
+                params = {
+                    "entry_point": kwargs.get("entry_point")
+                    or configuration.get("CLI.ENTRY_POINT"),
+                    "hostname": kwargs.get("hostname")
+                    or configuration.get("SSH.HOSTNAME"),
+                    "username": kwargs.get("username")
+                    or configuration.get("SSH.USERNAME"),
+                    "password": kwargs.get("password")
+                    or configuration.get("SSH.PASSWORD"),
+                    "port": kwargs.get("port") or configuration.get("SSH.PORT"),
+                    "key_filename": kwargs.get("key_filename")
+                    or configuration.get("SSH.KEY_FILENAME"),
+                    "agent": kwargs.get("agent", configuration.get("SSH.AGENT")),
+                }
             case _:
                 params = {}
 

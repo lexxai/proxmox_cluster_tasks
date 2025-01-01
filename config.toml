@@ -11,6 +11,14 @@ VERIFY_SSL = true
 [CLI]
 ENTRY_POINT = "pvesh"
 
+[SSH]
+HOSTNAME = ""
+USERNAME = ""
+PASSWORD = ""
+PORT = 22
+AGENT = false
+KEY_FILENAME = ""
+
 #[API_HANDLERS]
 #TICKET = "/api2/json/access/ticket"
 #VERSION = "/api2/json/version"
