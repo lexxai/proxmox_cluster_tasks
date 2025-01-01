@@ -75,8 +75,22 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         data: dict = None,
         **kwargs,
     ):
+        one_time = False
+        if not self._client:
+            self.connect()
+            logger.warning(
+                "SSH client session is not initialized. Use 'with' context to start a session. Creating onetime client instance."
+            )
+            one_time = True
         command = self.format_command(endpoint, params, method, data)
-        stdin, stdout, stderr = self._client.exec_command(command)
+        try:
+            stdin, stdout, stderr = self._client.exec_command(command)
+        except paramiko.ssh_exception.SSHException as e:
+            logger.error(f"SSH Error: {e}")
+            return {"response": {}, "status_code": 1}
+        finally:
+            if one_time:
+                self.close()
         exit_status = stdout.channel.recv_exit_status()
         output = stdout.read()
         error = stderr.read()
@@ -94,8 +108,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
 
 class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
 
-    async def __aenter__(self):
-        # Setup async SSH context
+    async def connect(self):
         params = {
             "host": self.hostname,
             "username": self.username,
@@ -106,13 +119,21 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
             params["client_keys"] = [self.key_filename]
 
         self._client = await asyncssh.connect(**params)
-        return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def close(self):
         if self._client:
             self._client.close()
             await self._client.wait_closed()
             self._client = None
+
+    async def __aenter__(self):
+        # Setup async SSH context
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.close()
+        return True
 
     async def async_request(
         self,
@@ -123,8 +144,13 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         **kwargs,
     ):
         # Implement async SSH command execution here
+        one_time = False
         if not self._client:
-            raise RuntimeError("Async SSH Connection not opened")
+            await self.connect()
+            logger.warning(
+                "Async SSH client session is not initialized. Use 'with' context to start a session. Creating onetime client instance."
+            )
+            one_time = True
 
         command = self.format_command(endpoint, params, method, data)
         try:
@@ -132,6 +158,9 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         except asyncssh.ProcessError as e:
             logger.error(f"Async SSH Error: {e}")
             return {"response": {}, "status_code": e.exit_status}
+        finally:
+            if one_time:
+                await self.close()
         output, error, exit_status = result.stdout, result.stderr, result.exit_status
         if error:
             logger.error(f"SSH Error: {error.decode()}")
