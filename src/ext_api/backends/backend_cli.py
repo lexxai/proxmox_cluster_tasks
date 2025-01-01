@@ -18,13 +18,16 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         self.entry_point = entry_point.strip("/")
 
     def format_command(
-        self, endpoint: str, params: dict = None, method: str = None
+        self, endpoint: str, params: dict = None, method: str = None, data: dict = None
     ) -> str:
         """Format the full URL for a given endpoint."""
-        endpoint = endpoint.strip("/")
+        endpoint = endpoint.rstrip("/")
         if params:
             endpoint = endpoint.format(**params)
-        command = f"{self.entry_point} {method.strip().lower()} {endpoint.lstrip('/')}"
+        command = [self.entry_point, method.strip().lower(), endpoint]
+        if data:
+            command.extend([f"--{k}={v}" for k, v in data.items()])
+        command = " ".join(command)
         logger.debug("Formatted command: %s", command)
         return command
 
@@ -40,8 +43,9 @@ class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
         *args,
         **kwargs,
     ):
-        command = self.format_command(endpoint, params, method)
-
+        command = self.format_command(endpoint, params, method, data)
+        if command is None:
+            return {"response": None, "status_code": -1}
         try:
             process = subprocess.run(
                 command, shell=True, capture_output=True, text=True, check=True
@@ -63,7 +67,7 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
         *args,
         **kwargs,
     ):
-        command = self.format_command(endpoint, params, method)
+        command = self.format_command(endpoint, params, method, data)
 
         if command is None:
             return {"response": None, "status_code": -1}

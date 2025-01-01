@@ -166,14 +166,17 @@ if __name__ == "__main__":
             response = proxmox.request("get", "version")
             logger.info(response)
             response = proxmox.request(
-                "get",
-                "nodes/{node}/status",
+                "create",
+                "/cluster/ha/groups",
                 params={"node": node},
+                data={"name": "test-node"},
             )
             logger.info(response)
 
     except Exception as e:
         logger.error(f"ERROR: {e}")
+
+    logger.info("\n\nTESTING ASYNC --------\n")
 
     async def async_main():
         # Register backend with the registry
@@ -191,9 +194,10 @@ if __name__ == "__main__":
                 response = await proxmox.async_request("get", "version")
                 logger.info(response)
                 response = await proxmox.async_request(
-                    "get",
-                    "nodes/{node}/status",
+                    "create",
+                    "/cluster/ha/groups",
                     params={"node": node},
+                    data={"name": "test-node"},
                 )
                 logger.info(response)
         except Exception as e:
