@@ -2,7 +2,7 @@ import logging
 
 from config.config import configuration
 from ext_api.backends.backend_abstract import ProxmoxBackend
-from ext_api.backends.backend_https import ProxmoxHTTPSBackend
+from ext_api.backends.backend_https import ProxmoxHTTPSBackend, ProxmoxAsyncHTTPSBackend
 from ext_api.backends.registry import register_backends
 from ext_api.backends.backend_registry import (
     BackendRegistry,
@@ -43,20 +43,25 @@ class ProxmoxAPI:
 
     def _create_backend(self, **kwargs) -> ProxmoxBackend:
         """Factory method to create the appropriate backend."""
-        logger.info(
+        logger.debug(
             f"Creating backend: {self.backend_name} of type: {self.backend_type}"
         )
-        base_url = kwargs.get("base_url") or configuration.get("API.BASE_URL")
-        entry_point = kwargs.get("entry_point") or configuration.get("API.ENTRY_POINT")
-        token = kwargs.get("token") or configuration.get("API.TOKEN")
+        if self.backend_name == "https":
+            params = {
+                "base_url": kwargs.get("base_url") or configuration.get("API.BASE_URL"),
+                "entry_point": kwargs.get("entry_point")
+                or configuration.get("API.ENTRY_POINT"),
+                "token": kwargs.get("token") or configuration.get("API.TOKEN"),
+            }
+        else:
+            params = {}
 
         backend_cls: type[ProxmoxBackend] = BackendRegistry.get_backend(
             self.backend_name, self.backend_type
         )
         if backend_cls:
-            return backend_cls(
-                base_url=base_url, entry_point=entry_point, token=token, **kwargs
-            )
+            kwargs.update(params)
+            return backend_cls(**kwargs)
         raise ValueError(
             f"Unsupported backend: {self.backend_name} of this type: {self.backend_type}"
         )
@@ -123,12 +128,8 @@ if __name__ == "__main__":
         # backend = None
         # Now you can use ProxmoxAPI with the backend you registered
         # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
-        backend = ProxmoxHTTPSBackend(
-            base_url=configuration.get("API.BASE_URL"),
-            token=configuration.get("API.TOKEN"),
-            entry_point=configuration.get("API.ENTRY_POINT"),
-        )
-        api = ProxmoxAPI(backend=backend)
+
+        api = ProxmoxAPI(token="ss")
 
         with api as proxmox:
             response = proxmox.request("get", "version")
