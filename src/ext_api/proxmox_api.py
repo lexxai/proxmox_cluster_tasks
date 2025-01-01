@@ -185,7 +185,7 @@ if __name__ == "__main__":
             # Now you can use ProxmoxAPI with the backend you registered
             api = ProxmoxAPI(
                 backend_type="async",
-                backend_name="https",
+                backend_name="cli",
             )
             response = await api.async_request("get", "version")
             logger.info(response)

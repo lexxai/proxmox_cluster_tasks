@@ -8,6 +8,11 @@ logger = logging.getLogger("CT.{__name__}")
 
 
 class ProxmoxCLIBaseBackend(ProxmoxBackend):
+    METHOD_MAP = {
+        "post": "create",
+        "put": "set",
+    }
+
     def __init__(
         self,
         entry_point: str,
@@ -22,9 +27,11 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
     ) -> str:
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.rstrip("/")
+        method = method.strip().lower()
+        method = self.METHOD_MAP.get(method, method)
         if params:
             endpoint = endpoint.format(**params)
-        command = [self.entry_point, method.strip().lower(), endpoint]
+        command = [self.entry_point, method, endpoint]
         if data:
             command.extend([f"--{k}={v}" for k, v in data.items()])
         command = " ".join(command)
