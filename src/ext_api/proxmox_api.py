@@ -185,7 +185,7 @@ if __name__ == "__main__":
             # Now you can use ProxmoxAPI with the backend you registered
             api = ProxmoxAPI(
                 backend_type="async",
-                backend_name="cli",
+                backend_name="https",
             )
             response = await api.async_request("get", "version")
             logger.info(response)
@@ -194,10 +194,16 @@ if __name__ == "__main__":
                 response = await proxmox.async_request("get", "version")
                 logger.info(response)
                 response = await proxmox.async_request(
-                    "create",
+                    "post",
                     "/cluster/ha/groups",
-                    params={"node": node},
-                    data={"name": "test-node"},
+                    params={},
+                    data={"group": "test-group", "nodes": "c01:100,c02,c03"},
+                )
+                logger.info(response)
+                response = await proxmox.async_request(
+                    "get",
+                    "/cluster/ha/groups",
+                    params={},
                 )
                 logger.info(response)
         except Exception as e:

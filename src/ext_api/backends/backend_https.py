@@ -54,7 +54,7 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
     def build_headers(self, token: str | None = None):
         headers = {
             "Authorization": f"PVEAPIToken={token or self.token}",
-            "Content-Type": "application/url-encoded",
+            "Content-Type": "application/x-www-form-urlencoded",
         }
         return headers
 
@@ -118,9 +118,8 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
         try:
             url = self.format_url(endpoint, params)
             response = self._client.request(method, url, data=data)
-            response.raise_for_status()
             result = {
-                "response": response.json(),
+                "response": response.json() if response.status_code < 400 else {},
                 "status_code": response.status_code,
             }
             return result
@@ -171,9 +170,8 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
         try:
             url = self.format_url(endpoint, params)
             response = await self._client.request(method, url, data=data)
-            response.raise_for_status()
             result = {
-                "response": response.json(),
+                "response": response.json() if response.status_code < 400 else {},
                 "status_code": response.status_code,
             }
             return result
