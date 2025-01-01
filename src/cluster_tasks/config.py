@@ -119,6 +119,5 @@ class ConfigLoader:
 configuration = ConfigLoader()
 
 if __name__ == "__main__":
-    print(configuration.settings)
-    print(configuration.get("API_HANDLERS.VERSION"))
-    print(configuration.get("API.TOKEN"))
+    # print(configuration.settings)
+    print(configuration.get("NODES"))
