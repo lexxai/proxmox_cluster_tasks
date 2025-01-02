@@ -51,9 +51,12 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         self.verify_ssl = verify_ssl
         self._client: httpx.Client | httpx.AsyncClient | None = None
 
+    def get_authorization(self, token: str | None = None):
+        return f"PVEAPIToken={token or self.token}"
+
     def build_headers(self, token: str | None = None):
         headers = {
-            "Authorization": f"PVEAPIToken={token or self.token}",
+            "Authorization": self.get_authorization(token),
             "Content-Type": "application/x-www-form-urlencoded",
         }
         return headers
@@ -64,6 +67,14 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         if params:
             endpoint = endpoint.format(**params)
         return f"{self.base_url}/{self.entry_point}/{endpoint.lstrip('/')}"
+
+    @staticmethod
+    def response_analyzer(response: httpx.Response):
+        result = {
+            "response": response.json() if response.status_code < 400 else {},
+            "status_code": response.status_code,
+        }
+        return result
 
 
 class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
@@ -118,11 +129,7 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
         try:
             url = self.format_url(endpoint, params)
             response = self._client.request(method, url, data=data)
-            result = {
-                "response": response.json() if response.status_code < 400 else {},
-                "status_code": response.status_code,
-            }
-            return result
+            return self.response_analyzer(response)
         finally:
             if one_time:
                 self.close()
@@ -170,11 +177,7 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
         try:
             url = self.format_url(endpoint, params)
             response = await self._client.request(method, url, data=data)
-            result = {
-                "response": response.json() if response.status_code < 400 else {},
-                "status_code": response.status_code,
-            }
-            return result
+            return self.response_analyzer(response)
         finally:
             if one_time:
                 await self.close()
