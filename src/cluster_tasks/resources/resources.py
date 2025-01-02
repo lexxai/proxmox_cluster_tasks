@@ -2,6 +2,7 @@ from cluster_tasks.resources.cluster import (
     ClusterResources,
     ClusterAsyncResources,
 )
+from cluster_tasks.resources.config import api_resources
 from cluster_tasks.resources.nodes import NodesResources, NodesAsyncResources
 from ext_api.proxmox_api import ProxmoxAPI
 
@@ -9,11 +10,12 @@ from ext_api.proxmox_api import ProxmoxAPI
 class ResourcesBase:
     def __init__(self, ext_api: ProxmoxAPI):
         self.ext_api = ext_api
+        self.resources = api_resources.get("ROOT", {})
 
     def _get_version_data(self):
         data = {
             "method": "get",
-            "endpoint": "version",
+            "endpoint": self.resources.get("VERSION"),
         }
         return data
 

@@ -10,13 +10,6 @@ class ClusterResourcesBase:
     def __init__(self, ext_api: ProxmoxAPI):
         self.ext_api = ext_api
 
-    def _get_data(self):
-        data = {
-            "method": "get",
-            "endpoint": "",
-        }
-        return data
-
 
 class ClusterResources(ClusterResourcesBase):
     def __init__(self, ext_api):

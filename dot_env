@@ -2,8 +2,11 @@ API_TOKEN_ID=.....
 API_TOKEN_SECRET=....
 API_BASE_URL="https://example.com:8006"
 
-# API_HANDLERS_VERSION=...
-# CLI_COMMANDS_VERSION=...
+SSH_HOSTNAME="example.com"
+SSH_USERNAME=""
+SSH_PASSWORD=""
+SSH_AGENT=false
+SSH_KEY_FILENAME=""
 
 NODES=["c01", "c02", "c03", "c04", "c05"]
 DEBUG=False

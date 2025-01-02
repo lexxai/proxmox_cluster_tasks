@@ -1,0 +1,7 @@
+# https://pve.proxmox.com/pve-docs/api-viewer
+[ROOT]
+VERSION = "/version"
+[NODES]
+STATUS = "/nodes/{node}/status"
+[CLUSTER.HA]
+GROUPS = "/cluster/ha/groups"

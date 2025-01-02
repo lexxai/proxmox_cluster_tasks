@@ -1,3 +1,4 @@
+from cluster_tasks.resources.config import api_resources
 from ext_api.proxmox_api import ProxmoxAPI
 
 
@@ -5,6 +6,7 @@ class NodesResourcesBase:
     def __init__(self, ext_api: ProxmoxAPI):
         self.ext_api = ext_api
         self.node: str | None = None
+        self.resources = api_resources.get("NODES",{})
 
     def __call__(self, node):
         self.node = node
@@ -13,7 +15,7 @@ class NodesResourcesBase:
     def _get_status_data(self, node: str = None):
         data = {
             "method": "get",
-            "endpoint": "/nodes/{node}/status",
+            "endpoint": self.resources.get("STATUS"),
             "params": {"node": node or self.node},
         }
         return data
