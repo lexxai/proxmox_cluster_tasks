@@ -29,7 +29,6 @@ class BackendRegistry:
         key = BackendKey(name, backend_type)
         del cls.registered_backends[key]
 
-
     @classmethod
     def get_backend(
         cls, name: str, backend_type: BackendType = BackendType.SYNC
