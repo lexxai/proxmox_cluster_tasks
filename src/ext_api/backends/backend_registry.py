@@ -24,6 +24,13 @@ class BackendRegistry:
         cls.registered_backends[key] = backend_cls
 
     @classmethod
+    def unregister_backend(cls, name: str, backend_type: BackendType):
+        """Unregister a backend class."""
+        key = BackendKey(name, backend_type)
+        del cls.registered_backends[key]
+
+
+    @classmethod
     def get_backend(
         cls, name: str, backend_type: BackendType = BackendType.SYNC
     ) -> Type[T]:
