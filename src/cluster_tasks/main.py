@@ -3,6 +3,7 @@ import logging
 
 from cluster_tasks.configure_logging import config_logger
 from cluster_tasks.resources.resources import Resources, AsyncResources
+from config.config import configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 
@@ -17,6 +18,8 @@ def main():
         resources = Resources(api)
         logger.info(resources.get_version())
         logger.info(resources.cluster.ha.get_groups())
+        node = configuration.get("NODES")[0]
+        logger.info(resources.nodes.get_status(node))
 
 
 async def async_main():
@@ -26,6 +29,8 @@ async def async_main():
         resources = AsyncResources(api)
         logger.info(await resources.get_version())
         logger.info(await resources.cluster.ha.get_groups())
+        node = configuration.get("NODES")[0]
+        logger.info(await resources.nodes(node).get_status())
 
 
 if __name__ == "__main__":
