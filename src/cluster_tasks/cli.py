@@ -1,7 +1,7 @@
 import logging
 
 from config.config import configuration
-from cluster_tasks.ext_cli.handler import CLIHandler
+from old.ext_cli import CLIHandler
 from cluster_tasks.main import cluster_tasks
 
 logger = logging.getLogger("CT")

@@ -1,6 +1,6 @@
 import logging
 
-from cluster_tasks.ext_abs.base import AbstractHandler
+from old.ext_abs import AbstractHandler
 
 logger = logging.getLogger("CT")
 

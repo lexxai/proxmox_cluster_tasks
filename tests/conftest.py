@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from cluster_tasks._api.handler import APIHandler
+from old._api import APIHandler
 
 
 class CTLoggerFilter(logging.Filter):
