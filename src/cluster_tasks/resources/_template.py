@@ -1,7 +1,7 @@
 from ext_api.proxmox_api import ProxmoxAPI
 
 
-class TemplateTasksBase:
+class TemplateResourcesBase:
     def __init__(self, ext_api: ProxmoxAPI):
         self.ext_api = ext_api
 
@@ -13,7 +13,7 @@ class TemplateTasksBase:
         return data
 
 
-class TemplateTasks(TemplateTasksBase): ...
+class TemplateResources(TemplateResourcesBase): ...
 
 
-class TemplateAsyncTasks(TemplateTasksBase): ...
+class TemplateAsyncResources(TemplateResourcesBase): ...
