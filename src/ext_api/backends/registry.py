@@ -15,8 +15,13 @@ def register_backends(names: list[str] | str = None):
         names = BACKENDS_NAMES
     if isinstance(names, str):
         names = [names]
+
     for name in names:
-        match name.strip().lower():
+        name = name.strip().lower()
+        if name not in BACKENDS_NAMES:
+            logger.error(f"Unsupported backend: {name}")
+            continue
+        match name:
             case "https":
                 try:
                     from ext_api.backends.backend_https import (
