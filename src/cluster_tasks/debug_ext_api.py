@@ -87,7 +87,7 @@ async def debug_get_status(api_handler: ProxmoxAPI):
                 "get", "/nodes/{node}/status", params={"node": node}
             )
         )
-    logger.info("Waiting for results... of tasks: %s", len(tasks))
+    logger.info("Waiting for results... of resources: %s", len(tasks))
     results = await asyncio.gather(*tasks)
     # logger.info(len(results))
     for node, result in zip(nodes, results):

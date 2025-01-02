@@ -1,7 +1,7 @@
 from ext_api.proxmox_api import ProxmoxAPI
 
 
-class ClusterHaTasksBase:
+class ClusterHaResourcesBase:
     def __init__(self, ext_api: ProxmoxAPI):
         self.ext_api = ext_api
 
@@ -13,11 +13,11 @@ class ClusterHaTasksBase:
         return data
 
 
-class ClusterHaTasks(ClusterHaTasksBase):
+class ClusterHaResources(ClusterHaResourcesBase):
     def get_groups(self):
         return self.ext_api.request(**self._get_groups_data())
 
 
-class ClusterHaAsyncTasks(ClusterHaTasksBase):
+class ClusterHaAsyncResources(ClusterHaResourcesBase):
     async def get_groups(self):
         return await self.ext_api.async_request(**self._get_groups_data())

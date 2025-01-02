@@ -58,7 +58,7 @@ async def debug_get_status(api_handler: APIHandler):
     for node in nodes:
         # logger.info(node)
         tasks.append(api_handler.aget_status(node))
-    logger.info("Waiting for results... of tasks: %s", len(tasks))
+    logger.info("Waiting for results... of resources: %s", len(tasks))
     results = await asyncio.gather(*tasks)
     # logger.info(len(results))
     for node, result in zip(nodes, results):

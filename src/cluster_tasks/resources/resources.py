@@ -1,12 +1,12 @@
-from cluster_tasks.tasks.cluster import (
-    ClusterTasks,
-    ClusterAsyncTasks,
+from cluster_tasks.resources.cluster import (
+    ClusterResources,
+    ClusterAsyncResources,
 )
-from cluster_tasks.tasks.nodes import NodesTasks, NodesAsyncTasks
+from cluster_tasks.resources.nodes import NodesTasks, NodesAsyncTasks
 from ext_api.proxmox_api import ProxmoxAPI
 
 
-class ProxmoxTasksBase:
+class ResourcesBase:
     def __init__(self, ext_api: ProxmoxAPI):
         self.ext_api = ext_api
 
@@ -18,16 +18,16 @@ class ProxmoxTasksBase:
         return data
 
 
-class ProxmoxTasks(ProxmoxTasksBase):
+class Resources(ResourcesBase):
     def __init__(self, ext_api: ProxmoxAPI):
         super().__init__(ext_api)
-        self._cluster: ClusterTasks | None = None
+        self._cluster: ClusterResources | None = None
         self._nodes: NodesTasks | None = None
 
     @property
-    def cluster(self) -> ClusterTasks:
+    def cluster(self) -> ClusterResources:
         if self._cluster is None:
-            self._cluster = ClusterTasks(self.ext_api)
+            self._cluster = ClusterResources(self.ext_api)
         return self._cluster
 
     @property
@@ -40,16 +40,16 @@ class ProxmoxTasks(ProxmoxTasksBase):
         return self.ext_api.request(**self._get_version_data())
 
 
-class ProxmoxAsyncTasks(ProxmoxTasksBase):
+class AsyncResources(ResourcesBase):
     def __init__(self, ext_api: ProxmoxAPI):
         super().__init__(ext_api)
-        self._cluster: ClusterAsyncTasks | None = None
+        self._cluster: ClusterAsyncResources | None = None
         self._nodes: NodesAsyncTasks | None = None
 
     @property
-    def cluster(self) -> ClusterAsyncTasks:
+    def cluster(self) -> ClusterAsyncResources:
         if self._cluster is None:
-            self._cluster = ClusterAsyncTasks(self.ext_api)
+            self._cluster = ClusterAsyncResources(self.ext_api)
         return self._cluster
 
     @property

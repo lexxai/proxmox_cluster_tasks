@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from cluster_tasks.configure_logging import config_logger
-from cluster_tasks.tasks.proxmoxtasks import ProxmoxTasks, ProxmoxAsyncTasks
+from cluster_tasks.resources.resources import Resources, AsyncResources
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 
@@ -14,7 +14,7 @@ def main():
     register_backends(["https"])
     ext_api = ProxmoxAPI(backend_name="https", backend_type="sync")
     with ext_api as api:
-        task = ProxmoxTasks(api)
+        task = Resources(api)
         logger.info(task.get_version())
         logger.info(task.cluster.ha.get_groups())
 
@@ -23,11 +23,10 @@ async def async_main():
     register_backends(["https"])
     ext_api = ProxmoxAPI(backend_name="https", backend_type="async")
     async with ext_api as api:
-        task = ProxmoxAsyncTasks(api)
+        task = AsyncResources(api)
         logger.info(await task.get_version())
         logger.info(await task.cluster.ha.get_groups())
-        # response = await api.async_request("get", "version")
-        # logger.info(response)
+
 
 
 if __name__ == "__main__":
