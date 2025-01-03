@@ -52,7 +52,34 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         }
 
     @staticmethod
-    def _response_analyze(response, filter_keys=None) -> str | list | dict | None:
+    def _filter_response(response_data, filter_keys=None):
+        if not filter_keys:
+            return response_data
+        if isinstance(response_data, list):
+            if isinstance(filter_keys, str):
+                response_data = [item.get(filter_keys) for item in response_data]
+            else:
+                response_data = [
+                    {key: item.get(key) for key in filter_keys if key in item}
+                    for item in response_data
+                ]
+        elif isinstance(response_data, dict):
+            if isinstance(filter_keys, str):
+                response_data = (
+                    response_data.get(filter_keys)
+                    if filter_keys in response_data
+                    else None
+                )
+            else:
+                response_data = {
+                    key: response_data.get(key)
+                    for key in filter_keys
+                    if key in response_data
+                }
+        return response_data
+        # logger.debug(f"Filtered data: {response_data=}")
+
+    def _response_analyze(self, response, filter_keys=None) -> str | list | dict | None:
         try:
             if response is None or not response.get("success"):
                 raise Exception(response)
@@ -62,32 +89,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             response_data = response.get("data")
             if response_data is None:
                 raise Exception(response)
-            if filter_keys:
-                if isinstance(response_data, list):
-                    if isinstance(filter_keys, str):
-                        response_data = [
-                            item.get(filter_keys) for item in response_data
-                        ]
-                    else:
-                        response_data = [
-                            {key: item.get(key) for key in filter_keys if key in item}
-                            for item in response_data
-                        ]
-                elif isinstance(response_data, dict):
-                    if isinstance(filter_keys, str):
-                        response_data = (
-                            response_data.get(filter_keys)
-                            if filter_keys in response_data
-                            else None
-                        )
-                    else:
-                        response_data = {
-                            key: response_data.get(key)
-                            for key in filter_keys
-                            if key in response_data
-                        }
-                # logger.debug(f"Filtered data: {response_data=}")
-            return response_data
+            return self._filter_response(response_data, filter_keys)
         except Exception as e:
             logger.error(f"Failed to execute: {e}")
             return None
