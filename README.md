@@ -364,3 +364,8 @@ INFO: Node: c07, Result: {'kversion': 'Linux 6.8.12-5-pve #1 SMP PREEMPT_DYNAMIC
 INFO: Node: c08, Result: {'kversion': 'Linux 6.8.12-5-pve #1 SMP PREEMPT_DYNAMIC PMX 6.8.12-5 (2024-12-03T10:26Z)', 'cpus': 24, 'cpus_model': 'Intel(R) Xeon(R) CPU E5-2643 v2 @ 3.50GHz', 'memory_total': '125.85 GB', 'uptime': '6 days, 11:34:01'}
 ```
 </details>
+
+## Acknowledgments
+
+Special thanks to the [proxmoxer](https://github.com/proxmoxer/proxmoxer) project for providing inspiration and solutions that influenced the development of this library.
+
