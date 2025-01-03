@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import timedelta
+from importlib.metadata import version
 
 from cluster_tasks.configure_logging import config_logger
 from config.config import configuration
@@ -153,19 +154,51 @@ async def debug_create_ha_group(api: ProxmoxAPI):
     logger.info(await api.cluster.ha.groups.get(filter_keys="group"))
 
 
+async def debug_low_level_get_version(api: ProxmoxAPI):
+    logger.info(params := api.version.get(get_request_param=True))
+    logger.info(response := await api.async_request(**params))
+    logger.info(api._response_analyze(response, filter_keys="version"))
+
+    logger.info(
+        params := api.cluster.ha.groups.create(
+            data={"group": "test_group_name", "nodes": "c01,c02"},
+            get_request_param=True,
+        )
+    )
+    logger.info(await api.async_request(**params))
+
+    logger.info(
+        params := api.cluster.ha.groups("test_group_name").get(get_request_param=True)
+    )
+    logger.info(await api.async_request(**params))
+
+    logger.info(
+        params := api.cluster.ha.groups("test_group_name").delete(
+            get_request_param=True
+        )
+    )
+    logger.info(await api.async_request(**params))
+
+
 async def async_main():
     register_backends()
     async with ProxmoxAPI(backend_type="async") as api:
         try:
-            logger.info(await api.version.get(filter_keys="version"))
-            logger.info("\n\nDebug_get_ha_groups\n")
-            await debug_get_ha_groups(api)
-            logger.info("\n\nDebug_create_ha_group\n")
-            await debug_create_ha_group(api)
-            logger.info("\n\nDebug_get_node_status_sequenced\n")
-            await debug_get_node_status_sequenced(api)
-            logger.info("\n\nDebug_get_node_status_parallel\n")
-            await debug_get_node_status_parallel(api)
+            await debug_low_level_get_version(api)
+
+            # params = api.version.create(
+            #     data={"version": "1.1.1"}, get_request_param=True
+            # )
+            # logger.info(params)
+            # logger.info(await api.version.get(filter_keys="version"))
+            # logger.info("\n\nDebug_get_ha_groups\n")
+            # await debug_get_ha_groups(api)
+            # logger.info("\n\nDebug_create_ha_group\n")
+            # await debug_create_ha_group(api)
+            # logger.info("\n\nDebug_get_node_status_sequenced\n")
+            # await debug_get_node_status_sequenced(api)
+            # logger.info("\n\nDebug_get_node_status_parallel\n")
+            # await debug_get_node_status_parallel(api)
         except Exception as e:
             logger.error(f"ERROR async_main: {e}")
 

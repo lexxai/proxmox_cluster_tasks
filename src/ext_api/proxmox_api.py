@@ -30,6 +30,9 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         if args and not kwargs:
             self._context_path.extend(args)
             return self
+        if kwargs.get("get_request_param"):
+            kwargs.pop("get_request_param")
+            return self._request_prepare(*args, **kwargs)
         try:
             if asyncio.get_running_loop().is_running():
                 return self._async_execute(*args, **kwargs)
@@ -38,11 +41,10 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         # Otherwise, execute synchronously
         return self._execute(*args, **kwargs)
 
-    def _request_prepare(self, data=None, filter_keys=None) -> dict:
+    def _request_prepare(self, data=None) -> dict:
         action = self._context_path.pop()
         endpoint = "/".join(self._context_path)
         self._context_path = []  # Clear the path after generating the endpoint
-        # logger.debug(f"Executing {action} on /{endpoint}: {data=}, {filter_keys=}")
         method = self.METHOD_MAP.get(action, action)
         if method not in self.METHODS:
             raise ValueError(f"Unsupported action: {action}")
@@ -129,14 +131,14 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             return None
 
     def _execute(self, data=None, filter_keys=None) -> str | list | dict | None:
-        params = self._request_prepare(data, filter_keys=filter_keys)
+        params = self._request_prepare(data)
         response = self.request(**params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
     async def _async_execute(
         self, data=None, filter_keys=None
     ) -> str | list | dict | None:
-        params = self._request_prepare(data, filter_keys=filter_keys)
+        params = self._request_prepare(data)
         response = await self.async_request(**params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
