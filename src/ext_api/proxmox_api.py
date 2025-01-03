@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Self
 
@@ -25,17 +26,17 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         self._path.append(name)
         return self
 
-    def __call__(self, *args, **kwargs) -> str | list | dict | None | Self:
+    def __call__(self, *args, **kwargs):
         if args and not kwargs:
             self._path.extend(args)
             return self
+        try:
+            if asyncio.get_running_loop().is_running():
+                return self._async_execute(*args, **kwargs)
+        except RuntimeError:
+            ...
+        # Otherwise, execute synchronously
         return self._execute(*args, **kwargs)
-
-    async def __acall__(self, *args, **kwargs) -> str | list | dict | None | Self:
-        if args and not kwargs:
-            self._path.extend(args)
-            return self
-        return await self._aync_execute(*args, **kwargs)
 
     def _request_prepare(self, data=None, filter_keys=None) -> dict:
         action = self._path.pop()
@@ -136,7 +137,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         self, data=None, filter_keys=None
     ) -> str | list | dict | None:
         params = self._request_prepare(data, filter_keys=filter_keys)
-        response = await self.request(**params)
+        response = await self.async_request(**params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
 

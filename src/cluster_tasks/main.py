@@ -17,7 +17,7 @@ def main():
     with ext_api as api:
         # resources = Resources(api)
         logger.info(api.version.get(filter_keys="version"))
-        logger.info(api.cluster.ha.groups.get(filter_keys="group"))
+        logger.info(api.cluster.ha.groups.get(filter_keys=["group", "nodes"]))
         node = configuration.get("NODES")[0]
         # logger.info(api.nodes(node).status.get(filter_keys=["kversion", "uptime"]))
         logger.info(api.nodes(node).status.get(filter_keys="current-kernel.release"))
@@ -27,16 +27,21 @@ async def async_main():
     register_backends(["https"])
     ext_api = ProxmoxAPI(backend_name="https", backend_type="async")
     async with ext_api as api:
-        resources = AsyncResources(api)
-        logger.info(await resources.get_version())
-        logger.info(await resources.cluster.ha.get_groups())
+        # resources = AsyncResources(api)
+        logger.info(await api.version.get(filter_keys="version"))
+        logger.info(await api.cluster.ha.groups.get(filter_keys=["group", "nodes"]))
         node = configuration.get("NODES")[0]
-        logger.info(await resources.nodes(node).get_status())
+        logger.info(
+            await api.nodes(node).status.get(filter_keys=["kversion", "uptime"])
+        )
+        logger.info(
+            await api.nodes(node).status.get(filter_keys="current-kernel.release")
+        )
 
 
 if __name__ == "__main__":
     try:
         main()
-        # asyncio.run(async_main())
-    except Exception as e:
+        asyncio.run(async_main())
+    except ValueError as e:
         logger.error(f"MAIN: {e}")
