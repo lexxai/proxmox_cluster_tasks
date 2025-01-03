@@ -160,7 +160,7 @@ print(api._response_analyze(response, filter_keys="version"))
 print(await api._async_execute(params=params, filter_keys="version"))
 ```
 
-### Example of Low-Level Parallel Requests Using the Same API Instance (Async)
+#### Example of Low-Level Parallel Requests Using the Same API Instance (Async)
 
 Perform parallel requests for multiple nodes while reusing the same API instance:
 
