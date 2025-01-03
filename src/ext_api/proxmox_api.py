@@ -122,7 +122,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
                 raise Exception(response)
             response_data = response.get("data")
             if response_data is None:
-                raise Exception(response)
+                return None
             return self._filter_response(response_data, filter_keys)
         except Exception as e:
             logger.error(f"Failed to execute: {e}")
