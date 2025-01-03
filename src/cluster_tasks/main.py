@@ -15,11 +15,11 @@ def main():
     register_backends(["https"])
     ext_api = ProxmoxAPI(backend_name="https", backend_type="sync")
     with ext_api as api:
-        resources = Resources(api)
-        logger.info(resources.get_version())
-        logger.info(resources.cluster.ha.get_groups())
+        # resources = Resources(api)
+        logger.info(api.version.get(filter_keys="version"))
+        logger.info(api.cluster.ha.groups.get(filter_keys="group"))
         node = configuration.get("NODES")[0]
-        logger.info(resources.nodes.get_status(node))
+        logger.info(api.nodes(node).status.get(filter_keys=["kversion", "uptime"]))
 
 
 async def async_main():
@@ -36,6 +36,6 @@ async def async_main():
 if __name__ == "__main__":
     try:
         main()
-        asyncio.run(async_main())
+        # asyncio.run(async_main())
     except Exception as e:
         logger.error(f"MAIN: {e}")
