@@ -1,45 +1,57 @@
 # proxmox_cluster_tasks
-proxmox cluster automatic tasks helper
+
+Proxmox cluster automatic tasks helper
 
 ## API Reference
-- Usage of Proxmox VE API : https://pve.proxmox.com/wiki/Proxmox_VE_API
-- Proxmox VE API Viewer: https://pve.proxmox.com/pve-docs/api-viewer
+- [Proxmox VE API Documentation](https://pve.proxmox.com/wiki/Proxmox_VE_API)
+- [Proxmox VE API Viewer](https://pve.proxmox.com/pve-docs/api-viewer)
 
+---
 
 ## Setup
+
 ### Backends
-Present some list of allowed backends:
+Supported backends:
 ```python
 BACKENDS_NAMES = ["https", "cli", "ssh"]
 ```
-#### Automatically register backends
-For use backends you can register all backends or selected list only with default settings by use config file by use 
-`register_backends()`:
-```python
-# register_backends()
-# register_backends("https")
-# register_backends(["https", "ssh"])
-```
-Backends registered as for sync code and for async code for use `asyncio` module.
 
-#### Manually create instance of backend
-Or you can create instance of backend class manually with manual import module of backand:
+#### Automatically Register Backends
+To use backends, you can register all available backends or a specific subset using a configuration file with `register_backends()`:
+
 ```python
-from ext_api.backends.backend_https import (
-    ProxmoxHTTPSBackend
-)
+# Register all backends
+register_backends()
+
+# Register a single backend
+register_backends("https")
+
+# Register specific backends
+register_backends(["https", "ssh"])
+```
+
+Backends are available for both synchronous and asynchronous code.
+
+#### Manually Create an Instance of a Backend
+Alternatively, you can manually create a backend instance by importing the corresponding module:
+
+```python
+from ext_api.backends.backend_https import ProxmoxHTTPSBackend
 
 backend = ProxmoxHTTPSBackend(
-    base_url: str,
-    entry_point: str,
-    token: str,
-    verify_ssl: bool = True)
+    base_url="<BASE_URL>",
+    entry_point="<ENTRY_POINT>",
+    token="<TOKEN>",
+    verify_ssl=True
+)
 ```
 
-### class ProxmoxAPI
-Context friendly instance of ProxmoxAPI allow use manually created backed instance, or create instance inside of class automatically
-For automatically create instance can use `backend_name` and `backend_type` by default used: `backend_name="https"`, `backend_type="sync"`
-#### Registered backends "https" in "sync" mode
+---
+
+### ProxmoxAPI Class
+The `ProxmoxAPI` class provides a context-friendly interface to interact with Proxmox. It supports using both manually created backend instances or automatically created instances via `backend_name` and `backend_type` parameters. Defaults: `backend_name="https"`, `backend_type="sync"`.
+
+#### Example: Registered Backends (`https` in `sync` Mode)
 ```python
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
@@ -53,16 +65,12 @@ with ext_api as api:
     print(api.cluster.ha.groups.get())
     print(api.nodes(node).status.get(filter_keys=["kversion", "uptime"]))
     print(api.nodes(node).status.get(filter_keys="current-kernel.release"))
-    api.cluster.ha.groups.create(
-            data={"group": "test_group_name", "nodes": ",".join(nodes[:3])}
-        )
-    print(
-        api.cluster.ha.groups("test_group_name").get(filter_keys=["group", "nodes"])
-    )
+    api.cluster.ha.groups.create(data={"group": "test_group_name", "nodes": ",".join(nodes[:3])})
+    print(api.cluster.ha.groups("test_group_name").get(filter_keys=["group", "nodes"]))
     api.cluster.ha.groups("test_group_name").delete()
 ```
 
-#### Registered backends "https" in "async" mode
+#### Example: Registered Backends (`https` in `async` Mode)
 ```python
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
@@ -77,8 +85,8 @@ async def async_main():
 asyncio.run(async_main())
 ```
 
-#### Registered backends "ssh" in "sync" mode
-```python    
+#### Example: Registered Backends (`ssh` in `sync` Mode)
+```python
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 
@@ -88,24 +96,23 @@ with ext_api as api:
     print(api.version.get(filter_keys="version"))
 ```
 
-#### Manually created backends "https" in "sync"
+#### Example: Manually Created Backend (`https` in `sync` Mode)
 ```python
-from ext_api.backends.backend_https import (
-    ProxmoxHTTPSBackend
-)
+from ext_api.backends.backend_https import ProxmoxHTTPSBackend
 from ext_api.proxmox_api import ProxmoxAPI
 
 backend = ProxmoxHTTPSBackend(
-    base_url = "https://proxmox.local:8006",
-    token: "user@pam!user_api=XXXX-YYYY-.....",
-    verify_ssl= False)
+    base_url="https://proxmox.local:8006",
+    token="user@pam!user_api=XXXX-YYYY-.....",
+    verify_ssl=False
+)
 
 ext_api = ProxmoxAPI(backend=backend, backend_name="https", backend_type="sync")
 with ext_api as api:
     print(api.version.get(filter_keys="version"))
 ```
 
-#### Registered backends "https" in "async" mode multiple parallel instances
+#### Example: Multiple Parallel Instances (`https` in `async` Mode)
 ```python
 async def async_main():
     register_backends("https")
@@ -113,40 +120,26 @@ async def async_main():
     async with ext_api as api:
         print(await api.version.get(filter_keys="version"))
         print(await api.cluster.ha.groups.get())
-        nodes: list[dict] = await api.nodes.get(filter_keys=["node", "status"])
+        nodes = await api.nodes.get(filter_keys=["node", "status"])
         if nodes:
             nodes = sorted([n.get("node") for n in nodes if n.get("status") == "online"])
         tasks = []
-        # reuse previously opened client session by backend
         backend = api.backend
-        print(type(backend))
         for node in nodes:
             new_api = ProxmoxAPI(backend=backend)
-            tasks.append(
-                new_api.nodes(node).status.get(
-                    filter_keys=["kversion", "cpuinfo", "memory.total", "uptime"]
-                )
-            )
-        print("Waiting for results... of resources: %s", len(tasks))
+            tasks.append(new_api.nodes(node).status.get(filter_keys=["kversion", "cpuinfo", "memory.total", "uptime"]))
         results = await asyncio.gather(*tasks)
         for node, data in zip(nodes, results):
-            if data is not None:
-                data = {
-                    "kversion": data.get("kversion", {}),
-                    "cpus": data.get("cpuinfo", {}).get("cpus", {}),
-                    "cpus_model": data.get("cpuinfo", {}).get("model", {}),
-                    "memory_total": data.get("memory.total"),
-                    "uptime":data.get("uptime", 0),
-                }
-            else:
-                data = None
             print(data)
-       
 
 asyncio.run(async_main())
 ```
 
-## Config file `config.toml`
+---
+
+## Configuration
+
+### `config.toml` File
 ```toml
 DEBUG = false
 NODES = []
@@ -170,15 +163,17 @@ AGENT = false
 KEY_FILENAME = ""
 ```
 
-## Redefine config values by .env file:
+### Overriding Configuration with `.env` File
 ```dotenv
 API_TOKEN_ID=user@pam!user_api
 API_TOKEN_SECRET=XXXX-YYYY-.....
-API_BASE_URL="https://proxmox.local:8006"
+API_BASE_URL=https://proxmox.local:8006
 
-SSH_HOSTNAME="proxmox.local"
-SSH_USERNAME="root"
+SSH_HOSTNAME=proxmox.local
+SSH_USERNAME=root
 ```
+
+
 
 
 ## Debug
