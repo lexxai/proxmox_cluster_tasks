@@ -25,6 +25,8 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
     def format_command(
         self, endpoint: str, params: dict = None, method: str = None, data: dict = None
     ) -> str:
+        if endpoint is None:
+            raise ValueError("CLI backend: Endpoint is required")
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.rstrip("/")
         method = method.strip().lower()
