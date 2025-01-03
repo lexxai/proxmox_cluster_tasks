@@ -61,9 +61,14 @@ class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
                 command, shell=True, capture_output=True, text=True, check=True
             )
             result = process.stdout.strip()
-            return {"response": result, "status_code": process.returncode}
+            success = process.returncode == 0
+            return {
+                "response": result,
+                "status_code": process.returncode,
+                "success": success,
+            }
         except subprocess.CalledProcessError as e:
-            return {"response": None, "status_code": e.returncode}
+            return {"response": None, "status_code": e.returncode, "success": False}
 
 
 class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
@@ -91,6 +96,11 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
                     returncode=process.returncode, cmd=command, output=stderr
                 )
             result = stdout.decode("utf-8").strip()
-            return {"response": result, "status_code": process.returncode}
+            success = process.returncode == 0
+            return {
+                "response": result,
+                "status_code": process.returncode,
+                "success": success,
+            }
         except subprocess.CalledProcessError as e:
-            return {"response": None, "status_code": e.returncode}
+            return {"response": None, "status_code": e.returncode, "success": False}

@@ -71,6 +71,16 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
             endpoint = endpoint.format(**params)
         return f"{self.base_url}/{self.entry_point}/{endpoint.lstrip('/')}"
 
+    @staticmethod
+    def response_analyze(response: httpx.Response):
+        success = response.status_code < 400
+        result = {
+            "response": response.json() if success else {},
+            "status_code": response.status_code,
+            "success": success,
+        }
+        return result
+
 
 class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
     """
@@ -124,11 +134,7 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
         try:
             url = self.format_url(endpoint, params)
             response = self._client.request(method, url, data=data)
-            result = {
-                "response": response.json() if response.status_code < 400 else {},
-                "status_code": response.status_code,
-            }
-            return result
+            return self.response_analyze(response)
         finally:
             if one_time:
                 self.close()
@@ -176,11 +182,8 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
         try:
             url = self.format_url(endpoint, params)
             response = await self._client.request(method, url, data=data)
-            result = {
-                "response": response.json() if response.status_code < 400 else {},
-                "status_code": response.status_code,
-            }
-            return result
+            return self.response_analyze(response)
+
         finally:
             if one_time:
                 await self.close()

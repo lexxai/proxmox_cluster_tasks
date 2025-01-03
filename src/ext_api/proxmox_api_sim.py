@@ -50,7 +50,7 @@ class ProxmoxAPISim(ProxmoxAPI):
         if method not in self.METHODS:
             raise ValueError(f"Unsupported action: {action}")
         response = self.request(method=action, endpoint=endpoint, data=data)
-        if response is not None and response.get("error") is None:
+        if response is not None and response.get("success"):
             response = response.get("response", {})
             if response:
                 return response.get("data")
