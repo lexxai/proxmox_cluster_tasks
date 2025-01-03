@@ -69,6 +69,7 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         endpoint = endpoint.strip("/")
         if params:
             endpoint = endpoint.format(**params)
+        logger.debug(f"Formatted endpoint: /{self.entry_point}/{endpoint}")
         return f"{self.base_url}/{self.entry_point}/{endpoint.lstrip('/')}"
 
     @staticmethod
