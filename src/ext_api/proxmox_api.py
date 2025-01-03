@@ -52,32 +52,65 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         }
 
     @staticmethod
-    def _filter_response(response_data, filter_keys=None):
+    def _get_nested_value(data, key_path):
+        """
+        Helper function to fetch values from nested dictionaries or lists using a dotted key path.
+
+        :param data: The dictionary or list to search through.
+        :param key_path: The dotted key path (e.g., "kernel.cpu").
+        :return: The value found at the specified key path, or None if not found.
+        """
+        keys = key_path.split(".")  # Split the dotted path into individual keys
+        for key in keys:
+            if isinstance(data, dict):
+                data = data.get(key, None)
+            elif isinstance(data, list) and key.isdigit():  # If key is an index
+                try:
+                    data = data[int(key)]
+                except (ValueError, IndexError):
+                    return None
+            else:
+                return None
+            if data is None:
+                return None
+        return data
+
+    def _filter_response(self, response_data, filter_keys=None):
+        """
+        Filters the response data based on the specified filter_keys, allowing for nested dotted keys.
+
+        :param response_data: The data to filter (could be a list or dictionary).
+        :param filter_keys: A string or list of strings specifying the keys to filter.
+        :return: The filtered data.
+        """
         if not filter_keys:
             return response_data
+
         if isinstance(response_data, list):
             if isinstance(filter_keys, str):
-                response_data = [item.get(filter_keys) for item in response_data]
+                response_data = [
+                    self._get_nested_value(item, filter_keys) for item in response_data
+                ]
             else:
                 response_data = [
-                    {key: item.get(key) for key in filter_keys if key in item}
+                    {
+                        key: self._get_nested_value(item, key)
+                        for key in filter_keys
+                        if self._get_nested_value(item, key) is not None
+                    }
                     for item in response_data
                 ]
         elif isinstance(response_data, dict):
             if isinstance(filter_keys, str):
-                response_data = (
-                    response_data.get(filter_keys)
-                    if filter_keys in response_data
-                    else None
-                )
+                response_data = self._get_nested_value(response_data, filter_keys)
             else:
                 response_data = {
-                    key: response_data.get(key)
+                    key: self._get_nested_value(response_data, key)
                     for key in filter_keys
-                    if key in response_data
+                    if self._get_nested_value(response_data, key) is not None
                 }
+
         return response_data
-        # logger.debug(f"Filtered data: {response_data=}")
 
     def _response_analyze(self, response, filter_keys=None) -> str | list | dict | None:
         try:

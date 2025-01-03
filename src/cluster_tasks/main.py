@@ -19,7 +19,8 @@ def main():
         logger.info(api.version.get(filter_keys="version"))
         logger.info(api.cluster.ha.groups.get(filter_keys="group"))
         node = configuration.get("NODES")[0]
-        logger.info(api.nodes(node).status.get(filter_keys=["kversion", "uptime"]))
+        # logger.info(api.nodes(node).status.get(filter_keys=["kversion", "uptime"]))
+        logger.info(api.nodes(node).status.get(filter_keys="current-kernel.release"))
 
 
 async def async_main():
