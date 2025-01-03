@@ -48,17 +48,23 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         self.base_url = base_url
         self.entry_point = entry_point.strip("/")
         self.token = token
+        self.token_delimiter = "="
         self.verify_ssl = verify_ssl
         self._client: httpx.Client | httpx.AsyncClient | None = None
 
+    def get_authorization(self, token: str | None = None):
+        return f"PVEAPIToken{self.token_delimiter}{token or self.token}"
+
     def build_headers(self, token: str | None = None):
         headers = {
-            "Authorization": f"PVEAPIToken={token or self.token}",
+            "Authorization": self.get_authorization(token),
             "Content-Type": "application/x-www-form-urlencoded",
         }
         return headers
 
     def format_url(self, endpoint: str, params: dict = None) -> str:
+        if endpoint is None:
+            raise ValueError("HTTPS backend: Endpoint is required")
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.strip("/")
         if params:
