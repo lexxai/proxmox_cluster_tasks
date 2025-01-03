@@ -130,15 +130,17 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             logger.error(f"Failed to execute: {e}")
             return None
 
-    def _execute(self, data=None, filter_keys=None) -> str | list | dict | None:
-        params = self._request_prepare(data)
+    def _execute(
+        self, data=None, filter_keys=None, params=None
+    ) -> str | list | dict | None:
+        params = params or self._request_prepare(data)
         response = self.request(**params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
     async def _async_execute(
-        self, data=None, filter_keys=None
+        self, data=None, filter_keys=None, params=None
     ) -> str | list | dict | None:
-        params = self._request_prepare(data)
+        params = params or self._request_prepare(data)
         response = await self.async_request(**params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
