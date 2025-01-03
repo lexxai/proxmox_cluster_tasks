@@ -129,11 +129,7 @@ async def debug_low_level_get_node_status_parallel(api: ProxmoxAPI):
     if nodes:
         nodes = sorted([n.get("node") for n in nodes if n.get("status") == "online"])
         logger.info(nodes)
-    # nodes = configuration.get("NODES", [])  # Extract nodes to a list
     tasks = []
-    # reuse previously opened client session by backend
-    # backend = api.backend
-    # logger.debug(type(backend))
     for node in nodes:
         logger.info(node)
         params = api.nodes(node).status.get(

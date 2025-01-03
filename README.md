@@ -112,7 +112,8 @@ with ext_api as api:
     print(api.version.get(filter_keys="version"))
 ```
 
-#### Example: Multiple Parallel Instances (`https` in `async` Mode)
+#### Example: Multiple Parallel Instances (https in Async Mode)
+In this example, multiple API instances with reusing the same backend session are created and used in parallel for asynchronous operations:
 ```python
 async def async_main():
     register_backends("https")
@@ -134,8 +135,55 @@ async def async_main():
 
 asyncio.run(async_main())
 ```
+This example demonstrates the ability to handle multiple API instances, enabling efficient parallel operations while reusing the same backend session. This approach is ideal for scenarios where data from multiple nodes needs to be fetched concurrently.
 
----
+#### Example of Low-Level Requests (Async)
+
+For more advanced use cases, you can perform low-level API requests directly:
+
+##### Solution 1: Prepare and Execute the Request Manually
+
+```python
+# Extract the request parameters for the desired endpoint
+params = api.version.get(get_request_param=True)
+
+# Perform the asynchronous request using the extracted parameters
+response = await api.async_request(**params)
+
+# Analyze the response to filter and extract specific data
+print(api._response_analyze(response, filter_keys="version"))
+```
+
+##### Solution 2: Simplified Execution with Built-in API Method
+```python
+# Use the internal execution method directly with request parameters
+print(await api._async_execute(params=params, filter_keys="version"))
+```
+
+### Example of Low-Level Parallel Requests Using the Same API Instance (Async)
+
+Perform parallel requests for multiple nodes while reusing the same API instance:
+
+```python
+# Prepare tasks for parallel execution
+tasks = []
+for node in nodes:
+    print(node)  # Log or display the current node
+    params = api.nodes(node).status.get(get_request_param=True)
+    
+    # Add the task to the list using the internal execution method
+    tasks.append(
+        api._async_execute(
+            params=params,
+            filter_keys=["kversion", "cpuinfo", "memory.total", "uptime"],
+        )
+    )
+
+# Wait for all tasks to complete and collect results
+print("Waiting for results... Number of resources:", len(tasks))
+results = await asyncio.gather(*tasks)    
+```
+These examples provide flexibility for advanced API usage, allowing you to control request preparation and execution explicitly, even in parallel scenarios.
 
 ## Configuration
 
