@@ -17,18 +17,18 @@ class ProxmoxAPI(ProxmoxBaseAPI):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._path = []
+        self._context_path = []
 
     def __getattr__(self, name) -> Self:
         if name.startswith("_") or (name in self._PRIVATE_METHODS):
             # Ignore private methods
             return self
-        self._path.append(name)
+        self._context_path.append(name)
         return self
 
     def __call__(self, *args, **kwargs):
         if args and not kwargs:
-            self._path.extend(args)
+            self._context_path.extend(args)
             return self
         try:
             if asyncio.get_running_loop().is_running():
@@ -39,9 +39,9 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         return self._execute(*args, **kwargs)
 
     def _request_prepare(self, data=None, filter_keys=None) -> dict:
-        action = self._path.pop()
-        endpoint = "/".join(self._path)
-        self._path = []  # Clear the path after generating the endpoint
+        action = self._context_path.pop()
+        endpoint = "/".join(self._context_path)
+        self._context_path = []  # Clear the path after generating the endpoint
         # logger.debug(f"Executing {action} on /{endpoint}: {data=}, {filter_keys=}")
         method = self.METHOD_MAP.get(action, action)
         if method not in self.METHODS:
