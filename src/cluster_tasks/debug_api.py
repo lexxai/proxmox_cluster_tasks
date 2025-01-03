@@ -49,7 +49,7 @@ async def debug_get_ha_groups(api: ProxmoxAPI):
             logger.info(f"{i}: Group: {group_name} Nods: {group_nodes}")
 
 
-async def debug_get_node_status(api: ProxmoxAPI):
+async def debug_get_node_status_sequenced(api: ProxmoxAPI):
     nodes: list[dict] = await api.nodes.get(filter_keys=["node", "status"])
     if nodes:
         nodes = sorted([n.get("node") for n in nodes if n.get("status") == "online"])
@@ -84,6 +84,45 @@ async def debug_get_node_status(api: ProxmoxAPI):
         logger.info(f"Node: {node}, Result: {data}")
 
 
+async def debug_get_node_status_parallel(api: ProxmoxAPI):
+    nodes: list[dict] = await api.nodes.get(filter_keys=["node", "status"])
+    if nodes:
+        nodes = sorted([n.get("node") for n in nodes if n.get("status") == "online"])
+        logger.info(nodes)
+    # nodes = configuration.get("NODES", [])  # Extract nodes to a list
+    tasks = []
+    # reuse previously opened client session by backend
+    backend = api.backend
+    logger.debug(type(backend))
+    for node in nodes:
+        logger.info(node)
+        # Using a lambda or a helper function to ensure deferred evaluation
+        new_api = ProxmoxAPI(backend=backend)
+        tasks.append(
+            new_api.nodes(node).status.get(
+                filter_keys=["kversion", "cpuinfo", "memory.total", "uptime"]
+            )
+        )
+
+    logger.info("Waiting for results... of resources: %s", len(tasks))
+    results = await asyncio.gather(*tasks)
+    # logger.info(len(results))
+    for node, data in zip(nodes, results):
+        # logger.debug(data)
+        if data is not None:
+            data = {
+                "kversion": data.get("kversion", {}),
+                "cpus": data.get("cpuinfo", {}).get("cpus", {}),
+                "cpus_model": data.get("cpuinfo", {}).get("model", {}),
+                "memory_total": human_readable_size(data.get("memory.total")),
+                "uptime": str(timedelta(seconds=data.get("uptime", 0))),
+            }
+            # data = data.get("boot-info", {})
+        else:
+            data = None
+        logger.info(f"Node: {node}, Result: {data}")
+
+
 async def debug_create_ha_group(handler: ProxmoxAPI):
     result = await handler.acreate_ha_group("test-gr-02-03f-04", ["c03", "c02", "c04"])
     logger.info(result)
@@ -98,7 +137,8 @@ async def async_main():
             # await debug_create_ha_group(api)
             # await debug_get_ha_groups(api)
 
-            await debug_get_node_status(api)
+            # await debug_get_node_status_sequenced(api)
+            await debug_get_node_status_parallel(api)
         except Exception as e:
             logger.error(f"ERROR async_main: {e}")
 
