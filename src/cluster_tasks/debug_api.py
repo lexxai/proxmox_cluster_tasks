@@ -124,6 +124,47 @@ async def debug_get_node_status_parallel(api: ProxmoxAPI):
         logger.info(f"Node: {node}, Result: {data}")
 
 
+async def debug_low_level_get_node_status_parallel(api: ProxmoxAPI):
+    nodes: list[dict] = await api.nodes.get(filter_keys=["node", "status"])
+    if nodes:
+        nodes = sorted([n.get("node") for n in nodes if n.get("status") == "online"])
+        logger.info(nodes)
+    # nodes = configuration.get("NODES", [])  # Extract nodes to a list
+    tasks = []
+    # reuse previously opened client session by backend
+    # backend = api.backend
+    # logger.debug(type(backend))
+    for node in nodes:
+        logger.info(node)
+        params = api.nodes(node).status.get(
+            get_request_param=True,
+        )
+        tasks.append(
+            api._async_execute(
+                params=params,
+                filter_keys=["kversion", "cpuinfo", "memory.total", "uptime"],
+            )
+        )
+
+    logger.info("Waiting for results... of resources: %s", len(tasks))
+    results = await asyncio.gather(*tasks)
+    # logger.info(len(results))
+    for node, data in zip(nodes, results):
+        # logger.debug(data)
+        if data is not None:
+            data = {
+                "kversion": data.get("kversion", {}),
+                "cpus": data.get("cpuinfo", {}).get("cpus", {}),
+                "cpus_model": data.get("cpuinfo", {}).get("model", {}),
+                "memory_total": human_readable_size(data.get("memory.total")),
+                "uptime": str(timedelta(seconds=data.get("uptime", 0))),
+            }
+            # data = data.get("boot-info", {})
+        else:
+            data = None
+        logger.info(f"Node: {node}, Result: {data}")
+
+
 async def debug_create_ha_group(api: ProxmoxAPI):
     logger.info("List live nodes:")
     nodes: list[dict] = await api.nodes.get(filter_keys=["node", "status"])
@@ -155,9 +196,12 @@ async def debug_create_ha_group(api: ProxmoxAPI):
 
 
 async def debug_low_level_get_version(api: ProxmoxAPI):
+    # solution 1
     logger.info(params := api.version.get(get_request_param=True))
     logger.info(response := await api.async_request(**params))
     logger.info(api._response_analyze(response, filter_keys="version"))
+    # solution 2
+    logger.info(await api._async_execute(params=params, filter_keys="version"))
 
     logger.info(
         params := api.cluster.ha.groups.create(
@@ -185,6 +229,7 @@ async def async_main():
     async with ProxmoxAPI(backend_type="async") as api:
         try:
             await debug_low_level_get_version(api)
+            # await debug_low_level_get_node_status_parallel(api)
 
             # params = api.version.create(
             #     data={"version": "1.1.1"}, get_request_param=True
