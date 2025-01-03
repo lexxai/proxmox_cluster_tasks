@@ -75,11 +75,10 @@ class ProxmoxAPI(ProxmoxBaseAPI):
                         ]
                 elif isinstance(response_data, dict):
                     if isinstance(filter_keys, str):
-                        response_data = [
-                            v for k, v in response_data.items() if k == filter_keys
-                        ]
                         response_data = (
-                            response_data[0] if len(response_data) > 0 else None
+                            response_data.get(filter_keys)
+                            if filter_keys in response_data
+                            else None
                         )
                     else:
                         response_data = {
