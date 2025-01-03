@@ -93,6 +93,10 @@ class ProxmoxBaseAPI:
             f"Unsupported backend: {self.backend_name} of this type: {self.backend_type}"
         )
 
+    @property
+    def backend(self):
+        return self._backend
+
     def __enter__(self):
         """Enter context for synchronous backends."""
         if self.backend_type != BackendType.SYNC:
