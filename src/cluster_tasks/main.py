@@ -2,7 +2,6 @@ import asyncio
 import logging
 
 from cluster_tasks.configure_logging import config_logger
-from cluster_tasks.resources.resources import Resources, AsyncResources
 from config.config import configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
