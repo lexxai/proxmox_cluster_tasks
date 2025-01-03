@@ -123,9 +123,34 @@ async def debug_get_node_status_parallel(api: ProxmoxAPI):
         logger.info(f"Node: {node}, Result: {data}")
 
 
-async def debug_create_ha_group(handler: ProxmoxAPI):
-    result = await handler.acreate_ha_group("test-gr-02-03f-04", ["c03", "c02", "c04"])
-    logger.info(result)
+async def debug_create_ha_group(api: ProxmoxAPI):
+    logger.info("List live nodes:")
+    nodes: list[dict] = await api.nodes.get(filter_keys=["node", "status"])
+    if nodes:
+        nodes_lst = sorted(
+            [n.get("node") for n in nodes if n.get("status") == "online"]
+        )
+    else:
+        nodes_lst = ["c01", "c02", "c03"]
+    logger.info(nodes_lst)
+    test_group_name = "test-gr-02-03f-04"
+    test_group_nodes = ",".join(nodes_lst[:3])
+    logger.info("List groups:")
+    logger.info(await api.cluster.ha.groups.get(filter_keys="group"))
+    logger.info(f"Create group: {test_group_name}, for nodes: {test_group_nodes}")
+    logger.info(
+        await api.cluster.ha.groups.create(
+            data={"group": test_group_name, "nodes": test_group_nodes}
+        )
+    )
+    logger.info(f"Get created group: {test_group_name}")
+    logger.info(
+        await api.cluster.ha.groups(test_group_name).get(filter_keys=["group", "nodes"])
+    )
+    logger.info(f"Delete group: {test_group_name}")
+    logger.info(await api.cluster.ha.groups(test_group_name).delete())
+    logger.info("List groups:")
+    logger.info(await api.cluster.ha.groups.get(filter_keys="group"))
 
 
 async def async_main():
@@ -133,11 +158,13 @@ async def async_main():
     async with ProxmoxAPI(backend_type="async") as api:
         try:
             logger.info(await api.version.get(filter_keys="version"))
-            # await debug_get_ha_groups(api)
-            # await debug_create_ha_group(api)
-            # await debug_get_ha_groups(api)
-
-            # await debug_get_node_status_sequenced(api)
+            logger.info("\n\nDebug_get_ha_groups\n")
+            await debug_get_ha_groups(api)
+            logger.info("\n\nDebug_create_ha_group\n")
+            await debug_create_ha_group(api)
+            logger.info("\n\nDebug_get_node_status_sequenced\n")
+            await debug_get_node_status_sequenced(api)
+            logger.info("\n\nDebug_get_node_status_parallel\n")
             await debug_get_node_status_parallel(api)
         except Exception as e:
             logger.error(f"ERROR async_main: {e}")
