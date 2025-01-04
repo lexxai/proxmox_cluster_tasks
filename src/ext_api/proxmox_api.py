@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import threading
 from typing import Self
 
 from cluster_tasks.configure_logging import config_logger
@@ -18,29 +19,35 @@ class ProxmoxAPI(ProxmoxBaseAPI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._context_path = {}
+        self._lock = threading.Lock()
 
-    def _get_task_id(self):
+    @staticmethod
+    def _get_task_id() -> tuple[int, bool]:
         try:
             task = asyncio.current_task()
-            logger.debug(f"ASYNC task_id: {id(task)}")
-            return id(task)
+            task_id = id(task)
+            logger.debug(f"ASYNC task_id: {task_id}")
+            return task_id, True
         except RuntimeError:
-            logger.debug("SYNC task")
-            return "sync"
+            task_id = threading.get_ident()
+            logger.debug(f"SYNC task_id: {task_id}")
+            return task_id, False
 
-    def _cleanup(self, task_id):
+    def _cleanup(self, task_id: int, is_async: bool = None):
         """Callback to clean up context when a task finishes."""
         # task_id = id(task)
-        self._context_path.pop(task_id, None)
+        with self._lock:
+            self._context_path.pop(task_id, None)
 
     def __getattr__(self, name) -> Self:
         if name.startswith("_") or (name in self._PRIVATE_METHODS):
             # Ignore private methods
             return self
-        task_id = self._get_task_id()
-        if task_id not in self._context_path:
-            self._context_path[task_id] = []
-        self._context_path[task_id].append(name)
+        task_id, is_async = self._get_task_id()
+        with self._lock:
+            if task_id not in self._context_path:
+                self._context_path[task_id] = []
+            self._context_path[task_id].append(name)
         return self
 
     def __call__(self, *args, **kwargs):
@@ -49,33 +56,37 @@ class ProxmoxAPI(ProxmoxBaseAPI):
                 return self.__acall__(*args, **kwargs)
         except RuntimeError:
             ...
-        task_id = self._get_task_id()
+        task_id, is_async = self._get_task_id()
         if args and not kwargs:
-            self._context_path[task_id].extend(args)
+            with self._lock:
+                self._context_path[task_id].extend(args)
             return self
         if kwargs.get("get_request_param"):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
         result = self._execute(*args, **kwargs)
-        self._cleanup(task_id)
+        self._cleanup(task_id, is_async)
         return result
 
     def __acall__(self, *args, **kwargs):
-        task_id = self._get_task_id()
+        task_id, is_async = self._get_task_id()
         if args and not kwargs:
             self._context_path[task_id].extend(args)
         if kwargs.get("get_request_param"):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
         result = self._async_execute(*args, **kwargs)
-        self._cleanup(task_id)
+        self._cleanup(task_id, is_async)
         return result
 
     def _request_prepare(self, data=None) -> dict:
-        task_id = self._get_task_id()
-        action = self._context_path[task_id].pop()
-        endpoint = "/".join(self._context_path[task_id])
-        self._context_path[task_id] = []  # Clear the path after generating the endpoint
+        task_id, is_async = self._get_task_id()
+        with self._lock:
+            action = self._context_path[task_id].pop()
+            endpoint = "/".join(self._context_path[task_id])
+            self._context_path[task_id] = (
+                []
+            )  # Clear the path after generating the endpoint
         method = self.METHOD_MAP.get(action, action)
         if method not in self.METHODS:
             raise ValueError(f"Unsupported action: {action}")
