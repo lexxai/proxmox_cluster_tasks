@@ -1,0 +1,9 @@
+Scenarios:
+  CloneTemplateVM:
+    file: "clone_template_vm"
+    config:
+      node: "c01"
+      vmid: "1004"
+      newid: "201"
+      name: "Cloned01"
+      full: True

@@ -13,6 +13,7 @@ python-dotenv = "==1.0.1"
 httpx = {extras = ["http2"], version = "^0.28.1"}
 paramiko = "^3.5.0"
 asyncssh = "^2.19.0"
+pyyaml = "^6.0.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"

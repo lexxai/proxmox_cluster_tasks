@@ -1,6 +1,7 @@
 import os
 import logging
 import tomllib as toml
+import yaml
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -32,13 +33,21 @@ class ConfigLoader:
         if self.file_path.exists() is False:
             logger.error(f"Config file not found {self.file_path}")
             return config
-        try:
-            with self.file_path.open("rb") as f:
-                config = toml.load(f)
-            config = self.override_with_env_vars(config)
-        except toml.TOMLDecodeError:
-            logger.error("Error of parsing config file")
-        return config
+        if self.file_path.suffix == ".yaml":
+            try:
+                with self.file_path.open("rb") as f:
+                    config = yaml.safe_load(f)
+                return config
+            except yaml.YAMLError as e:
+                logger.error(f"Error of parsing config file {e}")
+        elif self.file_path.suffix == ".toml":
+            try:
+                with self.file_path.open("rb") as f:
+                    config = toml.load(f)
+                config = self.override_with_env_vars(config)
+            except toml.TOMLDecodeError:
+                logger.error("Error of parsing config file")
+            return config
 
     @staticmethod
     def convert_to_bool(value: str) -> bool | str:
