@@ -1,8 +1,6 @@
 import asyncio
-import concurrent
 import logging
 import threading
-import time
 import uuid
 from typing import Self
 
@@ -244,34 +242,15 @@ class ProxmoxAPI(ProxmoxBaseAPI):
 
 
 if __name__ == "__main__":
-    from concurrent.futures import ThreadPoolExecutor
-
     # Example usage
     logger = logging.getLogger("CT")
     logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
     config_logger(logger)
     register_backends()
-    API = ProxmoxAPI(backend_name="https")
+    API = ProxmoxAPI(backend_name="ssh")
     with API as api:
         # Simulate API calls
-        # logger.info(api.version.get())
-        tasks = []
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            logger.debug(f"Task submit: {len(tasks)}")
-            task_id = api._new_task()
-            tasks.append(executor.submit(api.version.get, _task_id=task_id))
-            logger.debug(f"Task submit: {len(tasks)}")
-            task_id = api._new_task()
-            tasks.append(executor.submit(api.version.get, _task_id=task_id))
-            logger.debug(f"Task submit: {len(tasks)}")
-            task_id = api._new_task()
-            tasks.append(executor.submit(api.version.get, _task_id=task_id))
-
-        logger.debug("futures created")
-        # time.sleep(2)
-        for task in tasks:
-            # for task in concurrent.futures.as_completed(tasks):
-            logger.info(task.result())
+        logger.info(api.version.get())
 
         # logger.info(sorted([n.get("id") for n in api.nodes.get()]))
         # logger.info(api.nodes.get(filter_keys=["node", "status"]))
