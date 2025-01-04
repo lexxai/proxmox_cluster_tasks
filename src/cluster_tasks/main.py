@@ -28,19 +28,19 @@ async def async_main():
     async with ext_api as api:
         # resources = AsyncResources(api)
         logger.info(await api.version.get(filter_keys="version"))
-        logger.info(await api.cluster.ha.groups.get(filter_keys=["group", "nodes"]))
-        node = configuration.get("NODES")[0]
-        logger.info(
-            await api.nodes(node).status.get(filter_keys=["kversion", "uptime"])
-        )
-        logger.info(
-            await api.nodes(node).status.get(filter_keys="current-kernel.release")
-        )
+        # logger.info(await api.cluster.ha.groups.get(filter_keys=["group", "nodes"]))
+        # node = configuration.get("NODES")[0]
+        # logger.info(
+        #     await api.nodes(node).status.get(filter_keys=["kversion", "uptime"])
+        # )
+        # logger.info(
+        #     await api.nodes(node).status.get(filter_keys="current-kernel.release")
+        # )
 
 
 if __name__ == "__main__":
     try:
-        main()
+        # main()
         asyncio.run(async_main())
     except ValueError as e:
         logger.error(f"MAIN: {e}")

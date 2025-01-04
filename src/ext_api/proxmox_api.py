@@ -36,18 +36,26 @@ class ProxmoxAPI(ProxmoxBaseAPI):
     def _cleanup(self, task_id: int, is_async: bool = None):
         """Callback to clean up context when a task finishes."""
         # task_id = id(task)
-        with self._lock:
+        if is_async:
             self._context_path.pop(task_id, None)
+        else:
+            with self._lock:
+                self._context_path.pop(task_id, None)
 
     def __getattr__(self, name) -> Self:
         if name.startswith("_") or (name in self._PRIVATE_METHODS):
             # Ignore private methods
             return self
         task_id, is_async = self._get_task_id()
-        with self._lock:
+        if is_async:
             if task_id not in self._context_path:
                 self._context_path[task_id] = []
             self._context_path[task_id].append(name)
+        else:
+            with self._lock:
+                if task_id not in self._context_path:
+                    self._context_path[task_id] = []
+                self._context_path[task_id].append(name)
         return self
 
     def __call__(self, *args, **kwargs):
@@ -65,7 +73,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
         result = self._execute(*args, **kwargs)
-        self._cleanup(task_id, is_async)
+        # self._cleanup(task_id, is_async)
         return result
 
     def __acall__(self, *args, **kwargs):
@@ -76,17 +84,26 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
         result = self._async_execute(*args, **kwargs)
-        self._cleanup(task_id, is_async)
+        # self._cleanup(task_id, is_async)
         return result
 
     def _request_prepare(self, data=None) -> dict:
         task_id, is_async = self._get_task_id()
-        with self._lock:
+        if is_async:
             action = self._context_path[task_id].pop()
             endpoint = "/".join(self._context_path[task_id])
             self._context_path[task_id] = (
                 []
             )  # Clear the path after generating the endpoint
+            self._cleanup(task_id, is_async)
+        else:
+            with self._lock:
+                action = self._context_path[task_id].pop()
+                endpoint = "/".join(self._context_path[task_id])
+                self._context_path[task_id] = (
+                    []
+                )  # Clear the path after generating the endpoint
+            self._cleanup(task_id, is_async)
         method = self.METHOD_MAP.get(action, action)
         if method not in self.METHODS:
             raise ValueError(f"Unsupported action: {action}")
