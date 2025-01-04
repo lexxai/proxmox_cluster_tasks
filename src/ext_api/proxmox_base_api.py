@@ -1,7 +1,5 @@
 import logging
 
-from nacl.pwhash.argon2i import verify
-
 from config.config import configuration
 from ext_api.backends.backend_abstract import ProxmoxBackend
 from ext_api.backends.registry import register_backends
@@ -136,10 +134,6 @@ class ProxmoxBaseAPI:
         if self.backend_type != "async":
             raise RuntimeError("This instance is configured for synchronous requests.")
         return await self._backend.async_request(*args, **kwargs)
-
-
-class ProxmoxSSHBackend:
-    pass
 
 
 # TEST JUST
