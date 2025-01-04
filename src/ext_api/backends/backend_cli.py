@@ -55,7 +55,7 @@ class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
     ):
         command = self.format_command(endpoint, params, method, data)
         if command is None:
-            return {"response": None, "status_code": -1}
+            return {"response": None, "status_code": -1, "success": False}
         try:
             process = subprocess.run(
                 command, shell=True, capture_output=True, text=True, check=True
@@ -63,7 +63,7 @@ class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
             result = process.stdout.strip()
             success = process.returncode == 0
             return {
-                "response": result,
+                "response": {"data": result},
                 "status_code": process.returncode,
                 "success": success,
             }
@@ -85,7 +85,7 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
         command = self.format_command(endpoint, params, method, data)
 
         if command is None:
-            return {"response": None, "status_code": -1}
+            return {"response": None, "status_code": -1, "success": False}
         try:
             process = await asyncio.create_subprocess_shell(
                 command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
@@ -98,7 +98,7 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
             result = stdout.decode("utf-8").strip()
             success = process.returncode == 0
             return {
-                "response": result,
+                "response": {"data": result},
                 "status_code": process.returncode,
                 "success": success,
             }

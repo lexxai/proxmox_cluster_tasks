@@ -94,16 +94,25 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         exit_status = stdout.channel.recv_exit_status()
         output = stdout.read()
         error = stderr.read()
+        success = exit_status == 0
         if error:
             logger.error(f"SSH Error: {error.decode()}")
-            return {"response": {}, "status_code": exit_status}
+            return {"response": {}, "status_code": exit_status, "success": success}
         decoded = output.decode().strip()
         try:
             json.loads(decoded)
         except json.JSONDecodeError:
             logger.error(f"SSH Error of decode JSON result: {decoded}")
-            return {"response": decoded, "status_code": exit_status}
-        return {"response": json.loads(output.decode()), "status_code": exit_status}
+            return {
+                "response": {"data": decoded},
+                "status_code": exit_status,
+                "success": success,
+            }
+        return {
+            "response": {"data": json.loads(output.decode())},
+            "status_code": exit_status,
+            "success": success,
+        }
 
 
 class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
@@ -162,13 +171,22 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
             if one_time:
                 await self.close()
         output, error, exit_status = result.stdout, result.stderr, result.exit_status
+        success = exit_status == 0
         if error:
             logger.error(f"SSH Error: {error.decode()}")
-            return {"response": {}, "status_code": exit_status}
+            return {"response": {}, "status_code": exit_status, "success": success}
         decoded = output.strip()
         try:
             json.loads(decoded)
         except json.JSONDecodeError:
             logger.error(f"SSH Error of decode JSON result: {decoded}")
-            return {"response": decoded, "status_code": exit_status}
-        return {"response": json.loads(decoded), "status_code": exit_status}
+            return {
+                "response": {"data": decoded},
+                "status_code": exit_status,
+                "success": success,
+            }
+        return {
+            "response": {"data": json.loads(decoded)},
+            "status_code": exit_status,
+            "success": success,
+        }

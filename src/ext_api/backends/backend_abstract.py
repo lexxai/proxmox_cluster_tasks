@@ -7,7 +7,9 @@ class ProxmoxBackend(ABC):
     def request(self, *args, **kwargs) -> dict:
         """Perform a synchronous API request."""
         raise NotImplementedError("Sync request not implemented for this backend")
+        # return {"response": {"data": {}}, "status_code": 0, "success": True}
 
     async def async_request(self, *args, **kwargs) -> dict:
         """Perform an asynchronous API request."""
         raise NotImplementedError("Async request not implemented for this backend")
+        # return {"response": {"data": {}}, "status_code": 0, "success": True}
