@@ -151,7 +151,7 @@ async def async_main():
         tasks = []
         for _ in range(8):
             logger.info(len(tasks))
-            tasks.append(api.api.version.get(filter_keys="version"))
+            tasks.append(api.version.get(filter_keys="version"))
         logger.info("Waiting for results... of resources: %s", len(tasks))
         results = await asyncio.gather(*tasks)
         logger.info(results)
