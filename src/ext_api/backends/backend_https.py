@@ -1,11 +1,14 @@
 import logging
 
-import httpx
+logger = logging.getLogger("CT.{__name__}")
+
+try:
+    import httpx
+except ImportError as e:
+    logger.error(f"HTTPS Backend require load module: {e}")
+    exit(1)
 
 from ext_api.backends.backend_abstract import ProxmoxBackend
-
-
-logger = logging.getLogger("CT.{__name__}")
 
 
 """
