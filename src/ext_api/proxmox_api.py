@@ -1,6 +1,8 @@
 import asyncio
 import logging
 import threading
+import uuid
+from concurrent.futures import ThreadPoolExecutor
 from typing import Self
 
 from cluster_tasks.configure_logging import config_logger
@@ -14,24 +16,26 @@ logger = logging.getLogger(f"CT.{__name__}")
 class ProxmoxAPI(ProxmoxBaseAPI):
     METHODS = ["get", "post", "put", "delete"]
     METHOD_MAP = {"create": "post", "set": "put"}
-    _PRIVATE_METHODS = ["shape", "request", "async_request"]
+    _PRIVATE_METHODS = ["api", "shape", "request", "async_request"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._context_path = {}
         self._lock = threading.Lock()
+        self._task_id = None
 
-    @staticmethod
-    def _get_task_id() -> tuple[int, bool]:
+    def _get_task_id(self) -> tuple[int, bool]:
+        if self._task_id is None:
+            self._task_id = str(uuid.uuid4())
         try:
             task = asyncio.current_task()
-            task_id = id(task)
-            logger.debug(f"ASYNC task_id: {task_id}")
-            return task_id, True
+            # task_id = id(task)
+            logger.debug(f"ASYNC task_id: {self._task_id}")
+            return self._task_id, True
         except RuntimeError:
-            task_id = threading.get_ident()
-            logger.debug(f"SYNC task_id: {task_id}")
-            return task_id, False
+            # task_id = threading.get_ident()
+            logger.debug(f"SYNC task_id: {self._task_id}")
+            return self._task_id, False
 
     def _cleanup(self, task_id: int, is_async: bool = None):
         """Callback to clean up context when a task finishes."""
@@ -41,6 +45,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         else:
             with self._lock:
                 self._context_path.pop(task_id, None)
+        self._task_id = None
 
     def __getattr__(self, name) -> Self:
         if name.startswith("_") or (name in self._PRIVATE_METHODS):
@@ -58,12 +63,16 @@ class ProxmoxAPI(ProxmoxBaseAPI):
                 self._context_path[task_id].append(name)
         return self
 
-    def __call__(self, *args, **kwargs):
+    @staticmethod
+    def _is_async():
         try:
-            if asyncio.get_running_loop().is_running():
-                return self.__acall__(*args, **kwargs)
+            return asyncio.get_running_loop().is_running()
         except RuntimeError:
-            ...
+            return False
+
+    def __call__(self, *args, **kwargs):
+        if self._is_async():
+            return self.__acall__(*args, **kwargs)
         task_id, is_async = self._get_task_id()
         if args and not kwargs:
             with self._lock:
@@ -72,6 +81,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         if kwargs.get("get_request_param"):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
+        kwargs["task_id"] = task_id
         result = self._execute(*args, **kwargs)
         # self._cleanup(task_id, is_async)
         return result
@@ -80,15 +90,21 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         task_id, is_async = self._get_task_id()
         if args and not kwargs:
             self._context_path[task_id].extend(args)
+            return self
         if kwargs.get("get_request_param"):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
+        logger.debug("ACALL before execute")
+        kwargs["task_id"] = task_id
+        self._task_id = None
         result = self._async_execute(*args, **kwargs)
         # self._cleanup(task_id, is_async)
         return result
 
-    def _request_prepare(self, data=None) -> dict:
-        task_id, is_async = self._get_task_id()
+    def _request_prepare(self, data=None, task_id: int = None) -> dict:
+        is_async = self._is_async()
+        if task_id is None:
+            raise ValueError("_request_prepare: Task ID must be defied")
         if is_async:
             action = self._context_path[task_id].pop()
             endpoint = "/".join(self._context_path[task_id])
@@ -190,16 +206,18 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             return None
 
     def _execute(
-        self, data=None, filter_keys=None, params: dict = None
+        self, data=None, filter_keys=None, params: dict = None, task_id: int = None
     ) -> str | list | dict | None:
-        params = params or self._request_prepare(data)
+        logger.debug("_execute")
+        params = params or self._request_prepare(data, task_id=task_id)
         response = self.request(**params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
     async def _async_execute(
-        self, data=None, filter_keys=None, params: dict = None
+        self, data=None, filter_keys=None, params: dict = None, task_id: int = None
     ) -> str | list | dict | None:
-        params = params or self._request_prepare(data)
+        logger.debug("_async_execute")
+        params = params or self._request_prepare(data, task_id=task_id)
         response = await self.async_request(**params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
@@ -214,6 +232,9 @@ if __name__ == "__main__":
     with API as api:
         # Simulate API calls
         logger.info(api.version.get())
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            future = executor.submit(api.version.get)
+            logger.info(future.result())
         # logger.info(sorted([n.get("id") for n in api.nodes.get()]))
         # logger.info(api.nodes.get(filter_keys=["node", "status"]))
         # logger.info(api.nodes.get())
