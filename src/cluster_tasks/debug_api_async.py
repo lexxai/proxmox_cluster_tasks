@@ -256,12 +256,23 @@ async def debug_low_level_get_version(api: ProxmoxAPI):
     logger.info(await api.async_request(**params))
 
 
+async def debug_get_version_parallel_safe(api: ProxmoxAPI):
+    tasks = []
+    for _ in range(8):
+        logger.info(len(tasks))
+        tasks.append(api.api.version.get(filter_keys="version"))
+    logger.info("Waiting for results... of resources: %s", len(tasks))
+    results = await asyncio.gather(*tasks)
+    logger.info(results)
+
+
 async def async_main():
     register_backends()
     async with ProxmoxAPI(backend_type="async") as api:
         try:
             # await debug_low_level_get_version(api)
-            await debug_get_node_status_parallel_safe(api)
+            # await debug_get_node_status_parallel_safe(api)
+            await debug_get_version_parallel_safe(api)
             # await debug_low_level_get_node_status_parallel(api)
 
             # params = api.version.create(

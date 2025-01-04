@@ -112,7 +112,53 @@ with ext_api as api:
     print(api.version.get(filter_keys="version"))
 ```
 
-#### Example: Multiple Parallel Instances (https in Async Mode)
+#### Example: Multiple Parallel requests with same API Instance (https in Async Mode)
+In this example, one API instances with reusing the same backend session are created and used in parallel for asynchronous operations:
+```python
+async def async_main():
+    register_backends("https")
+    ext_api = ProxmoxAPI(backend_name="https", backend_type="async")
+    async with ext_api as api:
+        tasks = []
+        for _ in range(8):
+            logger.info(len(tasks))
+            tasks.append(api.api.version.get(filter_keys="version"))
+        logger.info("Waiting for results... of resources: %s", len(tasks))
+        results = await asyncio.gather(*tasks)
+        logger.info(results)
+```
+Results:
+```log
+DEBUG: Creating backend: https of type: async
+INFO: 0
+DEBUG: NEW task_id: 4be8ee71-218d-43ff-b62a-6fb15827bfe0
+INFO: 1
+DEBUG: NEW task_id: a55c5863-5634-4a2f-a379-9eb73046caa0
+INFO: 2
+DEBUG: NEW task_id: 8399e980-a6d6-4225-902f-3bcd7a504b7c
+INFO: 3
+DEBUG: NEW task_id: eea05041-1415-43ab-8c79-c1f48daed260
+INFO: 4
+DEBUG: NEW task_id: 42add8a3-e2c4-4206-ac83-ba694c3b9ed2
+INFO: 5
+DEBUG: NEW task_id: 4fd30c33-67c2-42f0-8150-67e27ca5ac45
+INFO: 6
+DEBUG: NEW task_id: 58e011e8-9eec-412b-b483-298487a002d8
+INFO: 7
+DEBUG: NEW task_id: 6957e51c-d8e4-4787-9adf-d5960a46f2b0
+INFO: Waiting for results... of resources: 8
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+INFO: ['8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2']
+```
+
+#### Example: Multiple Parallel with  many API Instances (https in Async Mode)
 In this example, multiple API instances with reusing the same backend session are created and used in parallel for asynchronous operations:
 ```python
 async def async_main():
