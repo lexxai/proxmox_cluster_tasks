@@ -17,34 +17,65 @@ class ProxmoxAPI(ProxmoxBaseAPI):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._context_path = []
+        self._context_path = {}
+
+    def _get_task_id(self):
+        try:
+            task = asyncio.current_task()
+            logger.debug(f"ASYNC task_id: {id(task)}")
+            return id(task)
+        except RuntimeError:
+            logger.debug("SYNC task")
+            return "sync"
+
+    def _cleanup(self, task_id):
+        """Callback to clean up context when a task finishes."""
+        # task_id = id(task)
+        self._context_path.pop(task_id, None)
 
     def __getattr__(self, name) -> Self:
         if name.startswith("_") or (name in self._PRIVATE_METHODS):
             # Ignore private methods
             return self
-        self._context_path.append(name)
+        task_id = self._get_task_id()
+        if task_id not in self._context_path:
+            self._context_path[task_id] = []
+        self._context_path[task_id].append(name)
         return self
 
     def __call__(self, *args, **kwargs):
+        try:
+            if asyncio.get_running_loop().is_running():
+                return self.__acall__(*args, **kwargs)
+        except RuntimeError:
+            ...
+        task_id = self._get_task_id()
         if args and not kwargs:
-            self._context_path.extend(args)
+            self._context_path[task_id].extend(args)
             return self
         if kwargs.get("get_request_param"):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
-        try:
-            if asyncio.get_running_loop().is_running():
-                return self._async_execute(*args, **kwargs)
-        except RuntimeError:
-            ...
-        # Otherwise, execute synchronously
-        return self._execute(*args, **kwargs)
+        result = self._execute(*args, **kwargs)
+        self._cleanup(task_id)
+        return result
+
+    def __acall__(self, *args, **kwargs):
+        task_id = self._get_task_id()
+        if args and not kwargs:
+            self._context_path[task_id].extend(args)
+        if kwargs.get("get_request_param"):
+            kwargs.pop("get_request_param")
+            return self._request_prepare(*args, **kwargs)
+        result = self._async_execute(*args, **kwargs)
+        self._cleanup(task_id)
+        return result
 
     def _request_prepare(self, data=None) -> dict:
-        action = self._context_path.pop()
-        endpoint = "/".join(self._context_path)
-        self._context_path = []  # Clear the path after generating the endpoint
+        task_id = self._get_task_id()
+        action = self._context_path[task_id].pop()
+        endpoint = "/".join(self._context_path[task_id])
+        self._context_path[task_id] = []  # Clear the path after generating the endpoint
         method = self.METHOD_MAP.get(action, action)
         if method not in self.METHODS:
             raise ValueError(f"Unsupported action: {action}")
@@ -154,10 +185,11 @@ if __name__ == "__main__":
     API = ProxmoxAPI(backend_name="https")
     with API as api:
         # Simulate API calls
-        logger.info(sorted([n.get("id") for n in api.nodes.get()]))
-        logger.info(api.nodes.get(filter_keys=["node", "status"]))
-        logger.info(api.nodes.get())
-        logger.info(api.nodes("c01").status.get())
+        logger.info(api.version.get())
+        # logger.info(sorted([n.get("id") for n in api.nodes.get()]))
+        # logger.info(api.nodes.get(filter_keys=["node", "status"]))
+        # logger.info(api.nodes.get())
+        # logger.info(api.nodes("c01").status.get())
         # logger.info(api.cluster.ha.groups.create(name="test-gr02", nodes="c01,c02:100"))
 
         # print(response2)
