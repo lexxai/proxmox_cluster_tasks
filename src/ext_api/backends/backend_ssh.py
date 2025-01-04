@@ -1,15 +1,23 @@
 import json
 import logging
 
-import paramiko  # for Sync SSH
-import asyncssh  # for Async SSH
+logger = logging.getLogger(f"CT.{__name__}")
+
+try:
+    import paramiko  # for Sync SSH
+except ImportError as e:
+    logger.error(f"SSH Backend require load module: {e}")
+    exit(1)
+try:
+    import asyncssh  # for Async SSH
+except ImportError as e:
+    logger.error(f"Async SSH Backend require load module: {e}")
+    exit(1)
 
 
 from ext_api.backends.backend_cli import (
     ProxmoxCLIBaseBackend,
 )
-
-logger = logging.getLogger(f"CT.{__name__}")
 
 
 class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
