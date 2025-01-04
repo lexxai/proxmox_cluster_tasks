@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import threading
+import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 from typing import Self
 
 from cluster_tasks.configure_logging import config_logger
@@ -81,7 +81,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         if kwargs.get("get_request_param"):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
-        kwargs["task_id"] = task_id
+        # kwargs["task_id"] = task_id
         result = self._execute(*args, **kwargs)
         # self._cleanup(task_id, is_async)
         return result
@@ -94,15 +94,18 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         if kwargs.get("get_request_param"):
             kwargs.pop("get_request_param")
             return self._request_prepare(*args, **kwargs)
-        logger.debug("ACALL before execute")
+        # pulled task_id information to later use in _async_execute, and forgot in class instance
         kwargs["task_id"] = task_id
         self._task_id = None
+        logger.debug("ACALL before execute")
+        # here async code will be wait real awaited execution
         result = self._async_execute(*args, **kwargs)
-        # self._cleanup(task_id, is_async)
         return result
 
     def _request_prepare(self, data=None, task_id: int = None) -> dict:
         is_async = self._is_async()
+        # used task_id or pulled for later async run code or directly in class instance for sync code
+        task_id = task_id or self._task_id
         if task_id is None:
             raise ValueError("_request_prepare: Task ID must be defied")
         if is_async:
@@ -223,6 +226,8 @@ class ProxmoxAPI(ProxmoxBaseAPI):
 
 
 if __name__ == "__main__":
+    from concurrent.futures import ThreadPoolExecutor
+
     # Example usage
     logger = logging.getLogger("CT")
     logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
@@ -232,9 +237,16 @@ if __name__ == "__main__":
     with API as api:
         # Simulate API calls
         logger.info(api.version.get())
+        tasks = []
         with ThreadPoolExecutor(max_workers=4) as executor:
-            future = executor.submit(api.version.get)
-            logger.info(future.result())
+            tasks.append(executor.submit(api.version.get))
+            tasks.append(executor.submit(api.version.get))
+            tasks.append(executor.submit(api.version.get))
+
+        logger.debug("futures created")
+        time.sleep(2)
+        for task in tasks:
+            logger.info(task.result())
         # logger.info(sorted([n.get("id") for n in api.nodes.get()]))
         # logger.info(api.nodes.get(filter_keys=["node", "status"]))
         # logger.info(api.nodes.get())
