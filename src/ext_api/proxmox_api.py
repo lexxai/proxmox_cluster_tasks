@@ -247,7 +247,7 @@ if __name__ == "__main__":
     logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
     config_logger(logger)
     register_backends()
-    API = ProxmoxAPI(backend_name="ssh")
+    API = ProxmoxAPI(backend_name="https")
     with API as api:
         # Simulate API calls
         logger.info(api.version.get())
