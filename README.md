@@ -229,6 +229,79 @@ for node in nodes:
 print("Waiting for results... Number of resources:", len(tasks))
 results = await asyncio.gather(*tasks)    
 ```
+
+#### Example of Parallel Requests Using the Queue of pre created API Instances in Thread Pool (Sync)
+
+```python
+import queue
+from concurrent.futures import ThreadPoolExecutor
+
+from ext_api.backends.registry import register_backends
+from ext_api.proxmox_api import ProxmoxAPI
+MAX_THREADS = 4
+
+register_backends("https")
+clients = [ProxmoxAPI(backend_name="https") for _ in range(MAX_THREADS)]
+client_queue = queue.Queue()
+
+# Populate the queue with clients
+for c in clients:
+    client_queue.put(c)
+
+def get_version():
+    client = client_queue.get()
+    try:
+        # Get an available client from the queue
+        with client as api:
+            response = api.version.get()
+        return response
+    finally:
+        # Return the client to the queue
+        client_queue.put(client)
+        
+tasks = []
+with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+    for _ in range(8):
+        print(f"Task submit: {len(tasks)}")
+        tasks.append(executor.submit(get_version))
+print("futures created")
+results = [task.result() for task in tasks]
+print(results)
+```
+Results:
+```log
+DEBUG: Creating backend: https of type: sync
+DEBUG: Creating backend: https of type: sync
+DEBUG: Creating backend: https of type: sync
+DEBUG: Creating backend: https of type: sync
+DEBUG: Task submit: 0
+DEBUG: Task submit: 1
+DEBUG: Task submit: 2
+DEBUG: Task submit: 3
+DEBUG: Task submit: 4
+DEBUG: Task submit: 5
+DEBUG: Task submit: 6
+DEBUG: Task submit: 7
+DEBUG: NEW task_id: 6f8c5d7b-52ac-42db-bf1e-3e3314ac36a9
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: NEW task_id: eb986b66-77ef-41f5-9282-e627fea07407
+DEBUG: NEW task_id: 61950227-42ff-4923-b16c-a565d8430394
+DEBUG: NEW task_id: 45359f3c-9821-4ff4-99c1-1338b396cd48
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: NEW task_id: 838ab521-5687-4ae1-8c73-6bd7f9567b66
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: NEW task_id: 2332882c-1ab9-48da-98bf-c54295c37761
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: NEW task_id: 6d4770b3-0a04-4f4f-8b10-373112b1fae9
+DEBUG: Formatted endpoint: /api2/json/version
+DEBUG: NEW task_id: d79ebba9-581e-46a0-a076-b607ae4012e4
+DEBUG: Formatted endpoint: /api2/json/version
+futures created
+['8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2', '8.3.2']
+```
+
 These examples provide flexibility for advanced API usage, allowing you to control request preparation and execution explicitly, even in parallel scenarios.
 
 ## Filtering Results

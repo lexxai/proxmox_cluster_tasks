@@ -52,9 +52,8 @@ def get_version():
     try:
         # Get an available client from the queue
         with client as api:
-            response1 = api.version.get()
-            response2 = api.version.get()
-        return [response1, response2]
+            response = api.version.get(filter_keys="version")
+        return response
     finally:
         # Return the client to the queue
         client_queue.put(client)
@@ -114,14 +113,12 @@ def debug_thread_pool_get_node_status_parallel():
 def demo_thread_pool_get_version():
     tasks = []
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-        for _ in range(20):
+        for _ in range(8):
             logger.debug(f"Task submit: {len(tasks)}")
             tasks.append(executor.submit(get_version))
-    logger.debug("futures created")
-    # time.sleep(2)
-    # for task in tasks:
-    for task in concurrent.futures.as_completed(tasks):
-        logger.info(task.result())
+    logger.info("futures created")
+    results = [task.result() for task in tasks]
+    logger.info(results)
 
 
 def demo_sequenced_session():
@@ -140,8 +137,8 @@ def demo_sequenced_session():
 
 
 def main():
-    debug_thread_pool_get_node_status_parallel()
-    # demo_thread_pool_get_version()
+    # debug_thread_pool_get_node_status_parallel()
+    demo_thread_pool_get_version()
     # demo_sequenced_session()
 
 
