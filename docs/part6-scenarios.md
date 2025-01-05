@@ -64,43 +64,25 @@ This flexibility allows for maintaining existing values or updating them as need
         decrease_ip: {number}
 ```
 
-#### Result
+#### Result Running Scenario Template VM Clone
 <details>
-<summary>src/cluster_tasks/controller_sync.py</summary>
+<summary>src/cluster_tasks/main.py</summary>
 
 ``` pycon
-python /src/cluster_tasks/controller_sync.py 
-DEBUG: Scenarios config: <config.config.ConfigLoader object at 0x10fd0b350>
-DEBUG: Creating backend: https of type: sync
-Running Scenario Template VM Clone: ScenarioCloneTemplateVmSync
-DEBUG: Generated a new task ID: 036b0cf8-c506-42ae-bb16-41f79d8708d2
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/qemu/201/status/current
+python /src/cluster_tasks/main.py
+INFO: Running Scenario Template VM Clone: ScenarioCloneTemplateVmSync
 INFO: VM 201 already exists - Deleting...
-DEBUG: Generated a new task ID: d851e29d-11b9-49f0-ac48-b4be53f66a47
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/qemu/201
-DEBUG: Generated a new task ID: fb7e60d4-9f45-490b-ba48-c2b7c408f297
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/tasks/UPID:c01:002DC36D:045F99E0:677A9183:qmdestroy:201:api_user@pam!cluster_helper:/status
-INFO: Waiting for task to finish... [ 0:00:00 / 0:01:00 ]
-DEBUG: Generated a new task ID: cb281c02-d5de-4f5e-9362-11f83e261250
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/tasks/UPID:c01:002DC36D:045F99E0:677A9183:qmdestroy:201:api_user@pam!cluster_helper:/status
+INFO: Waiting for task to finish... [ 0:00:00 / 0:02:00 ]
 INFO: VM 201 deleted successfully
-DEBUG: Generated a new task ID: 1f3ce5b8-2ac1-4889-b43c-5ddfc76b949a
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/qemu/1004/clone
-DEBUG: Generated a new task ID: 2bb19080-44ab-43ce-9b30-a3d8c4d0c51f
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/tasks/UPID:c01:002DC388:045F9AE2:677A9185:qmclone:1004:api_user@pam!cluster_helper:/status
-INFO: Waiting for task to finish... [ 0:00:00 / 0:01:00 ]
-DEBUG: Generated a new task ID: 3398e65b-ddad-427b-af86-ee2735e54907
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/tasks/UPID:c01:002DC388:045F9AE2:677A9185:qmclone:1004:api_user@pam!cluster_helper:/status
-INFO: Waiting for task to finish... [ 0:00:02 / 0:01:00 ]
-DEBUG: Generated a new task ID: 6cafba81-fa97-48a8-9b51-c11df3bbe1d8
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/tasks/UPID:c01:002DC388:045F9AE2:677A9185:qmclone:1004:api_user@pam!cluster_helper:/status
-INFO: Waiting for task to finish... [ 0:00:04 / 0:01:00 ]
-DEBUG: Generated a new task ID: 507cb3aa-7a72-4b01-b1f0-9a52a8f92b99
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/tasks/UPID:c01:002DC388:045F9AE2:677A9185:qmclone:1004:api_user@pam!cluster_helper:/status
-INFO: Waiting for task to finish... [ 0:00:06 / 0:01:00 ]
-DEBUG: Generated a new task ID: f4cb2983-3d06-49d0-b221-6336da330ce1
-DEBUG: Formatted endpoint: /api2/json/nodes/c01/tasks/UPID:c01:002DC388:045F9AE2:677A9185:qmclone:1004:api_user@pam!cluster_helper:/status
+INFO: Cloning VM from 1004 to 201
+INFO: Waiting for task to finish... [ 0:00:00 / 0:02:00 ]
+INFO: Waiting for task to finish... [ 0:00:02 / 0:02:00 ]
+INFO: Waiting for task to finish... [ 0:00:04 / 0:02:00 ]
+INFO: Waiting for task to finish... [ 0:00:06 / 0:02:00 ]
 INFO: VM 201 cloned successfully
+INFO: Configuring Network for VM 201
+INFO: Configured Network for VM 201 successfully
+INFO: Scenario ScenarioCloneTemplateVmSync completed successfully
 
 Process finished with exit code 0
 ```
