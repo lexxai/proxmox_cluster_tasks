@@ -26,19 +26,19 @@ class ProxmoxAPI(ProxmoxBaseAPI):
     def _new_task(self) -> str:
         with self._lock:
             self._task_id = str(uuid.uuid4())
-        logger.debug(f"Forced NEW task_id: {self._task_id}")
+        logger.debug(f"Forced a new task_id: {self._task_id}")
         return self._task_id
 
     def _get_task_id(self, is_async: bool) -> str:
         if is_async:
             if self._task_id is None:
                 self._task_id = str(uuid.uuid4())
-                logger.debug(f"NEW task_id: {self._task_id}")
+                logger.debug(f"Generated a new task ID: {self._task_id}")
         else:
             if self._task_id is None:
                 with self._lock:
                     self._task_id = str(uuid.uuid4())
-                logger.debug(f"NEW task_id: {self._task_id}")
+                logger.debug(f"Generated a new task ID: {self._task_id}")
         return self._task_id
 
     def _cleanup(self, task_id: str, is_async: bool = None):
