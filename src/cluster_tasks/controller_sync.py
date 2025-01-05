@@ -16,21 +16,19 @@ config_logger(logger)
 
 def main():
     config_file = Path(__file__).parent / "scenarios_configs.yaml"
-    scenarios_config = ConfigLoader(file_path=config_file).settings.copy()
+    scenarios_config = ConfigLoader(file_path=config_file)
     # Iterate over the scenarios and run them
     logger.debug(f"Scenarios config: {scenarios_config}")
-
-    register_backends(["https"])
-    ext_api = ProxmoxAPI(backend_name="https", backend_type="sync")
+    backend_name = scenarios_config.get("API.backend", "https")
+    register_backends(backend_name)
+    ext_api = ProxmoxAPI(backend_name=backend_name, backend_type="sync")
     with ext_api as api:
         node_tasks = NodeTasksSync(api=api)  # Pass the api instance to NodeTasksAsync
-        for k, v in scenarios_config.get("Scenarios").items():
+        for v in scenarios_config.get("Scenarios").values():
             scenario_file = v.get("file")
             config = v.get("config")
-
             # Create scenario instance using the factory
             scenario = ScenarioFactory.create_scenario(scenario_file, config)
-
             # Run the scenario
             scenario.run(node_tasks)
 

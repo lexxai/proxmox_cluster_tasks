@@ -34,6 +34,8 @@ The primary goal of this project is to streamline Proxmox VE cluster management,
 
 - [API Reference](docs/part2-api-reference.md)
 - [Setup Instructions](docs/part3-setup.md)
+- [Scenarios](docs/part6-scenarios.md)
+- NodeTasks Class
 - ProxmoxAPI Class
   - [Examples](docs/part4-1-proxmoxapi-examples.md)
   - [Advanced Concurrent Usage and Low-Level API Requests](docs/part4-2-advanced-examples.md)
