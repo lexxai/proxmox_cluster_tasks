@@ -192,3 +192,5 @@ futures created
 ```
 
 These examples provide flexibility for advanced API usage, allowing you to control request preparation and execution explicitly, even in parallel scenarios.
+
+[README](../README.md)

@@ -34,3 +34,6 @@ API_BASE_URL=https://proxmox.local:8006
 SSH_HOSTNAME=proxmox.local
 SSH_USERNAME=root
 ```
+
+
+[README](../README.md)
