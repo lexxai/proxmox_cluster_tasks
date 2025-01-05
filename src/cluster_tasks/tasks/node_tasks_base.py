@@ -106,7 +106,7 @@ class NodeTasksBase(BaseTasks):
             time.sleep(self.polling_interval)
             if time.time() - start_time > self.timeout:
                 logger.warning(
-                    f"Timeout reached while waiting for task to finish. {upid=}"
+                    f"Timeout reached while waiting for task to finish. {self.shorten_upid(upid)}..."
                 )
                 break
         return False

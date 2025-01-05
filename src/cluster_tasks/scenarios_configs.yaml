@@ -5,7 +5,10 @@ Scenarios:
     file: "clone_template_vm"
     config:
       node: "c01"
-      vmid: 1004
-      newid: 201
+      source_vm_id: 1004
+      destination_vm_id: 201
       name: "Cloned01"
+      network:
+        ip: "192.0.2.1/24"
+        increase_ip: 1
       full: 1

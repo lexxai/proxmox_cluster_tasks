@@ -1,4 +1,5 @@
 import asyncio
+import ipaddress
 import logging
 
 from cluster_tasks.tasks.base_tasks import BaseTasks
@@ -86,3 +87,55 @@ class NodeTasksAsync(NodeTasksBase):
         if wait:
             return await self.wait_task_done_async(upid, node)
         return upid
+
+    async def vm_config_get(
+        self, node: str, vm_id: int, filter_keys: str | list[str] = None
+    ) -> dict | str | list | None:
+        return (
+            await self.api.nodes(node).qemu(vm_id).config.get(filter_keys=filter_keys)
+        )
+
+    async def vm_config_network_set(
+        self, node: str, vm_id: int, config: dict, wait: bool = True
+    ) -> bool:
+        id = config.get("id", 0)
+        increase_ip = config.get("increase_ip")
+        decrease_ip = config.get("decrease_ip")
+        ip = config.get("ip")
+        if ip:
+            ip_list = ip.split("/")
+            if len(ip_list) != 2:
+                logger.error("IP address must be in CIDR format")
+                return False
+            try:
+                ipaddress.ip_interface(ip)
+            except Exception as e:
+                logger.error(f"Invalid IP network address {e}")
+                return False
+        gw = config.get("gw")
+        # get current config
+        iface = f"ipconfig{id}"
+        ipconfig = await self.vm_config_get(node, vm_id, filter_keys=iface)
+        if not ipconfig:
+            return False
+        ipconfig = ipconfig.split(",")  # "ip={ip},gw={gw}"
+        config_ip = ip or ipconfig[0].split("=")[1]
+        if config_ip:
+            try:
+                config_ip_if = ipaddress.ip_interface(config_ip)
+                if config_ip_if:
+                    config_ip = f"{config_ip_if.ip + increase_ip}/{config_ip_if.network.prefixlen}"
+                elif decrease_ip:
+                    config_ip = f"{config_ip_if.ip - decrease_ip}/{config_ip_if.network.prefixlen}"
+            except Exception as e:
+                logger.error(f"Invalid IP network address {e}")
+                return False
+        config_gw = ipconfig[1].split("=")[1]
+        new_ifconfig = f"ip={config_ip},gw={gw or config_gw}"
+        data = {iface: new_ifconfig}
+        upid = await self.api.nodes(node).qemu(vm_id).config.post(data=data)
+        if wait:
+            if not (await self.wait_task_done_async(upid, node)):
+                logger.error("Failed to set network config")
+                return False
+        return True
