@@ -39,10 +39,29 @@ Scenarios:
     file: "clone_template_vm"
     config:
       node: "c01"
-      vmid: 1004
-      newid: 201
+      source_vm_id: 1004
+      destination_vm_id: 201
+      overwrite_destination: True
       name: "Cloned01"
+      network:
+        ip: "192.0.2.1/24"
+        increase_ip: 1
       full: 1
+```
+#### VM network
+The cloned VM can either retain the network settings of the source VM or be assigned a new network configuration. 
+This flexibility allows for maintaining existing values or updating them as needed.
+
+* ip (str): The final IP address with its mask for the new VM, derived from the configuration or the source VM.
+* gw (str): The final gateway IP address for the new VM, derived from the configuration or the source VM.
+* increase_ip (int): The value to increment the IP address by.
+* decrease_ip (int): The value to decrement the IP address by.
+```yaml
+      network:
+        ip: "{ip}/{subnet}"
+        gw: "{gw}"
+        increase_ip: {number}
+        decrease_ip: {number}
 ```
 
 #### Result
