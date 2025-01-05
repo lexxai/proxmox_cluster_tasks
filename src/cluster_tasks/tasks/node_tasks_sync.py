@@ -54,7 +54,7 @@ class NodeTasksSync(NodeTasksBase):
         """
         upid = self.api.nodes(node).qemu(vm_id).delete()
         if wait:
-            return self.wait_task_done_sync(node, upid)
+            return self.wait_task_done_sync(upid, node)
         return upid
 
     def vm_clone(
@@ -76,5 +76,5 @@ class NodeTasksSync(NodeTasksBase):
         """
         upid = self.api.nodes(node).qemu(vm_id).clone.create(data=data)
         if wait:
-            return self.wait_task_done_sync(node, upid)
+            return self.wait_task_done_sync(upid, node)
         return upid

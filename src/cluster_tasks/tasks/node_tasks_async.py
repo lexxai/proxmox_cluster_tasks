@@ -62,7 +62,7 @@ class NodeTasksAsync(NodeTasksBase):
         """
         upid = await self.api.nodes(node).qemu(vm_id).delete()
         if wait:
-            return await self.wait_task_done_async(node, upid)
+            return await self.wait_task_done_async(upid, node)
         return upid
 
     async def vm_clone(
@@ -84,5 +84,5 @@ class NodeTasksAsync(NodeTasksBase):
         """
         upid = await self.api.nodes(node).qemu(vm_id).clone.create(data=data)
         if wait:
-            return await self.wait_task_done_async(node, upid)
+            return await self.wait_task_done_async(upid, node)
         return upid
