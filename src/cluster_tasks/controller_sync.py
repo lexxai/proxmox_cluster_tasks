@@ -22,15 +22,20 @@ def main():
     backend_name = scenarios_config.get("API.backend", "https")
     register_backends(backend_name)
     ext_api = ProxmoxAPI(backend_name=backend_name, backend_type="sync")
-    with ext_api as api:
-        node_tasks = NodeTasksSync(api=api)  # Pass the api instance to NodeTasksAsync
-        for v in scenarios_config.get("Scenarios").values():
-            scenario_file = v.get("file")
-            config = v.get("config")
-            # Create scenario instance using the factory
-            scenario = ScenarioFactory.create_scenario(scenario_file, config)
-            # Run the scenario
-            scenario.run(node_tasks)
+    try:
+        with ext_api as api:
+            node_tasks = NodeTasksSync(
+                api=api, timeout=120
+            )  # Pass the api instance to NodeTasksAsync
+            for v in scenarios_config.get("Scenarios").values():
+                scenario_file = v.get("file")
+                config = v.get("config")
+                # Create scenario instance using the factory
+                scenario = ScenarioFactory.create_scenario(scenario_file, config)
+                # Run the scenario
+                scenario.run(node_tasks)
+    except Exception as e:
+        logger.error(f"MAIN: {e}")
 
 
 if __name__ == "__main__":

@@ -53,12 +53,12 @@ class NodeTasksBase(BaseTasks):
                 return True
             duration = time.time() - start_time
             formatted_duration = self.format_duration(duration)
-            formatted_timeout = self.format_duration(self.TIMEOUT)
+            formatted_timeout = self.format_duration(self.timeout)
             logger.info(
                 f"Waiting for task to finish... [ {formatted_duration} / {formatted_timeout} ]"
             )
-            time.sleep(self.LOOP_SLEEP)
-            if time.time() - start_time > self.TIMEOUT:
+            time.sleep(self.loop_sleep)
+            if time.time() - start_time > self.timeout:
                 logger.warning(
                     f"Timeout reached while waiting for task to finish. {upid=}"
                 )
@@ -75,12 +75,12 @@ class NodeTasksBase(BaseTasks):
                 return True
             duration = time.time() - start_time
             formatted_duration = self.format_duration(duration)
-            formatted_timeout = self.format_duration(self.TIMEOUT)
+            formatted_timeout = self.format_duration(self.timeout)
             logger.info(
                 f"Waiting for task to finish... [ {formatted_duration} / {formatted_timeout} ]"
             )
-            await asyncio.sleep(self.LOOP_SLEEP)
-            if time.time() - start_time > self.TIMEOUT:
+            await asyncio.sleep(self.loop_sleep)
+            if time.time() - start_time > self.timeout:
                 logger.warning(
                     f"Timeout reached while waiting for task to finish. {upid=}"
                 )
