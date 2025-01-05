@@ -7,6 +7,7 @@ Scenarios:
       node: "c01"
       source_vm_id: 1004
       destination_vm_id: 201
+      overwrite_destination: True
       name: "Cloned01"
       network:
         ip: "192.0.2.1/24"

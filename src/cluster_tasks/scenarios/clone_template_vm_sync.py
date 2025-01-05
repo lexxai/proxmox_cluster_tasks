@@ -78,6 +78,7 @@ class ScenarioCloneTemplateVmSync(ScenarioBase):
         self.node = config.get("node")
         self.source_vm_id = config.get("source_vm_id")
         self.destination_vm_id = config.get("destination_vm_id")
+        self.overwrite_destination = config.get("overwrite_destination", False)
         network = config.get("network", {})
         self.ip = network.get("ip")
         self.gw = network.get("gw")
@@ -108,6 +109,10 @@ class ScenarioCloneTemplateVmSync(ScenarioBase):
             # Check if the VM already exists
             present = node_tasks.vm_status(self.node, self.destination_vm_id)
             if present:
+                if not self.overwrite_destination:
+                    raise Exception(
+                        f"VM {self.destination_vm_id} already exists, overwrite_destination not allow to delete VM"
+                    )
                 # If VM already exists, delete it
                 logger.info(f"VM {self.destination_vm_id} already exists - Deleting...")
                 is_deleted = node_tasks.vm_delete(self.node, self.destination_vm_id)
