@@ -15,10 +15,13 @@ class BaseTasks:
     """
 
     timeout = 60
-    loop_sleep = 2
+    polling_interval = 2
 
     def __init__(
-        self, api: ProxmoxAPI, timeout: int = timeout, loop_sleep: int = loop_sleep
+        self,
+        api: ProxmoxAPI,
+        timeout: int = timeout,
+        polling_interval: int = polling_interval,
     ):
         """
         Initializes the BaseTasks class with the given Proxmox API instance and optional
@@ -27,11 +30,11 @@ class BaseTasks:
         Args:
             api (ProxmoxAPI): The Proxmox API instance for making API calls.
             timeout (int, optional): The timeout value for tasks (default is 60).
-            loop_sleep (int, optional): The sleep time between loops in seconds (default is 2).
+            polling_interval (int, optional): The sleep time between loops in seconds (default is 2).
         """
         self._api: ProxmoxAPI = api
         self.timeout = timeout
-        self.loop_sleep = loop_sleep
+        self.polling_interval = polling_interval
 
     @property
     def api(self):

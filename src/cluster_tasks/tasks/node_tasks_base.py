@@ -58,29 +58,29 @@ class NodeTasksBase(BaseTasks):
 
     async def get_status_async(self, upid: str, node: str = None) -> str | None:
         """
-         Retrieve the status of a task asynchronously by its UPID (Unique Process ID).
+        Retrieve the status of a task asynchronously by its UPID (Unique Process ID).
 
-         Args:
-             upid (str): The Unique Process ID of the task to check.
-             node (str, optional): The name of the node where the task is running.
-                 If not provided, it is automatically determined by decoding the UPID.
+        Args:
+            upid (str): The Unique Process ID of the task to check.
+            node (str, optional): The name of the node where the task is running.
+                If not provided, it is automatically determined by decoding the UPID.
 
-         Returns:
-             str | None: The status of the task as a string if available, or None if
-             the UPID or node is invalid or the task status cannot be retrieved.
+        Returns:
+            str | None: The status of the task as a string if available, or None if
+            the UPID or node is invalid or the task status cannot be retrieved.
 
-         Raises:
-             Exception: Raised if an error occurs while fetching the task status.
+        Raises:
+            Exception: Raised if an error occurs while fetching the task status.
 
-         Notes:
-             - The `decode_upid` method is used to extract the node from the UPID if
-               the `node` argument is not explicitly provided.
-             - Relies on the Proxmox API to retrieve task status.
+        Notes:
+            - The `decode_upid` method is used to extract the node from the UPID if
+              the `node` argument is not explicitly provided.
+            - Relies on the Proxmox API to retrieve task status.
 
-         Example:
-             status = instance.get_status_sync("UPID:pve1:0000ABCD")
-             print(status)  # Outputs the task status or None
-         """
+        Example:
+            status = instance.get_status_sync("UPID:pve1:0000ABCD")
+            print(status)  # Outputs the task status or None
+        """
         if not node:
             node = self.decode_upid(upid).get("node")
         if upid and node:
@@ -103,7 +103,7 @@ class NodeTasksBase(BaseTasks):
             logger.info(
                 f"Waiting for task to finish... [ {formatted_duration} / {formatted_timeout} ]"
             )
-            time.sleep(self.loop_sleep)
+            time.sleep(self.polling_interval)
             if time.time() - start_time > self.timeout:
                 logger.warning(
                     f"Timeout reached while waiting for task to finish. {upid=}"
@@ -125,10 +125,10 @@ class NodeTasksBase(BaseTasks):
             logger.info(
                 f"Waiting for task to finish... [ {formatted_duration} / {formatted_timeout} ]"
             )
-            await asyncio.sleep(self.loop_sleep)
+            await asyncio.sleep(self.polling_interval)
             if time.time() - start_time > self.timeout:
                 logger.warning(
-                    f"Timeout reached while waiting for task to finish. {upid=}"
+                    f"Timeout reached while waiting for task to finish. {self.shorten_upid(upid)}..."
                 )
                 break
         return False
@@ -160,3 +160,8 @@ class NodeTasksBase(BaseTasks):
             "comment": segments[8],
         }
         return data
+
+    @staticmethod
+    def shorten_upid(upid: str, length: int = 7) -> str | None:
+        if upid:
+            return ":".join(upid.split(":")[:length])
