@@ -3,6 +3,7 @@ import tomllib
 from pathlib import Path
 
 from cluster_tasks.configure_logging import config_logger
+from cluster_tasks.tasks.node_tasks_sync import NodeTasksSync
 from config.config import ConfigLoader
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
@@ -20,16 +21,18 @@ def main():
     logger.debug(f"Scenarios config: {scenarios_config}")
 
     register_backends(["https"])
-    api = ProxmoxAPI(backend_name="https", backend_type="sync")
-    for k, v in scenarios_config.get("Scenarios").items():
-        scenario_file = v.get("file")
-        config = v.get("config")
+    ext_api = ProxmoxAPI(backend_name="https", backend_type="sync")
+    with ext_api as api:
+        node_tasks = NodeTasksSync(api=api)  # Pass the api instance to NodeTasksAsync
+        for k, v in scenarios_config.get("Scenarios").items():
+            scenario_file = v.get("file")
+            config = v.get("config")
 
-        # Create scenario instance using the factory
-        scenario = ScenarioFactory.create_scenario(scenario_file, api, config)
+            # Create scenario instance using the factory
+            scenario = ScenarioFactory.create_scenario(scenario_file, config)
 
-        # Run the scenario
-        scenario.run()
+            # Run the scenario
+            scenario.run(node_tasks)
 
 
 if __name__ == "__main__":

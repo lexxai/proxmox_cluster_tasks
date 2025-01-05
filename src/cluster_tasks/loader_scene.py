@@ -5,8 +5,8 @@ from ext_api.proxmox_api import ProxmoxAPI
 
 class ScenarioFactory:
     base_module = "scenarios"
-    prefix_file = "scenario_"
     prefix_class = "Scenario"
+    suffix_file = {"sync": "_sync", "async": "_async"}
 
     @staticmethod
     def convert_to_class_name(file_name: str) -> str:
@@ -21,14 +21,18 @@ class ScenarioFactory:
         return getattr(module, class_name)
 
     @classmethod
-    def create_scenario(cls, scenario_file: str, api: ProxmoxAPI, config: dict = None):
+    def create_scenario(
+        cls, scenario_file: str, config: dict = None, run_type: str = "sync"
+    ):
         # Dynamically load the scenario class based on the name
-        scenario_file = f"{cls.prefix_file}{scenario_file}"
+        scenario_file = f"{scenario_file}{cls.suffix_file.get(run_type)}"
         module_name = f"{cls.base_module}.{scenario_file}"
         scenario_name = cls.convert_to_class_name(scenario_file)
 
-        scenario_class = cls.load_class(module_name, scenario_name)
+        scenario_class = cls.load_class(
+            module_name, f"{cls.prefix_class}{scenario_name}"
+        )
 
-        scenario_instance = scenario_class(api)
+        scenario_instance = scenario_class()
         scenario_instance.configure(config)
         return scenario_instance

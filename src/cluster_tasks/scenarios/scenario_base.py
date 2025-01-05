@@ -1,6 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 
+from cluster_tasks.tasks.node_tasks_base import NodeTasksBase
 from ext_api.proxmox_api import ProxmoxAPI
 from cluster_tasks.tasks.node_tasks_sync import NodeTasksSync
 
@@ -8,13 +9,11 @@ logger = logging.getLogger("CT.{__name__}")
 
 
 class ScenarioBase(ABC):
-    def __init__(self, api: ProxmoxAPI):
-        self.name = self.__class__.__name__
-        self.api: ProxmoxAPI = api
-        self.node_tasks = NodeTasksSync(api)
+    def __init__(self):
+        self.scenario_name = self.__class__.__name__
 
     @abstractmethod
-    def run(self):
+    def run(self, node_tasks: NodeTasksBase, *args, **kwargs):
         """Method to execute the scenario"""
         ...
 
