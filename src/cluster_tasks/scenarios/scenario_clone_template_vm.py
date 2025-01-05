@@ -15,7 +15,7 @@ class ScenarioCloneTemplateVm(ScenarioBase):
 
     def configure(self, config):
         self.node = config.get("node")
-        self.vmid = config.get("vmid")
+        self.vmid = int(config.get("vmid", 0))
         self.newid = config.get("newid")
         self.name = config.get("name")
         self.full = int(config.get("full", True))
@@ -23,22 +23,25 @@ class ScenarioCloneTemplateVm(ScenarioBase):
     def run(self):
         print(f"Running Scenario Template: {self.template_name} at {self.source_node}")
         # Perform the specific API logic for this scenario
-
-        # data = {"newid": int(self.newid), "name": self.name, "full": self.full}
-        with self.api as api:
-            present = (
-                api.nodes(self.node)
-                .qemu(self.newid)
-                .status.current.get(filter_keys="vmid")
-            )
-            logger.info(f"result: {present} {self.newid} {self.newid==present}")
-            if present and int(present) == int(self.newid):
-                logger.info(f"VM {self.newid} already exists - Deleteting...")
-                upid = api.nodes(self.node).qemu(self.newid).delete()
-                logger.info(f"result: {upid}")
-                self.wait_task_done(api, self.node, upid)
-            data = {"newid": int(self.newid), "name": self.name, "full": self.full}
-            upid = api.nodes(self.node).qemu(self.vmid).clone.create(data=data)
-            logger.info(f"result: {upid}, data: {data}")
-            self.wait_task_done(api, self.node, upid)
-            logger.info(f"VM {self.newid} created")
+        try:
+            # Open a connection session of the Proxmox API
+            with self.api:
+                # Check is VM already exists
+                present = self.node_tasks.vm_status(self.node, self.newid)
+                if present:
+                    # If VM already exists, delete it
+                    logger.info(f"VM {self.newid} already exists - Deleting...")
+                    is_deleted = self.node_tasks.vm_delete(self.node, self.newid)
+                    if is_deleted:
+                        logger.info(f"VM {self.newid} deleted successfully")
+                    else:
+                        raise Exception(f"Failed to delete VM {self.newid}")
+                # Clone the VM from the template
+                data = {"newid": int(self.newid), "name": self.name, "full": self.full}
+                is_created = self.node_tasks.vm_clone(self.node, self.vmid, data)
+                if is_created:
+                    logger.info(f"VM {self.newid} cloned successfully")
+                else:
+                    raise Exception(f"Failed to clone VM {self.newid}")
+        except Exception as e:
+            logger.error(f"Failed to run scenario: {e}")

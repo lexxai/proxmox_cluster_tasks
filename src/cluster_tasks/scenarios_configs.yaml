@@ -1,3 +1,6 @@
+API:
+  backend: "https"
+  type: "sync"
 Scenarios:
   CloneTemplateVM:
     file: "clone_template_vm"
