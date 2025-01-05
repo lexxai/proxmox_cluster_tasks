@@ -29,19 +29,21 @@ async def main():
     )  # Assuming you have async support in ProxmoxAPI
 
     # Create an instance of the async NodeTasks class
-
-    # Run through scenarios
-    async with ext_api as api:
-        node_tasks = NodeTasksAsync(api=api)  # Pass the api instance to NodeTasksAsync
-        for k, v in scenarios_config.get("Scenarios").items():
-            scenario_file = v.get("file")
-            config = v.get("config")
-
-            # Create scenario instance using the factory
-            scenario = ScenarioFactory.create_scenario(scenario_file, config, "async")
-
-            # Run the scenario asynchronously
-            await scenario.run(node_tasks)  # Assuming `run` is now an async method
+    try:
+        # Run through scenarios
+        async with ext_api as api:
+            node_tasks = NodeTasksAsync(api=api)
+            for v in scenarios_config.get("Scenarios").values():
+                scenario_file = v.get("file")
+                config = v.get("config")
+                # Create scenario instance using the factory
+                scenario = ScenarioFactory.create_scenario(
+                    scenario_file, config, "async"
+                )
+                # Run the scenario asynchronously
+                await scenario.run(node_tasks)  # Assuming `run` is now an async method
+    except Exception as e:
+        logger.error(f"MAIN: {e}")
 
 
 if __name__ == "__main__":
