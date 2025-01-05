@@ -10,8 +10,7 @@ from ext_api.proxmox_api import ProxmoxAPI
 from loader_scene import ScenarioFactory
 
 
-logger = logging.getLogger("CT")
-config_logger(logger)
+logger = logging.getLogger(f"CT.{__name__}")
 
 
 async def main():
@@ -46,4 +45,6 @@ async def main():
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger("CT")
+    config_logger(logger)
     asyncio.run(main())  # Start the event loop and run the main function asynchronously

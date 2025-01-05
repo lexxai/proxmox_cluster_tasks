@@ -8,9 +8,7 @@ from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 from loader_scene import ScenarioFactory
 
-
-logger = logging.getLogger("CT")
-config_logger(logger)
+logger = logging.getLogger(f"CT.{__name__}")
 
 
 def main():
@@ -38,4 +36,6 @@ def main():
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger("CT")
+    config_logger(logger)
     main()

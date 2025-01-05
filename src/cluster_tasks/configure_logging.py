@@ -18,10 +18,11 @@ class ColoredFormatter(logging.Formatter):
         return f"{log_color}{message}{self.COLORS['RESET']}"
 
 
-def config_logger(logger: logging):
+def config_logger(logger: logging, debug: bool = None):
     # Setup colored logger
     handler = logging.StreamHandler()
     handler.setFormatter(ColoredFormatter("%(levelname)s: %(message)s"))
     logger.addHandler(handler)
-    logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
+    debug_mode = debug if debug is not None else configuration.get("DEBUG")
+    logger.setLevel("DEBUG" if debug_mode else "INFO")
     return logger

@@ -1,46 +1,46 @@
+import argparse
 import asyncio
 import logging
 
 from cluster_tasks.configure_logging import config_logger
-from config.config import configuration
-from ext_api.backends.registry import register_backends
-from ext_api.proxmox_api import ProxmoxAPI
+from controller_sync import main as controller_sync
+from controller_async import main as controller_async
 
 logger = logging.getLogger("CT")
-config_logger(logger)
 
 
 def main():
-    register_backends(["https"])
-    ext_api = ProxmoxAPI(backend_name="https", backend_type="sync")
-    with ext_api as api:
-        # resources = Resources(api)
-        logger.info(api.version.get(filter_keys="version"))
-        logger.info(api.cluster.ha.groups.get(filter_keys=["group", "nodes"]))
-        node = configuration.get("NODES")[0]
-        # logger.info(api.nodes(node).status.get(filter_keys=["kversion", "uptime"]))
-        logger.info(api.nodes(node).status.get(filter_keys="current-kernel.release"))
+    controller_sync()
 
 
 async def async_main():
-    register_backends(["https"])
-    ext_api = ProxmoxAPI(backend_name="https", backend_type="async")
-    async with ext_api as api:
-        # resources = AsyncResources(api)
-        logger.info(await api.version.get(filter_keys="version"))
-        # logger.info(await api.cluster.ha.groups.get(filter_keys=["group", "nodes"]))
-        # node = configuration.get("NODES")[0]
-        # logger.info(
-        #     await api.nodes(node).status.get(filter_keys=["kversion", "uptime"])
-        # )
-        # logger.info(
-        #     await api.nodes(node).status.get(filter_keys="current-kernel.release")
-        # )
+    await controller_async()
 
 
 if __name__ == "__main__":
+    arg_parser = argparse.ArgumentParser("Proxmox Cluster Tasks")
+    arg_parser.add_argument(
+        "--debug",
+        type=str,  # Accept as a string to parse custom logic
+        choices=["true", "false", "none"],  # Allow specific values
+        default="none",  # Default state
+        help="Enable or disable debug mode (true, false, none)",
+    )
+    arg_parser.add_argument(
+        "--sync", help="Run in sync mode, default is async mode", action="store_true"
+    )
+    args = arg_parser.parse_args()
+    if args.debug.lower() == "true":
+        args.debug = True
+    elif args.debug.lower() == "false":
+        args.debug = False
+    else:
+        args.debug = None
+    config_logger(logger, debug=args.debug)
     try:
-        # main()
-        asyncio.run(async_main())
+        if args.sync:
+            main()
+        else:
+            asyncio.run(async_main())
     except ValueError as e:
         logger.error(f"MAIN: {e}")
