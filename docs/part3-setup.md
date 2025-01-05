@@ -37,4 +37,16 @@ backend = ProxmoxHTTPSBackend(
 ```
 
 
+### Run
+```commandline
+python main.py --h         
+usage: Proxmox Cluster Tasks [-h] [--debug {true,false,none}] [--sync]
+
+options:
+  -h, --help            show this help message and exit
+  --debug {true,false,none}
+                        Enable or disable debug mode (true, false, none)
+  --sync                Run in sync mode, default is async mode
+```
+
 [README](../README.md)
