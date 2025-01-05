@@ -37,7 +37,7 @@ The primary goal of this project is to streamline Proxmox VE cluster management,
 - ProxmoxAPI Class
   - [Examples](docs/part4-1-proxmoxapi-examples.md)
   - [Advanced Concurrent Usage and Low-Level API Requests](docs/part4-2-advanced-examples.md)
-  - [Filering results](docs/part4-3-proxmoxapi-filtering.md)
+  - [Filtering results](docs/part4-3-proxmoxapi-filtering.md)
   - [Debug Results](docs/part4-4-debug.md)
 - [Configuration](docs/part5-configuration.md)
 
