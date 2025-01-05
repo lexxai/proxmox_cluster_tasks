@@ -74,7 +74,7 @@ class ScenarioCloneTemplateVmAsync(ScenarioBase):
         Raises:
             Exception: If the VM already exists and deletion fails, or if cloning fails.
         """
-        print(f"Running Scenario Template VM Clone: {self.scenario_name}")
+        logger.info(f"Running Scenario Template VM Clone: {self.scenario_name}")
         # Perform the specific API logic for this scenario
         try:
             # Open a connection session of the Proxmox API
