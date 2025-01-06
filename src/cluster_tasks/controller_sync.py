@@ -12,7 +12,7 @@ from loader_scene import ScenarioFactory
 
 logger = logging.getLogger(f"CT.{__name__}")
 
-MAX_THREADS = 4
+MAX_THREADS = 16
 
 
 def scenario_run_queue(api_queue, scenario_config):
