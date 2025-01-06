@@ -95,10 +95,12 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             "decrease_ip": self.decrease_ip,
             "full": self.full,
         }
-        if not node_tasks.vm_config_network_set(
+        result = node_tasks.vm_config_network_set(
             self.node, self.destination_vm_id, config=config
-        ):
+        )
+        if result is None:
             raise Exception("Failed to configure network for VM")
+        self.vm_network = result
         logger.info(f"Configured Network for VM {self.destination_vm_id} successfully")
 
     def vm_migration(self, node_tasks):
@@ -132,13 +134,14 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
     def configure_tags(self, node_tasks):
         if not self.tags:
             return
+        tags = self.calculate_tags(self.tags)
         logger.info(f"Configuring tags for VM {self.destination_vm_id}")
         is_configured = node_tasks.vm_config_tags_set(
-            self.node, self.destination_vm_id, self.tags
+            self.node, self.destination_vm_id, tags
         )
         if is_configured:
             logger.info(
-                f"VM {self.destination_vm_id} configured tags:'{self.tags}' successfully"
+                f"VM {self.destination_vm_id} configured tags:'{tags}' successfully"
             )
         else:
-            raise Exception(f"Failed to configure tags for VM {self.destination_vm_id}")
+            f"Failed to configure tags:'{tags}' for VM {self.destination_vm_id}"

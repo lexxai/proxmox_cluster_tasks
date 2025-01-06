@@ -11,6 +11,10 @@ logger = logging.getLogger("CT.{__name__}")
 
 
 class ScenarioCloneTemplateVmBase(ScenarioBase):
+    def __init__(self):
+        super().__init__()
+        self.vm_network = None
+
     def configure(self, config):
         """
         Configures the scenario with the provided settings.
@@ -70,6 +74,21 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
         self.tags = config.get("tags")
         if self.tags and isinstance(self.tags, list):
             self.tags = ",".join(self.tags)
+
+    def calculate_tags(self, tags: str) -> str:
+        if self.vm_network:
+            try:
+                vm_ip = self.vm_network.get("ip", "")
+                vm_ip = vm_ip.split("/")[0]
+                if vm_ip.find(".") == -1:
+                    vm_dot_ip = vm_ip.split(":")[-1]
+                else:
+                    vm_dot_ip = vm_ip.split(".")[-1]
+                tags = tags.format(vm_dot_ip=vm_dot_ip, vm_ip=vm_ip)
+            except ValueError:
+                ...
+        tags = tags.translate(str.maketrans("_.:", "---", "{}"))
+        return tags
 
     def run(self, node_tasks: NodeTasksAsync, *args, **kwargs):
         raise NotImplementedError

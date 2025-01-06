@@ -49,8 +49,7 @@ Scenarios:
         ip: "192.0.2.1/24"
         increase_ip: 1
       full: 1
-      tags: ["tag1", "tag2"]
-
+      tags: ["tag1", "dot-{vm_dot_ip}","{vm_ip}"]
 ```
 #### VM network
 The cloned VM can either retain the network settings of the source VM or be assigned a new network configuration. 
@@ -87,6 +86,8 @@ INFO: Waiting for task to finish... [ 0:00:06 / 0:01:00 ]
 INFO: VM 201 cloned successfully
 INFO: Configuring Network for VM 201
 INFO: Configured Network for VM 201 successfully
+INFO: Configuring tags for VM 201
+INFO: VM 201 configured tags:'tag1,dot-2,192-0-2-2' successfully
 INFO: Migrating VM 201 to node: c02
 INFO: Waiting for task to finish... [ 0:00:00 / 0:01:00 ]
 INFO: Waiting for task to finish... [ 0:00:02 / 0:01:00 ]
