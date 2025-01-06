@@ -27,6 +27,7 @@ Example:
 cluster_tasks
 ├── scenarios_configs.yaml
 ├── scenarios
+│   ├── clone_template_vm_base.py  (class ScenarioCloneTemplateVmBase)
 │   ├── clone_template_vm_async.py (class ScenarioCloneTemplateVmAsync)
 │   ├── clone_template_vm_sync.py  (class ScenarioCloneTemplateVmSync)
 ````
