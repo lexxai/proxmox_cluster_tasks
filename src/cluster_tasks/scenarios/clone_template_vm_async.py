@@ -54,6 +54,9 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             # Configure Network
             await self.configure_network(node_tasks)
 
+            # Configure Tags
+            await self.configure_tags(node_tasks)
+
             # Migration VM
             await self.vm_migration(node_tasks)
 
@@ -129,3 +132,17 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             logger.info(f"VM {self.destination_vm_id} cloned successfully")
         else:
             raise Exception(f"Failed to clone VM {self.destination_vm_id}")
+
+    async def configure_tags(self, node_tasks):
+        if not self.tags:
+            return
+        logger.info(f"Configuring tags for VM {self.destination_vm_id}")
+        is_configured = await node_tasks.vm_config_tags_set(
+            self.node, self.destination_vm_id, self.tags
+        )
+        if is_configured:
+            logger.info(
+                f"VM {self.destination_vm_id} configured tags:'{self.tags}' successfully"
+            )
+        else:
+            raise Exception(f"Failed to configure tags for VM {self.destination_vm_id}")

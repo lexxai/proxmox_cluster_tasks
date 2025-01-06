@@ -1,5 +1,6 @@
 import logging
 import asyncio
+from os.path import split
 
 from cluster_tasks.scenarios.scenario_base import ScenarioBase
 from cluster_tasks.tasks.node_tasks_async import (
@@ -47,7 +48,7 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
             increase_ip (int): The value to increment the IP address by.
             decrease_ip (int): The value to decrement the IP address by.
             full (int): Flag indicating whether to clone the full VM or just the template.
-
+            tags (list): A list of tags to apply to the new VM.
         Notes:
             - The `ip` must always include the network mask (e.g., "192.0.2.12/24").
             - If `ip` is not set, it defaults to the source VM's IP with its mask, potentially modified by `increase_ip` or `decrease_ip`.
@@ -66,6 +67,9 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
         self.increase_ip = network.get("increase_ip")
         self.decrease_ip = network.get("decrease_ip")
         self.full = config.get("full", 1)
+        self.tags = config.get("tags")
+        if self.tags and isinstance(self.tags, list):
+            self.tags = ",".join(self.tags)
 
     def run(self, node_tasks: NodeTasksAsync, *args, **kwargs):
         raise NotImplementedError

@@ -133,6 +133,18 @@ class NodeTasksSync(NodeTasksBase):
                 return False
         return True
 
+    def vm_config_tags_set(
+        self, node: str, vm_id: int, tags: str, wait: bool = True
+    ) -> bool:
+
+        data = {"tags": tags}
+        upid = self.api.nodes(node).qemu(vm_id).config.post(data=data)
+        if wait:
+            if not (self.wait_task_done_sync(upid, node)):
+                logger.error("Failed to set tags config")
+                return False
+        return True
+
     def vm_migrate_create(
         self,
         node: str,

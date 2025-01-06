@@ -140,6 +140,28 @@ class NodeTasksAsync(NodeTasksBase):
                 return False
         return True
 
+    async def vm_config_tags_set(
+        self,
+        node: str,
+        vm_id: int,
+        tags: str | None,
+        add: bool = True,
+        wait: bool = True,
+    ) -> bool:
+        if tags is None:
+            return True
+        if add:
+            current_tags = await self.vm_config_get(node, vm_id, filter_keys="tags")
+            if current_tags:
+                tags = f"{current_tags},{tags}"
+        data = {"tags": tags}
+        upid = await self.api.nodes(node).qemu(vm_id).config.post(data=data)
+        if wait:
+            if not (await self.wait_task_done_async(upid, node)):
+                logger.error("Failed to set tags config")
+                return False
+        return True
+
     async def vm_migrate_create(
         self,
         node: str,

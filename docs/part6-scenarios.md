@@ -49,6 +49,8 @@ Scenarios:
         ip: "192.0.2.1/24"
         increase_ip: 1
       full: 1
+      tags: ["tag1", "tag2"]
+
 ```
 #### VM network
 The cloned VM can either retain the network settings of the source VM or be assigned a new network configuration. 
