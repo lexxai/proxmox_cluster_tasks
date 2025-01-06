@@ -13,5 +13,5 @@ Scenarios:
       network:
         ip: "192.0.2.1/24"
         increase_ip: 1
-      tags: ["tag1", "tag2"]
+      tags: ["tag1", ".{vm_ip}}"]
       full: 1

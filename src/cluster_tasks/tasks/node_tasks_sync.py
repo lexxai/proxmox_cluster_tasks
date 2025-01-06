@@ -90,7 +90,7 @@ class NodeTasksSync(NodeTasksBase):
 
     def vm_config_network_set(
         self, node: str, vm_id: int, config: dict, wait: bool = True
-    ) -> bool:
+    ) -> dict | None:
         id = config.get("id", 0)
         increase_ip = config.get("increase_ip")
         decrease_ip = config.get("decrease_ip")
@@ -99,18 +99,18 @@ class NodeTasksSync(NodeTasksBase):
             ip_list = ip.split("/")
             if len(ip_list) != 2:
                 logger.error("IP address must be in CIDR format")
-                return False
+                return None
             try:
                 ipaddress.ip_interface(ip)
             except Exception as e:
                 logger.error(f"Invalid IP network address {e}")
-                return False
+                return None
         gw = config.get("gw")
         # get current config
         iface = f"ipconfig{id}"
         ipconfig = self.vm_config_get(node, vm_id, filter_keys=iface)
         if not ipconfig:
-            return False
+            return None
         ipconfig = ipconfig.split(",")  # "ip={ip},gw={gw}"
         config_ip = ip or ipconfig[0].split("=")[1]
         if config_ip:
@@ -122,7 +122,7 @@ class NodeTasksSync(NodeTasksBase):
                     config_ip = f"{config_ip_if.ip - decrease_ip}/{config_ip_if.network.prefixlen}"
             except Exception as e:
                 logger.error(f"Invalid IP network address {e}")
-                return False
+                return None
         config_gw = ipconfig[1].split("=")[1]
         new_ifconfig = f"ip={config_ip},gw={gw or config_gw}"
         data = {iface: new_ifconfig}
@@ -130,8 +130,8 @@ class NodeTasksSync(NodeTasksBase):
         if wait:
             if not (self.wait_task_done_sync(upid, node)):
                 logger.error("Failed to set network config")
-                return False
-        return True
+                return None
+        return {"ip": config_ip, "gw": {gw or config_gw}}
 
     def vm_config_tags_set(
         self, node: str, vm_id: int, tags: str, wait: bool = True
