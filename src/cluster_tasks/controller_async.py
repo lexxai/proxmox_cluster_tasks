@@ -23,7 +23,7 @@ async def scenario_run(api, scenario_config):
     await scenario.run(node_tasks)  # Assuming `run` is now an async method
 
 
-async def main():
+async def main(concurrent: bool = False):
     config_file = Path(__file__).parent / "scenarios_configs.yaml"
     scenarios_config = ConfigLoader(file_path=config_file)
     # Iterate over the scenarios and run them asynchronously
@@ -35,8 +35,14 @@ async def main():
     try:
         # Run through scenarios
         async with ext_api as api:
+            tasks = []
             for scenario_config in scenarios_config.get("Scenarios").values():
-                await scenario_run(api, scenario_config)
+                if concurrent:
+                    tasks.append(scenario_run(api, scenario_config))
+                else:
+                    await scenario_run(api, scenario_config)
+            if concurrent:
+                await asyncio.gather(*tasks)
     except Exception as e:
         logger.error(f"MAIN: {e}")
 

@@ -38,15 +38,17 @@ backend = ProxmoxHTTPSBackend(
 
 
 ### Run
+Need to define env variables for `PYTHONPATH` to src folder before running main.py
 ```commandline
 python main.py --h         
-usage: Proxmox Cluster Tasks [-h] [--debug {true,false,none}] [--sync]
+usage: Proxmox Cluster Tasks [-h] [--debug {true,false,none}] [--sync] [--concurrent]
 
 options:
   -h, --help            show this help message and exit
   --debug {true,false,none}
                         Enable or disable debug mode (true, false, none)
   --sync                Run in sync mode, default is async mode
+  --concurrent          Run scenarios concurrently; defaults to running sequentially.
 ```
 
 [README](../README.md)

@@ -9,12 +9,12 @@ from controller_async import main as controller_async
 logger = logging.getLogger("CT")
 
 
-def main():
-    controller_sync()
+def main(concurrent: bool = False):
+    controller_sync(concurrent=concurrent)
 
 
-async def async_main():
-    await controller_async()
+async def async_main(concurrent: bool = False):
+    await controller_async(concurrent=concurrent)
 
 
 if __name__ == "__main__":
@@ -29,6 +29,11 @@ if __name__ == "__main__":
     arg_parser.add_argument(
         "--sync", help="Run in sync mode, default is async mode", action="store_true"
     )
+    arg_parser.add_argument(
+        "--concurrent",
+        help="Run scenarios concurrently; defaults to running sequentially.",
+        action="store_true",
+    )
     args = arg_parser.parse_args()
     if args.debug.lower() == "true":
         args.debug = True
@@ -39,8 +44,11 @@ if __name__ == "__main__":
     config_logger(logger, debug=args.debug)
     try:
         if args.sync:
-            main()
+            main(concurrent=args.concurrent)
         else:
-            asyncio.run(async_main())
+            asyncio.run(async_main(concurrent=args.concurrent))
+        logger.info("MAIN: Finished")
+    except KeyboardInterrupt:
+        logger.info("MAIN: KeyboardInterrupt")
     except ValueError as e:
         logger.error(f"MAIN: {e}")
