@@ -139,3 +139,19 @@ class NodeTasksAsync(NodeTasksBase):
                 logger.error("Failed to set network config")
                 return False
         return True
+
+    async def vm_migrate_create(
+        self,
+        node: str,
+        vm_id: int,
+        target_node: str,
+        data: dict = None,
+        wait: bool = True,
+    ) -> bool:
+        if not data:
+            data = {}
+        data["target"] = target_node
+        upid = await self.api.nodes(node).qemu(vm_id).migrate.create(data=data)
+        if wait:
+            return await self.wait_task_done_async(upid, node)
+        return upid

@@ -1,12 +1,13 @@
 import logging
 
+from cluster_tasks.scenarios.clone_template_vm_base import ScenarioCloneTemplateVmBase
 from cluster_tasks.scenarios.scenario_base import ScenarioBase
 from cluster_tasks.tasks.node_tasks_sync import NodeTasksSync
 
 logger = logging.getLogger("CT.{__name__}")
 
 
-class ScenarioCloneTemplateVmSync(ScenarioBase):
+class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
     """
     Scenario for cloning a VM from a template in a Proxmox environment.
 
@@ -21,70 +22,6 @@ class ScenarioCloneTemplateVmSync(ScenarioBase):
         name (str): The name to assign to the new VM.
         full (int): Flag indicating whether to clone the full VM or just the template.
     """
-
-    def __init__(self):
-        """
-        Initializes the ScenarioCloneTemplateVm class.
-
-        This constructor calls the base class constructor to set up the necessary
-        components for the scenario.
-        """
-        super().__init__()
-
-    def configure(self, config):
-        """
-        Configures the scenario with the provided settings.
-
-        This method initializes the scenario by reading configuration values from the
-        provided dictionary and setting up the necessary attributes. If certain values
-        are not explicitly set, defaults are copied from the source VM configuration.
-
-        Args:
-            config (dict): A dictionary containing the configuration settings. The expected keys are:
-                - node (str): The Proxmox node where the VM resides.
-                - source_vm_id (int): The ID of the source VM to clone.
-                - destination_vm_id (int): The ID of the new VM to create.
-                - name (str): The name for the new VM.
-                - ip (str, optional): The base IP address with its mask (e.g., "192.0.2.12/24") for the new VM.
-                                      If not provided, it will be copied from the source VM's IP and modified
-                                      using `increase_ip` or `decrease_ip` if specified.
-                - gw (str, optional): The gateway (GW) IP address for the new VM. If not provided,
-                                      it will be copied from the source VM's GW.
-                - increase_ip (int, optional): The value to increment the IP address by. If `ip` is not provided,
-                                               this value will modify the source VM's IP to compute the new IP.
-                - decrease_ip (int, optional): The value to decrement the IP address by. If `ip` is not provided,
-                                               this value will modify the source VM's IP to compute the new IP.
-                - full (int, optional): Flag indicating whether to clone the full VM or just the template.
-                                        Defaults to 1 (full clone).
-
-        Attributes:
-            node (str): The Proxmox node where the VM resides.
-            source_vm_id (int): The ID of the source VM to clone.
-            destination_vm_id (int): The ID of the new VM to create.
-            name (str): The name for the new VM.
-            ip (str): The final IP address with its mask for the new VM, derived from the configuration or the source VM.
-            gw (str): The final gateway IP address for the new VM, derived from the configuration or the source VM.
-            increase_ip (int): The value to increment the IP address by.
-            decrease_ip (int): The value to decrement the IP address by.
-            full (int): Flag indicating whether to clone the full VM or just the template.
-
-        Notes:
-            - The `ip` must always include the network mask (e.g., "192.0.2.12/24").
-            - If `ip` is not set, it defaults to the source VM's IP with its mask, potentially modified by `increase_ip` or `decrease_ip`.
-            - If `gw` is not set, it defaults to the source VM's gateway IP.
-            - Ensure `increase_ip` and `decrease_ip` are not used simultaneously to avoid conflicts.
-        """
-        self.name = config.get("name")
-        self.node = config.get("node")
-        self.source_vm_id = config.get("source_vm_id")
-        self.destination_vm_id = config.get("destination_vm_id")
-        self.overwrite_destination = config.get("overwrite_destination", False)
-        network = config.get("network", {})
-        self.ip = network.get("ip")
-        self.gw = network.get("gw")
-        self.increase_ip = network.get("increase_ip")
-        self.decrease_ip = network.get("decrease_ip")
-        self.full = config.get("full", 1)
 
     def run(self, node_tasks: NodeTasksSync, *args, **kwargs):
         """
@@ -105,50 +42,80 @@ class ScenarioCloneTemplateVmSync(ScenarioBase):
         logger.info(f"Running Scenario Template VM Clone: {self.scenario_name}")
         # Perform the specific API logic for this scenario
         try:
-            # Open a connection session of the Proxmox API
-            # Check if the VM already exists
-            present = node_tasks.vm_status(self.node, self.destination_vm_id)
+            # Check if the VM already exists asynchronously
+            self.check_existing_destination_vm(node_tasks)
+
+            # Clone the VM from the template asynchronously
+            self.vm_clone(node_tasks)
+
+            # Configure Network
+            self.configure_network(node_tasks)
+
+            # Migration VM
+            self.vm_migration(node_tasks)
+            logger.info(f"Scenario {self.scenario_name} completed successfully")
+        except Exception as e:
+            logger.error(f"Failed to run scenario: {e}")
+
+    def check_existing_destination_vm(self, node_tasks):
+        nodes = [self.destination_node, self.node]
+        for node in nodes:
+            present = node_tasks.vm_status(node, self.destination_vm_id)
             if present:
                 if not self.overwrite_destination:
                     raise Exception(
                         f"VM {self.destination_vm_id} already exists, overwrite_destination not allow to delete VM"
                     )
                 # If VM already exists, delete it
-                logger.info(f"VM {self.destination_vm_id} already exists - Deleting...")
-                is_deleted = node_tasks.vm_delete(self.node, self.destination_vm_id)
+                logger.info(
+                    f"VM {self.destination_vm_id} already exists on node:'{node}'. Deleting..."
+                )
+                is_deleted = node_tasks.vm_delete(node, self.destination_vm_id)
                 if is_deleted:
                     logger.info(f"VM {self.destination_vm_id} deleted successfully")
+                    break
                 else:
                     raise Exception(f"Failed to delete VM {self.destination_vm_id}")
-            # Clone the VM from the template
+
+    def configure_network(self, node_tasks):
+        logger.info(f"Configuring Network for VM {self.destination_vm_id}")
+        config = {
+            "ip": self.ip,
+            "gw": self.gw,
+            "increase_ip": self.increase_ip,
+            "decrease_ip": self.decrease_ip,
+            "full": self.full,
+        }
+        if not node_tasks.vm_config_network_set(
+            self.node, self.destination_vm_id, config=config
+        ):
+            raise Exception("Failed to configure network for VM")
+        logger.info(f"Configured Network for VM {self.destination_vm_id} successfully")
+
+    def vm_migration(self, node_tasks):
+        # Migration VM
+        if self.destination_node:
             logger.info(
-                f"Cloning VM from {self.source_vm_id} to {self.destination_vm_id}"
+                f"Migrating VM {self.destination_vm_id} to node: {self.destination_node}"
             )
-            data = {
-                "newid": int(self.destination_vm_id),
-                "name": self.name,
-                "full": self.full,
-            }
-            is_created = node_tasks.vm_clone(self.node, self.source_vm_id, data)
-            if is_created:
-                logger.info(f"VM {self.destination_vm_id} cloned successfully")
+            is_migrated = node_tasks.vm_migrate_create(
+                self.node, self.destination_vm_id, self.destination_node
+            )
+            if is_migrated:
+                logger.info(f"VM {self.destination_vm_id} migrated successfully")
             else:
-                raise Exception(f"Failed to clone VM {self.destination_vm_id}")
-            logger.info(f"Configuring Network for VM {self.destination_vm_id}")
-            config = {
-                "ip": self.ip,
-                "gw": self.gw,
-                "increase_ip": self.increase_ip,
-                "decrease_ip": self.decrease_ip,
-                "full": self.full,
-            }
-            if not node_tasks.vm_config_network_set(
-                self.node, self.destination_vm_id, config=config
-            ):
-                raise Exception("Failed to configure network for VM")
-            logger.info(
-                f"Configured Network for VM {self.destination_vm_id} successfully"
-            )
-            logger.info(f"Scenario {self.scenario_name} completed successfully")
-        except Exception as e:
-            logger.error(f"Failed to run scenario: {e}")
+                raise Exception(f"Failed to migrate VM {self.destination_vm_id}")
+
+    def vm_clone(self, node_tasks):
+        # Clone the VM from the template asynchronously
+        logger.info(f"Cloning VM from {self.source_vm_id} to {self.destination_vm_id}")
+        data = {
+            "newid": int(self.destination_vm_id),
+            "name": self.name,
+            "full": self.full,
+        }
+        is_created = node_tasks.vm_clone(self.node, self.source_vm_id, data)
+        if is_created:
+            logger.info(f"VM {self.destination_vm_id} cloned successfully")
+        else:
+            raise Exception(f"Failed to clone VM {self.destination_vm_id}")
