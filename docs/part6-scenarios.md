@@ -48,7 +48,7 @@ Scenarios:
       network:
         ip: "192.0.2.1/24"
         increase_ip: 1
-      full: 1
+      full: True
       tags: ["tag1", "dot-{vm_dot_ip}","{vm_ip}"]
 ```
 #### VM network
