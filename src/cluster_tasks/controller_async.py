@@ -25,8 +25,8 @@ async def main():
     try:
         # Run through scenarios
         async with ext_api as api:
-            node_tasks = NodeTasksAsync(api=api)
             for v in scenarios_config.get("Scenarios").values():
+                node_tasks = NodeTasksAsync(api=api)
                 scenario_file = v.get("file")
                 config = v.get("config")
                 # Create scenario instance using the factory

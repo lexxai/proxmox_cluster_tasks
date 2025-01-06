@@ -81,13 +81,17 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
                 vm_ip = self.vm_network.get("ip", "")
                 vm_ip = vm_ip.split("/")[0]
                 if vm_ip.find(".") == -1:
+                    # IPv6
                     vm_dot_ip = vm_ip.split(":")[-1]
+                    vm_dot_ip = vm_dot_ip.zfill(4)
                 else:
+                    # IPv4
                     vm_dot_ip = vm_ip.split(".")[-1]
+                    vm_dot_ip = vm_dot_ip.zfill(3)
                 tags = tags.format(vm_dot_ip=vm_dot_ip, vm_ip=vm_ip)
             except ValueError:
                 ...
-        tags = tags.translate(str.maketrans("_.:", "---", "{}"))
+        tags = tags.translate(str.maketrans("_.:", "---", "{}<>[]()"))
         return tags
 
     def run(self, node_tasks: NodeTasksAsync, *args, **kwargs):

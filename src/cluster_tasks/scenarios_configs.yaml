@@ -1,21 +1,31 @@
 API:
   backend: "https"
 Scenarios:
-  CloneTemplateVM:
+  CloneTemplateVM-2:
     file: "clone_template_vm"
     config:
       node: "c01"
       destination_node: "c02"
       source_vm_id: 1004
-      destination_vm_id: 201
+      destination_vm_id: 202
       overwrite_destination: True
       name: "Cloned01"
       network:
-        ip: "192.0.2.1/24"
+        ip: "192.0.2.0/24"
         increase_ip: 1
-#      tags: ["tag1", "dot-{vm_dot_ip}","{vm_ip}"]
-      tags:
-        - "tag1"
-        - "dot-{vm_dot_ip}"
-        - "{vm_ip}"
+      tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
+      full: True
+  CloneTemplateVM-3:
+    file: "clone_template_vm"
+    config:
+      node: "c01"
+      destination_node: "c03"
+      source_vm_id: 1004
+      destination_vm_id: 203
+      overwrite_destination: True
+      name: "Cloned03"
+      network:
+        ip: "192.0.2.0/24"
+        increase_ip: 3
+      tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
       full: True
