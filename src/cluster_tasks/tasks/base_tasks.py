@@ -14,7 +14,7 @@ class BaseTasks:
         _api (ProxmoxAPI): The Proxmox API instance used for interacting with Proxmox.
     """
 
-    timeout = 60
+    timeout = 10 * 60  # 10 minutes
     polling_interval = 2
 
     def __init__(

@@ -39,6 +39,7 @@ Scenarios:
     file: "clone_template_vm"
     config:
       node: "c01"
+      destination_node: "c02"
       source_vm_id: 1004
       destination_vm_id: 201
       overwrite_destination: True
@@ -70,19 +71,27 @@ This flexibility allows for maintaining existing values or updating them as need
 
 ``` pycon
 python /src/cluster_tasks/main.py
-INFO: Running Scenario Template VM Clone: ScenarioCloneTemplateVmSync
-INFO: VM 201 already exists - Deleting...
-INFO: Waiting for task to finish... [ 0:00:00 / 0:02:00 ]
+INFO: Running Scenario Template VM Clone: ScenarioCloneTemplateVmAsync
+INFO: VM 201 already exists on node:'c02'. Deleting...
+INFO: Waiting for task to finish... [ 0:00:00 / 0:01:00 ]
 INFO: VM 201 deleted successfully
 INFO: Cloning VM from 1004 to 201
-INFO: Waiting for task to finish... [ 0:00:00 / 0:02:00 ]
-INFO: Waiting for task to finish... [ 0:00:02 / 0:02:00 ]
-INFO: Waiting for task to finish... [ 0:00:04 / 0:02:00 ]
-INFO: Waiting for task to finish... [ 0:00:06 / 0:02:00 ]
+INFO: Waiting for task to finish... [ 0:00:00 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:02 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:04 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:06 / 0:01:00 ]
 INFO: VM 201 cloned successfully
 INFO: Configuring Network for VM 201
 INFO: Configured Network for VM 201 successfully
-INFO: Scenario ScenarioCloneTemplateVmSync completed successfully
+INFO: Migrating VM 201 to node: c02
+INFO: Waiting for task to finish... [ 0:00:00 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:02 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:04 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:06 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:08 / 0:01:00 ]
+INFO: Waiting for task to finish... [ 0:00:11 / 0:01:00 ]
+INFO: VM 201 migrated successfully
+INFO: Scenario ScenarioCloneTemplateVmAsync completed successfully
 
 Process finished with exit code 0
 ```
