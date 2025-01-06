@@ -15,18 +15,13 @@ logger = logging.getLogger(f"CT.{__name__}")
 
 async def main():
     config_file = Path(__file__).parent / "scenarios_configs.yaml"
-    scenarios_config = ConfigLoader(file_path=config_file).settings.copy()
+    scenarios_config = ConfigLoader(file_path=config_file)
     # Iterate over the scenarios and run them asynchronously
     logger.debug(f"Scenarios config: {scenarios_config}")
-
-    register_backends(["https"])
-
+    backend_name = scenarios_config.get("API.backend", "https")
+    register_backends(backend_name)
     # Change the API backend to async
-    ext_api = ProxmoxAPI(
-        backend_name="https", backend_type="async"
-    )  # Assuming you have async support in ProxmoxAPI
-
-    # Create an instance of the async NodeTasks class
+    ext_api = ProxmoxAPI(backend_name=backend_name, backend_type="async")
     try:
         # Run through scenarios
         async with ext_api as api:

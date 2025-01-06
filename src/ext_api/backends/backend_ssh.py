@@ -107,12 +107,18 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
             logger.error(f"SSH Error: {error.decode()}")
             return {"response": {}, "status_code": exit_status, "success": success}
         decoded = output.decode().strip()
+        if not decoded:
+            return {
+                "response": {"data": {}},
+                "status_code": exit_status,
+                "success": success,
+            }
         try:
             json.loads(decoded)
         except json.JSONDecodeError:
-            logger.error(f"SSH Error of decode JSON result: {decoded}")
+            logger.debug(f"SSH Error of decode JSON result: {decoded.splitlines()[-1]}")
             return {
-                "response": {"data": decoded},
+                "response": {"data": decoded.splitlines()[-1]},
                 "status_code": exit_status,
                 "success": success,
             }
@@ -184,12 +190,20 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
             logger.error(f"SSH Error: {error.decode()}")
             return {"response": {}, "status_code": exit_status, "success": success}
         decoded = output.strip()
+        if not decoded:
+            return {
+                "response": {"data": {}},
+                "status_code": exit_status,
+                "success": success,
+            }
         try:
             json.loads(decoded)
         except json.JSONDecodeError:
-            logger.error(f"SSH Error of decode JSON result: {decoded}")
+            logger.debug(
+                f"SSH Error of decode JSON result: {decoded.splitlines()[-1]}..."
+            )
             return {
-                "response": {"data": decoded},
+                "response": {"data": decoded.splitlines()[-1]},
                 "status_code": exit_status,
                 "success": success,
             }
