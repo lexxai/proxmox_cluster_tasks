@@ -3,6 +3,8 @@ import logging
 import time
 from idlelib.sidebar import get_widget_padding
 
+from pycparser.ply.yacc import resultlimit
+
 from cluster_tasks.tasks.base_tasks import BaseTasks
 from cluster_tasks.tasks.node_tasks_base import NodeTasksBase
 
@@ -146,3 +148,15 @@ class NodeTasksSync(NodeTasksBase):
         if wait:
             return self.wait_task_done_sync(upid, node)
         return upid
+
+    def get_nodes(self, online: bool = True) -> list[str]:
+        nodes = self.api.nodes.get(filter_keys=["node", "status"])
+        result = []
+        if nodes:
+            if online:
+                result = sorted(
+                    [n.get("node") for n in nodes if n.get("status") == "online"]
+                )
+            else:
+                result = sorted([n.get("node") for n in nodes])
+        return result

@@ -155,3 +155,15 @@ class NodeTasksAsync(NodeTasksBase):
         if wait:
             return await self.wait_task_done_async(upid, node)
         return upid
+
+    async def get_nodes(self, online: bool = True) -> list[str]:
+        nodes = await self.api.nodes.get(filter_keys=["node", "status"])
+        result = []
+        if nodes:
+            if online:
+                result = sorted(
+                    [n.get("node") for n in nodes if n.get("status") == "online"]
+                )
+            else:
+                result = sorted([n.get("node") for n in nodes])
+        return result

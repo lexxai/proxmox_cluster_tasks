@@ -72,6 +72,7 @@ This flexibility allows for maintaining existing values or updating them as need
 ``` pycon
 python /src/cluster_tasks/main.py
 INFO: Running Scenario Template VM Clone: ScenarioCloneTemplateVmAsync
+INFO: Checking if VM 201 already exists
 INFO: VM 201 already exists on node:'c02'. Deleting...
 INFO: Waiting for task to finish... [ 0:00:00 / 0:01:00 ]
 INFO: VM 201 deleted successfully
