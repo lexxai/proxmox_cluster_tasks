@@ -13,6 +13,16 @@ from loader_scene import ScenarioFactory
 logger = logging.getLogger(f"CT.{__name__}")
 
 
+async def scenario_run(api, scenario_config):
+    node_tasks = NodeTasksAsync(api=api)
+    scenario_file = scenario_config.get("file")
+    config = scenario_config.get("config")
+    # Create scenario instance using the factory
+    scenario = ScenarioFactory.create_scenario(scenario_file, config, "async")
+    # Run the scenario asynchronously
+    await scenario.run(node_tasks)  # Assuming `run` is now an async method
+
+
 async def main():
     config_file = Path(__file__).parent / "scenarios_configs.yaml"
     scenarios_config = ConfigLoader(file_path=config_file)
@@ -25,16 +35,8 @@ async def main():
     try:
         # Run through scenarios
         async with ext_api as api:
-            for v in scenarios_config.get("Scenarios").values():
-                node_tasks = NodeTasksAsync(api=api)
-                scenario_file = v.get("file")
-                config = v.get("config")
-                # Create scenario instance using the factory
-                scenario = ScenarioFactory.create_scenario(
-                    scenario_file, config, "async"
-                )
-                # Run the scenario asynchronously
-                await scenario.run(node_tasks)  # Assuming `run` is now an async method
+            for scenario_config in scenarios_config.get("Scenarios").values():
+                await scenario_run(api, scenario_config)
     except Exception as e:
         logger.error(f"MAIN: {e}")
 

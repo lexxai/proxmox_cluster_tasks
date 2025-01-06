@@ -11,6 +11,16 @@ from loader_scene import ScenarioFactory
 logger = logging.getLogger(f"CT.{__name__}")
 
 
+def scenario_run(api, scenario_config):
+    node_tasks = NodeTasksSync(api=api)
+    scenario_file = scenario_config.get("file")
+    config = scenario_config.get("config")
+    # Create scenario instance using the factory
+    scenario = ScenarioFactory.create_scenario(scenario_file, config, "sync")
+    # Run the scenario asynchronously
+    scenario.run(node_tasks)  # Assuming `run` is now an async method
+
+
 def main():
     config_file = Path(__file__).parent / "scenarios_configs.yaml"
     scenarios_config = ConfigLoader(file_path=config_file)
@@ -21,16 +31,8 @@ def main():
     ext_api = ProxmoxAPI(backend_name=backend_name, backend_type="sync")
     try:
         with ext_api as api:
-            node_tasks = NodeTasksSync(
-                api=api, timeout=120
-            )  # Pass the api instance to NodeTasksAsync
-            for v in scenarios_config.get("Scenarios").values():
-                scenario_file = v.get("file")
-                config = v.get("config")
-                # Create scenario instance using the factory
-                scenario = ScenarioFactory.create_scenario(scenario_file, config)
-                # Run the scenario
-                scenario.run(node_tasks)
+            for scenario_config in scenarios_config.get("Scenarios").values():
+                scenario_run(api, scenario_config)
     except Exception as e:
         logger.error(f"MAIN: {e}")
 

@@ -12,7 +12,7 @@ Scenarios:
       name: "Cloned01"
       network:
         ip: "192.0.2.0/24"
-        increase_ip: 1
+        increase_ip: 2
       tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
       full: True
   CloneTemplateVM-3:
