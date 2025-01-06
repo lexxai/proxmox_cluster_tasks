@@ -124,6 +124,7 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
     async def vm_clone(self, node_tasks):
         # Clone the VM from the template asynchronously
         logger.info(f"Cloning VM from {self.source_vm_id} to {self.destination_vm_id}")
+        logger.debug(f"full clone: {self.full}")
         data = {
             "newid": int(self.destination_vm_id),
             "name": self.name,

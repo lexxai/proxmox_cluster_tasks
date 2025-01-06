@@ -70,7 +70,7 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
         self.gw = network.get("gw")
         self.increase_ip = network.get("increase_ip")
         self.decrease_ip = network.get("decrease_ip")
-        self.full = config.get("full", 1)
+        self.full = int(config.get("full", 1))
         self.tags = config.get("tags")
         if self.tags and isinstance(self.tags, list):
             self.tags = ",".join(self.tags)
