@@ -194,7 +194,17 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         return result
 
     async def get_resources(self, resource_type: str) -> list[dict]:
-        resources = await self.api.cluster.resources.get()
+        request_type_map = {
+            "qemu": "vm",
+            "node": "node",
+            "storage": "storage",
+            "sdn": "sdn",
+        }
+        params = None
+        # prepare params by filter in request
+        if resource_type in request_type_map:
+            params = {"type": request_type_map[resource_type]}
+        resources = await self.api.cluster.resources.get(params=params)
         result = []
         for resource in resources:
             if resource.get("type") == resource_type:
