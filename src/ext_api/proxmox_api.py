@@ -214,7 +214,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
 
     def _response_analyze(self, response, filter_keys=None) -> str | list | dict | None:
         try:
-            if filter_keys == "_get_raw_":
+            if filter_keys and filter_keys.get("_raw_"):
                 return response
             if response is None or not response.get("success"):
                 raise Exception(response)

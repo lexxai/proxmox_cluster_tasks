@@ -224,24 +224,28 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
 
     async def create_replication_job(
         self,
-        node: str,
         vm_id: int,
-        target_node: int,
+        target_node: str,
         data: dict = None,
-        wait: bool = True,
-    ) -> bool:
+    ):
         if not data:
             data = {}
         # calculate job id
         jobs = await self.get_replication_jobs(filter_keys={"guest": vm_id})
-        max_job_id = 0
+        max_job_num = 0
         for job in jobs:
-            max_job_id = max(max_job_id, int(job.get("id").split("-")[1]))
-        job_id = max_job_id + 1
+            if job.get("target") == target_node:
+                logger.debug(
+                    f"Replication already present for VM '{vm_id}' for '{target_node}', skip"
+                )
+                return False
+            max_job_num = max(max_job_num, int(job.get("jobnum", 0)))
+        job_id = max_job_num + 1 if len(jobs) else 0
         data["id"] = f"{vm_id}-{job_id}"
         data["target"] = target_node
         data["type"] = "local"
-        upid = await self.api.nodes(node).qemu(vm_id).replication.create(data=data)
-        if wait:
-            return await self.wait_task_done_async(upid, node)
-        return upid
+        result = await self.api.cluster.replication.create(
+            data=data, filter_keys={"_raw_": True}
+        )
+        # logger.debug(f"finished {result}")
+        return result.get("success")
