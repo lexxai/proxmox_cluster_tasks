@@ -2,7 +2,7 @@ import logging
 
 from cluster_tasks.scenarios.clone_template_vm_base import ScenarioCloneTemplateVmBase
 from cluster_tasks.scenarios.scenario_base import ScenarioBase
-from cluster_tasks.tasks.node_tasks_sync import NodeTasksSync
+from cluster_tasks.tasks.node_tasks_sync import ProxmoxTasksSync
 
 logger = logging.getLogger("CT.{__name__}")
 
@@ -23,7 +23,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         full (int): Flag indicating whether to clone the full VM or just the template.
     """
 
-    def run(self, node_tasks: NodeTasksSync, *args, **kwargs) -> bool | None:
+    def run(self, node_tasks: ProxmoxTasksSync, *args, **kwargs) -> bool | None:
         """
         Runs the scenario of cloning a VM from a template.
 
@@ -31,7 +31,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         proceeds to clone the VM from the template.
 
         Args:
-            node_tasks (NodeTasksSync): The object responsible for performing the sync operations
+            node_tasks (ProxmoxTasksSync): The object responsible for performing the sync operations
                                          like checking VM status, deleting a VM, and cloning a VM.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.

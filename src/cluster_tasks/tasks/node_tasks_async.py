@@ -3,12 +3,12 @@ import ipaddress
 import logging
 
 from cluster_tasks.tasks.base_tasks import BaseTasks
-from cluster_tasks.tasks.node_tasks_base import NodeTasksBase
+from cluster_tasks.tasks.node_tasks_base import ProxmoxTasksBase
 
 logger = logging.getLogger("CT.{__name__}")
 
 
-class NodeTasksAsync(NodeTasksBase):
+class ProxmoxTasksAsync(ProxmoxTasksBase):
     """
     NodeTasks is a class for managing tasks related to virtual machines
     on a Proxmox node. This includes operations like checking task status,

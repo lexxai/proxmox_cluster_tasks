@@ -6,7 +6,7 @@ from idlelib.sidebar import get_widget_padding
 from pycparser.ply.yacc import resultlimit
 
 from cluster_tasks.tasks.base_tasks import BaseTasks
-from cluster_tasks.tasks.node_tasks_base import NodeTasksBase
+from cluster_tasks.tasks.node_tasks_base import ProxmoxTasksBase
 
 # Creating a logger instance specific to the current module
 logger = logging.getLogger("CT.{__name__}")
@@ -17,7 +17,7 @@ to reflect the source module where the log entries are generated.
 """
 
 
-class NodeTasksSync(NodeTasksBase):
+class ProxmoxTasksSync(ProxmoxTasksBase):
     """
     NodeTasks class provides functionality for interacting with tasks on a Proxmox node.
     It includes methods to check task status, wait for tasks to finish, and perform

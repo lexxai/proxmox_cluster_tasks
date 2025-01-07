@@ -7,7 +7,7 @@ from cluster_tasks.tasks.base_tasks import BaseTasks
 logger = logging.getLogger("CT.{__name__}")
 
 
-class NodeTasksBase(BaseTasks):
+class ProxmoxTasksBase(BaseTasks):
     """
     Base class with shared logic for both sync and async task handling.
     Contains methods for both sync and async API calls.

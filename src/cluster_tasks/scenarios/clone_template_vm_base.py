@@ -4,7 +4,7 @@ from os.path import split
 
 from cluster_tasks.scenarios.scenario_base import ScenarioBase
 from cluster_tasks.tasks.node_tasks_async import (
-    NodeTasksAsync,
+    ProxmoxTasksAsync,
 )  # Assuming there's an async version of NodeTasks
 
 logger = logging.getLogger("CT.{__name__}")
@@ -94,5 +94,5 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
         tags = tags.translate(str.maketrans("_.:", "---", "{}<>[]()"))
         return tags
 
-    def run(self, node_tasks: NodeTasksAsync, *args, **kwargs):
+    def run(self, node_tasks: ProxmoxTasksAsync, *args, **kwargs):
         raise NotImplementedError

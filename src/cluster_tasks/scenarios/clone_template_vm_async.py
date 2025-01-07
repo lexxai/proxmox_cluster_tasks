@@ -4,7 +4,7 @@ import asyncio
 from cluster_tasks.scenarios.clone_template_vm_base import ScenarioCloneTemplateVmBase
 from cluster_tasks.scenarios.scenario_base import ScenarioBase
 from cluster_tasks.tasks.node_tasks_async import (
-    NodeTasksAsync,
+    ProxmoxTasksAsync,
 )  # Assuming there's an async version of NodeTasks
 
 logger = logging.getLogger("CT.{__name__}")
@@ -26,7 +26,7 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
         full (int): Flag indicating whether to clone the full VM or just the template.
     """
 
-    async def run(self, node_tasks: NodeTasksAsync, *args, **kwargs) -> bool | None:
+    async def run(self, node_tasks: ProxmoxTasksAsync, *args, **kwargs) -> bool | None:
         """
         Runs the scenario of cloning a VM from a template asynchronously.
 
@@ -34,7 +34,7 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
         proceeds to clone the VM from the template. All operations are performed asynchronously.
 
         Args:
-            node_tasks (NodeTasksAsync): The object responsible for performing the async operations
+            node_tasks (ProxmoxTasksAsync): The object responsible for performing the async operations
                                          like checking VM status, deleting a VM, and cloning a VM.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
@@ -121,7 +121,7 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
         self.vm_network = result
         logger.info(f"Configured Network for VM {self.destination_vm_id} successfully")
 
-    async def vm_migration(self, node_tasks: NodeTasksAsync):
+    async def vm_migration(self, node_tasks: ProxmoxTasksAsync):
         # Migration VM
         if self.destination_node:
             logger.info(
