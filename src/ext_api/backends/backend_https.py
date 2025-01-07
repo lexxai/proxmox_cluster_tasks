@@ -185,7 +185,8 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
             one_time = True
         try:
             url = self.format_url(endpoint, params)
-            response = await self._client.request(method, url, data=data)
+            # logger.debug(f"Request: {method=}, {url=}, {data=}, {params=}")
+            response = await self._client.request(method, url, data=data, params=params)
             return self.response_analyze(response)
 
         finally:
