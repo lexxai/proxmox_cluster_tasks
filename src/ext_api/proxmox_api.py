@@ -119,7 +119,9 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         result = self._async_execute(*args, **kwargs)
         return result
 
-    def _request_prepare(self, data=None, task_id: str = None) -> dict:
+    def _request_prepare(
+        self, data=None, task_id: str = None, params: dict = None
+    ) -> dict:
         is_async = self._is_async()
         # used task_id or pulled for later async run code or directly in class instance for sync code
         task_id = task_id or self._task_id
@@ -146,6 +148,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             "method": method,
             "endpoint": endpoint,
             "data": data,
+            "params": params,
         }
 
     @staticmethod
@@ -233,11 +236,18 @@ class ProxmoxAPI(ProxmoxBaseAPI):
         return self._response_analyze(response, filter_keys=filter_keys)
 
     async def _async_execute(
-        self, data=None, filter_keys=None, params: dict = None, task_id: str = None
+        self,
+        data=None,
+        filter_keys=None,
+        params: dict = None,
+        task_id: str = None,
+        request_params: dict = None,
     ) -> str | list | dict | None:
         # logger.debug("_async_execute")
-        params = params or self._request_prepare(data, task_id=task_id)
-        response = await self.async_request(**params)
+        request_params = request_params or self._request_prepare(
+            data, task_id=task_id, params=params
+        )
+        response = await self.async_request(**request_params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
 
