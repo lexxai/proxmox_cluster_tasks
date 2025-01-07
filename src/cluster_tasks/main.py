@@ -18,7 +18,8 @@ async def async_main(concurrent: bool = False):
 
 
 if __name__ == "__main__":
-    arg_parser = argparse.ArgumentParser("Proxmox Cluster Tasks")
+    project_name = "Proxmox Cluster Tasks"
+    arg_parser = argparse.ArgumentParser(project_name)
     arg_parser.add_argument(
         "--debug",
         type=str,  # Accept as a string to parse custom logic
@@ -47,8 +48,8 @@ if __name__ == "__main__":
             main(concurrent=args.concurrent)
         else:
             asyncio.run(async_main(concurrent=args.concurrent))
-        logger.info("MAIN: Finished")
+        logger.info(f"{project_name}: Finished")
     except KeyboardInterrupt:
-        logger.info("MAIN: KeyboardInterrupt")
+        logger.info(f"{project_name}: KeyboardInterrupt")
     except ValueError as e:
-        logger.error(f"MAIN: {e}")
+        logger.error(f"{project_name}: {e}")

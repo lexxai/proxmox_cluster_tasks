@@ -39,7 +39,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         Raises:
             Exception: If the VM already exists and deletion fails, or if cloning fails.
         """
-        logger.info(f"Running Scenario Template VM Clone: {self.scenario_name}")
+        logger.info(f"*** Running Scenario Template VM Clone: '{self.scenario_name}'")
         # Perform the specific API logic for this scenario
         try:
             # Check if the VM already exists asynchronously
@@ -56,9 +56,9 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
 
             # Migration VM
             self.vm_migration(node_tasks)
-            logger.info(f"Scenario {self.scenario_name} completed successfully")
+            logger.info(f"*** Scenario '{self.scenario_name}' completed successfully")
         except Exception as e:
-            logger.error(f"Failed to run scenario: {e}")
+            logger.error(f"Failed to run scenario '{self.scenario_name}': {e}")
 
     def check_existing_destination_vm(self, node_tasks):
         logger.info(f"Checking if destination Node:'{self.destination_node}' is online")

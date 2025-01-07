@@ -9,8 +9,8 @@ logger = logging.getLogger("CT.{__name__}")
 
 
 class ScenarioBase(ABC):
-    def __init__(self):
-        self.scenario_name = self.__class__.__name__
+    def __init__(self, name: str = None):
+        self.scenario_name = name or self.__class__.__name__
 
     @abstractmethod
     def run(self, node_tasks: NodeTasksBase, *args, **kwargs):

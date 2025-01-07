@@ -22,7 +22,11 @@ class ScenarioFactory:
 
     @classmethod
     def create_scenario(
-        cls, scenario_file: str, config: dict = None, run_type: str = "sync"
+        cls,
+        scenario_file: str,
+        config: dict = None,
+        name: str = None,
+        run_type: str = "sync",
     ):
         # Dynamically load the scenario class based on the name
         scenario_file = f"{scenario_file}{cls.suffix_file.get(run_type)}"
@@ -33,6 +37,6 @@ class ScenarioFactory:
             module_name, f"{cls.prefix_class}{scenario_name}"
         )
 
-        scenario_instance = scenario_class()
+        scenario_instance = scenario_class(name=name)
         scenario_instance.configure(config)
         return scenario_instance

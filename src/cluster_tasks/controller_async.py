@@ -13,12 +13,14 @@ from loader_scene import ScenarioFactory
 logger = logging.getLogger(f"CT.{__name__}")
 
 
-async def scenario_run(api, scenario_config):
+async def scenario_run(api, scenario_config, scenario_name: str = None):
     node_tasks = NodeTasksAsync(api=api)
     scenario_file = scenario_config.get("file")
     config = scenario_config.get("config")
     # Create scenario instance using the factory
-    scenario = ScenarioFactory.create_scenario(scenario_file, config, "async")
+    scenario = ScenarioFactory.create_scenario(
+        scenario_file, config, scenario_name, "async"
+    )
     # Run the scenario asynchronously
     await scenario.run(node_tasks)  # Assuming `run` is now an async method
 
@@ -36,15 +38,17 @@ async def main(concurrent: bool = False):
         # Run through scenarios
         async with ext_api as api:
             tasks = []
-            for scenario_config in scenarios_config.get("Scenarios").values():
+            for scenario_name, scenario_config in scenarios_config.get(
+                "Scenarios"
+            ).items():
                 if concurrent:
-                    tasks.append(scenario_run(api, scenario_config))
+                    tasks.append(scenario_run(api, scenario_config, scenario_name))
                 else:
-                    await scenario_run(api, scenario_config)
+                    await scenario_run(api, scenario_config, scenario_name)
             if concurrent:
                 await asyncio.gather(*tasks)
     except Exception as e:
-        logger.error(f"MAIN: {e}")
+        logger.error(f"Controller: {e}")
 
 
 if __name__ == "__main__":

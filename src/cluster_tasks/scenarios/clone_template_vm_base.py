@@ -11,8 +11,8 @@ logger = logging.getLogger("CT.{__name__}")
 
 
 class ScenarioCloneTemplateVmBase(ScenarioBase):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name: str = None):
+        super().__init__(name=name)
         self.vm_network = None
 
     def configure(self, config):
