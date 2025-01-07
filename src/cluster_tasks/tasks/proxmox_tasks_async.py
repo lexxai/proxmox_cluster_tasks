@@ -210,3 +210,30 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             if resource.get("type") == resource_type:
                 result.append(resource)
         return result
+
+    async def get_replication_jobs(self, filter_keys: dict = None) -> list[dict]:
+        jobs = await self.api.cluster.replication.get()
+        if filter_keys:
+            result = []
+            for job in jobs:
+                for key, value in filter_keys.items():
+                    if job.get(key) == value:
+                        result.append(job)
+            return result
+        return jobs
+
+    async def create_replication_job(
+        self,
+        node: str,
+        vm_id: int,
+        target_node: int,
+        data: dict = None,
+        wait: bool = True,
+    ) -> bool:
+        if not data:
+            data = {}
+        data["target"] = target_node
+        upid = await self.api.nodes(node).qemu(vm_id).replication.create(data=data)
+        if wait:
+            return await self.wait_task_done_async(upid, node)
+        return upid

@@ -9,23 +9,29 @@ Scenarios:
       source_vm_id: 1004
       destination_vm_id: 202
       overwrite_destination: True
+      full: True
       name: "Cloned01"
       network:
         ip: "192.0.2.0/24"
         increase_ip: 2
       tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
-      full: True
-  CloneTemplateVM-3:
-    file: "clone_template_vm"
-    config:
-      node: "c01"
-      destination_node: "c04"
-      source_vm_id: 1004
-      destination_vm_id: 204
-      overwrite_destination: True
-      name: "Cloned03"
-      network:
-        ip: "192.0.2.0/24"
-        increase_ip: 3
-      tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
-      full: True
+      replications:
+        - node "c04":
+          - schedule: "*/30"
+          - rate: 5.0
+          - comment: "Replication to c04"
+          - disable: False
+#  CloneTemplateVM-3:
+#    file: "clone_template_vm"
+#    config:
+#      node: "c01"
+#      destination_node: "c04"
+#      source_vm_id: 1004
+#      destination_vm_id: 204
+#      overwrite_destination: True
+#      name: "Cloned03"
+#      network:
+#        ip: "192.0.2.0/24"
+#        increase_ip: 3
+#      tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
+#      full: True
