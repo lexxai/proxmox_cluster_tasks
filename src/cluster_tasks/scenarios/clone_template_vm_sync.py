@@ -61,9 +61,12 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             logger.error(f"Failed to run scenario: {e}")
 
     def check_existing_destination_vm(self, node_tasks):
+        logger.info(f"Checking if destination Node:'{self.destination_node}' is online")
+        additional_nodes = node_tasks.get_nodes(online=True)
+        if self.destination_node not in additional_nodes:
+            raise Exception(f"Node:'{self.destination_node}' is offline")
         logger.info(f"Checking if VM {self.destination_vm_id} already exists")
         nodes = [self.destination_node, self.node]
-        additional_nodes = node_tasks.get_nodes(online=True)
         for node in additional_nodes:
             if node not in nodes:  # Avoid duplicates
                 nodes.append(node)
