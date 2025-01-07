@@ -221,7 +221,7 @@ class ProxmoxAPI(ProxmoxBaseAPI):
                 return None
             return self._filter_response(response_data, filter_keys)
         except Exception as e:
-            logger.warning(f"Failed to execute: {e}")
+            logger.debug(f"WARING: Failed to execute: {e}")
             return None
 
     def _execute(

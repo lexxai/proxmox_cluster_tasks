@@ -93,13 +93,12 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             "gw": self.gw,
             "increase_ip": self.increase_ip,
             "decrease_ip": self.decrease_ip,
-            "full": self.full,
         }
         result = node_tasks.vm_config_network_set(
             self.node, self.destination_vm_id, config=config
         )
         if result is None:
-            raise Exception("Failed to configure network for VM")
+            f"Failed to configure network for VM {self.destination_vm_id}: {config}"
         self.vm_network = result
         logger.info(f"Configured Network for VM {self.destination_vm_id} successfully")
 

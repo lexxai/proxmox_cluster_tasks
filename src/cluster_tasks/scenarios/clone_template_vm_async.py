@@ -62,7 +62,7 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
 
             logger.info(f"Scenario {self.scenario_name} completed successfully")
         except Exception as e:
-            logger.error(f"Failed to run scenario: {e}")
+            logger.error(f"Failed to run scenario {self.scenario_name}: {e}")
 
     async def check_existing_destination_vm(self, node_tasks):
         logger.info(f"Checking if VM {self.destination_vm_id} already exists")
@@ -97,13 +97,14 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             "gw": self.gw,
             "increase_ip": self.increase_ip,
             "decrease_ip": self.decrease_ip,
-            "full": self.full,
         }
         result = await node_tasks.vm_config_network_set(
             self.node, self.destination_vm_id, config=config
         )
         if result is None:
-            raise Exception("Failed to configure network for VM")
+            raise Exception(
+                f"Failed to configure network for VM {self.destination_vm_id}: {config}"
+            )
         self.vm_network = result
         logger.info(f"Configured Network for VM {self.destination_vm_id} successfully")
 
