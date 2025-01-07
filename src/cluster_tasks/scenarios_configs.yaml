@@ -18,7 +18,7 @@ Scenarios:
       replications:
         - node "c04":
           - schedule: "*/30"
-          - rate: 5.0
+          - rate: 50.0
           - comment: "Replication to c04"
           - disable: False
 #  CloneTemplateVM-3:

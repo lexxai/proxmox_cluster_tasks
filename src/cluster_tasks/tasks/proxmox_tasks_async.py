@@ -249,3 +249,24 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         )
         # logger.debug(f"finished {result}")
         return result.get("success")
+
+    async def remove_replication_job(
+        self, vm_id: int, target_node: str = None, force: bool = None, keep: bool = None
+    ):
+        jobs = await self.get_replication_jobs(filter_keys={"guest": vm_id})
+        if target_node:
+            jobs = [job for job in jobs if job.get("target") == target_node]
+        results = []
+        for job in jobs:
+            job_id = job.get("id")
+            data = {}
+            if force is not None:
+                data["force"] = int(force)
+            if keep is not None:
+                data["keep"] = int(keep)
+            if job_id:
+                result = await self.api.cluster.replication(job_id).delete(
+                    data=data, filter_keys={"_raw_": True}
+                )
+                results.append(result.get("success"))
+        return all(results)
