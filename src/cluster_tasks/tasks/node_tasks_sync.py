@@ -172,3 +172,11 @@ class NodeTasksSync(NodeTasksBase):
             else:
                 result = sorted([n.get("node") for n in nodes])
         return result
+
+    def get_resources(self, resource_type: str) -> list[dict]:
+        resources = self.api.cluster.resources.get()
+        result = []
+        for resource in resources:
+            if resource.get("type") == resource_type:
+                result.append(resource)
+        return result

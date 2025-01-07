@@ -178,7 +178,9 @@ class NodeTasksAsync(NodeTasksBase):
             return await self.wait_task_done_async(upid, node)
         return upid
 
-    async def get_nodes(self, online: bool = True) -> list[str]:
+    async def get_nodes(
+        self, online: bool = True, with_status: bool = False
+    ) -> list[str] | list[dict]:
         nodes = await self.api.nodes.get(filter_keys=["node", "status"])
         result = []
         if nodes:
@@ -187,5 +189,16 @@ class NodeTasksAsync(NodeTasksBase):
                     [n.get("node") for n in nodes if n.get("status") == "online"]
                 )
             else:
-                result = sorted([n.get("node") for n in nodes])
+                if with_status:
+                    return nodes
+                else:
+                    result = sorted([n.get("node") for n in nodes])
+        return result
+
+    async def get_resources(self, resource_type: str) -> list[dict]:
+        resources = await self.api.cluster.resources.get()
+        result = []
+        for resource in resources:
+            if resource.get("type") == resource_type:
+                result.append(resource)
         return result

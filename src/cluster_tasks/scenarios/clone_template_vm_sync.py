@@ -23,7 +23,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         full (int): Flag indicating whether to clone the full VM or just the template.
     """
 
-    def run(self, node_tasks: NodeTasksSync, *args, **kwargs):
+    def run(self, node_tasks: NodeTasksSync, *args, **kwargs) -> bool | None:
         """
         Runs the scenario of cloning a VM from a template.
 
@@ -57,37 +57,45 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             # Migration VM
             self.vm_migration(node_tasks)
             logger.info(f"*** Scenario '{self.scenario_name}' completed successfully")
+            return True
         except Exception as e:
             logger.error(f"Failed to run scenario '{self.scenario_name}': {e}")
 
+    @staticmethod
+    def check_vm_is_exists_in_cluster(node_tasks, vm_id) -> str | None:
+        resources = node_tasks.get_resources(resource_type="qemu")
+        for resource in resources:
+            if resource.get("vmid") == vm_id:
+                return resource.get("node")
+        return None
+
     def check_existing_destination_vm(self, node_tasks):
         logger.info(f"Checking if destination Node:'{self.destination_node}' is online")
-        additional_nodes = node_tasks.get_nodes(online=True)
-        if self.destination_node not in additional_nodes:
+        online_nodes = node_tasks.get_nodes(online=True)
+        if self.destination_node not in online_nodes:
             raise Exception(f"Node:'{self.destination_node}' is offline")
         logger.info(f"Checking if VM {self.destination_vm_id} already exists")
-        nodes = [self.destination_node, self.node]
-        for node in additional_nodes:
-            if node not in nodes:  # Avoid duplicates
-                nodes.append(node)
-        logger.debug(f"Nodes: {nodes}")
-        for node in nodes:
-            present = node_tasks.vm_status(node, self.destination_vm_id)
-            if present:
-                if not self.overwrite_destination:
-                    raise Exception(
-                        f"VM {self.destination_vm_id} already exists, overwrite_destination not allow to delete VM"
-                    )
-                # If VM already exists, delete it
-                logger.info(
-                    f"VM {self.destination_vm_id} already exists on node:'{node}'. Deleting..."
+        present_node = self.check_vm_is_exists_in_cluster(
+            node_tasks, self.destination_vm_id
+        )
+        if present_node:
+            if not self.overwrite_destination:
+                raise Exception(
+                    f"VM {self.destination_vm_id} already exists, overwrite_destination not allow to delete VM"
                 )
-                is_deleted = node_tasks.vm_delete(node, self.destination_vm_id)
-                if is_deleted:
-                    logger.info(f"VM {self.destination_vm_id} deleted successfully")
-                    break
-                else:
-                    raise Exception(f"Failed to delete VM {self.destination_vm_id}")
+            if present_node not in online_nodes:
+                raise Exception(
+                    f"VM {self.destination_vm_id} already exists on offline node:'{present_node}', cannot delete"
+                )
+            # If VM already exists, delete it
+            logger.info(
+                f"VM {self.destination_vm_id} already exists on node:'{present_node}'. Deleting..."
+            )
+            is_deleted = node_tasks.vm_delete(present_node, self.destination_vm_id)
+            if is_deleted:
+                logger.info(f"VM {self.destination_vm_id} deleted successfully")
+            else:
+                raise Exception(f"Failed to delete VM {self.destination_vm_id}")
 
     def configure_network(self, node_tasks):
         logger.info(f"Configuring Network for VM {self.destination_vm_id}")

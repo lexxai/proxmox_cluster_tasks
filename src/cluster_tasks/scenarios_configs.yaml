@@ -19,7 +19,7 @@ Scenarios:
     file: "clone_template_vm"
     config:
       node: "c01"
-      destination_node: "c03"
+      destination_node: "c04"
       source_vm_id: 1004
       destination_vm_id: 203
       overwrite_destination: True
