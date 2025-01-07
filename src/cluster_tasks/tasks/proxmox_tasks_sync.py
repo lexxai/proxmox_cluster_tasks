@@ -185,3 +185,63 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             if resource.get("type") == resource_type:
                 result.append(resource)
         return result
+
+    def get_replication_jobs(self, filter_keys: dict = None) -> list[dict]:
+        jobs = self.api.cluster.replication.get()
+        if filter_keys:
+            result = []
+            for job in jobs:
+                for key, value in filter_keys.items():
+                    if job.get(key) == value:
+                        result.append(job)
+            return result
+        return jobs
+
+    def create_replication_job(
+        self,
+        vm_id: int,
+        target_node: str,
+        data: dict = None,
+    ):
+        if not data:
+            data = {}
+        # calculate job id
+        jobs = self.get_replication_jobs(filter_keys={"guest": vm_id})
+        max_job_num = 0
+        for job in jobs:
+            if job.get("target") == target_node:
+                logger.debug(
+                    f"Replication already present for VM '{vm_id}' for '{target_node}', skip"
+                )
+                return False
+            max_job_num = max(max_job_num, int(job.get("jobnum", 0)))
+        job_id = max_job_num + 1 if len(jobs) else 0
+        data["id"] = f"{vm_id}-{job_id}"
+        data["target"] = target_node
+        data["type"] = "local"
+        result = self.api.cluster.replication.create(
+            data=data, filter_keys={"_raw_": True}
+        )
+        # logger.debug(f"finished {result}")
+        return result.get("success")
+
+    def remove_replication_job(
+        self, vm_id: int, target_node: str = None, force: bool = None, keep: bool = None
+    ):
+        jobs = self.get_replication_jobs(filter_keys={"guest": vm_id})
+        if target_node:
+            jobs = [job for job in jobs if job.get("target") == target_node]
+        results = []
+        for job in jobs:
+            job_id = job.get("id")
+            data = {}
+            if force is not None:
+                data["force"] = int(force)
+            if keep is not None:
+                data["keep"] = int(keep)
+            if job_id:
+                result = self.api.cluster.replication(job_id).delete(
+                    data=data, filter_keys={"_raw_": True}
+                )
+                results.append(result.get("success"))
+        return all(results)
