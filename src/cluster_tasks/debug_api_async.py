@@ -229,11 +229,13 @@ async def debug_create_ha_group(api: ProxmoxAPI):
 
 async def debug_low_level_get_version(api: ProxmoxAPI):
     # solution 1
-    logger.info(params := api.version.get(get_request_param=True))
-    logger.info(response := await api.async_request(**params))
+    logger.info(request_params := api.version.get(get_request_param=True))
+    logger.info(response := await api.async_request(**request_params))
     logger.info(api._response_analyze(response, filter_keys="version"))
     # solution 2
-    logger.info(await api._async_execute(params=params, filter_keys="version"))
+    logger.info(
+        await api._async_execute(request_params=request_params, filter_keys="version")
+    )
 
     logger.info(
         params := api.cluster.ha.groups.create(
