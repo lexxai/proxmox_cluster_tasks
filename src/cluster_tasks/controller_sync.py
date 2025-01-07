@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, wait
 from pathlib import Path
 
 from cluster_tasks.configure_logging import config_logger
-from cluster_tasks.tasks.node_tasks_sync import ProxmoxTasksSync
+from cluster_tasks.tasks.proxmox_tasks_sync import ProxmoxTasksSync
 from config.config import ConfigLoader, configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI

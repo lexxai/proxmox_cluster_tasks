@@ -1,8 +1,7 @@
 import logging
 
 from cluster_tasks.scenarios.clone_template_vm_base import ScenarioCloneTemplateVmBase
-from cluster_tasks.scenarios.scenario_base import ScenarioBase
-from cluster_tasks.tasks.node_tasks_sync import ProxmoxTasksSync
+from cluster_tasks.tasks.proxmox_tasks_sync import ProxmoxTasksSync
 
 logger = logging.getLogger("CT.{__name__}")
 

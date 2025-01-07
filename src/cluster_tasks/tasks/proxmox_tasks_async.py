@@ -1,9 +1,7 @@
-import asyncio
 import ipaddress
 import logging
 
-from cluster_tasks.tasks.base_tasks import BaseTasks
-from cluster_tasks.tasks.node_tasks_base import ProxmoxTasksBase
+from cluster_tasks.tasks.proxmox_tasks_base import ProxmoxTasksBase
 
 logger = logging.getLogger("CT.{__name__}")
 

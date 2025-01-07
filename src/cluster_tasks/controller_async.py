@@ -3,7 +3,7 @@ from pathlib import Path
 import asyncio
 
 from cluster_tasks.configure_logging import config_logger
-from cluster_tasks.tasks.node_tasks_async import ProxmoxTasksAsync
+from cluster_tasks.tasks.proxmox_tasks_async import ProxmoxTasksAsync
 from config.config import ConfigLoader, configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI

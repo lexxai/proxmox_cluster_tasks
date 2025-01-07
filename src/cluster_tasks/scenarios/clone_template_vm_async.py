@@ -3,7 +3,7 @@ import asyncio
 
 from cluster_tasks.scenarios.clone_template_vm_base import ScenarioCloneTemplateVmBase
 from cluster_tasks.scenarios.scenario_base import ScenarioBase
-from cluster_tasks.tasks.node_tasks_async import (
+from cluster_tasks.tasks.proxmox_tasks_async import (
     ProxmoxTasksAsync,
 )  # Assuming there's an async version of NodeTasks
 
