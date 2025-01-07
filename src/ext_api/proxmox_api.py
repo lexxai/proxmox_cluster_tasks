@@ -228,11 +228,18 @@ class ProxmoxAPI(ProxmoxBaseAPI):
             return None
 
     def _execute(
-        self, data=None, filter_keys=None, params: dict = None, task_id: str = None
+        self,
+        data=None,
+        filter_keys=None,
+        params: dict = None,
+        task_id: str = None,
+        request_params: dict = None,
     ) -> str | list | dict | None:
         # logger.debug("_execute")
-        params = params or self._request_prepare(data, task_id=task_id)
-        response = self.request(**params)
+        request_params = request_params or self._request_prepare(
+            data, task_id=task_id, params=params
+        )
+        response = self.request(**request_params)
         return self._response_analyze(response, filter_keys=filter_keys)
 
     async def _async_execute(
