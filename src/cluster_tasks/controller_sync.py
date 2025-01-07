@@ -47,7 +47,10 @@ def main(concurrent: bool = False):
     ext_api = None
     if concurrent:
         max_threads = min(MAX_CONCURRENCY, len(scenarios_config.get("Scenarios")))
-        clients = [ProxmoxAPI(backend_name="https") for _ in range(max_threads)]
+        clients = [
+            ProxmoxAPI(backend_name=backend_name, backend_type="sync")
+            for _ in range(max_threads)
+        ]
         [client_queue.put(c) for c in clients]
     else:
         ext_api = ProxmoxAPI(backend_name=backend_name, backend_type="sync")
