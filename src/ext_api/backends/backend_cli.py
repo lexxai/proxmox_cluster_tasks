@@ -34,6 +34,8 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         if params:
             endpoint = endpoint.format(**params)
         command = [self.entry_point, method, endpoint]
+        if params:
+            command.extend([f"--{k}={v}" for k, v in params.items()])
         if data:
             command.extend([f"--{k}={v}" for k, v in data.items()])
         command.append("--output-format=json")
