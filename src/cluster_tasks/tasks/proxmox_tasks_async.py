@@ -232,7 +232,15 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
     ) -> bool:
         if not data:
             data = {}
+        # calculate job id
+        jobs = await self.get_replication_jobs(filter_keys={"guest": vm_id})
+        max_job_id = 0
+        for job in jobs:
+            max_job_id = max(max_job_id, int(job.get("id").split("-")[1]))
+        job_id = max_job_id + 1
+        data["id"] = f"{vm_id}-{job_id}"
         data["target"] = target_node
+        data["type"] = "local"
         upid = await self.api.nodes(node).qemu(vm_id).replication.create(data=data)
         if wait:
             return await self.wait_task_done_async(upid, node)
