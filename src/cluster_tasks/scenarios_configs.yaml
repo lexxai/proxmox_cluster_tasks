@@ -21,7 +21,7 @@ Scenarios:
       node: "c01"
       destination_node: "c04"
       source_vm_id: 1004
-      destination_vm_id: 203
+      destination_vm_id: 204
       overwrite_destination: True
       name: "Cloned03"
       network:
