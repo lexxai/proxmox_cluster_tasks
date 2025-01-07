@@ -5,14 +5,14 @@ from pathlib import Path
 
 from cluster_tasks.configure_logging import config_logger
 from cluster_tasks.tasks.node_tasks_sync import NodeTasksSync
-from config.config import ConfigLoader
+from config.config import ConfigLoader, configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 from loader_scene import ScenarioFactory
 
 logger = logging.getLogger(f"CT.{__name__}")
 
-MAX_THREADS = 16
+MAX_CONCURRENCY = configuration.get("SCENARIOS.MAX_CONCURRENCY", 4)
 
 
 def scenario_run_queue(api_queue, scenario_config, scenario_name: str = None):
@@ -46,7 +46,7 @@ def main(concurrent: bool = False):
     client_queue = queue.Queue()
     ext_api = None
     if concurrent:
-        max_threads = min(MAX_THREADS, len(scenarios_config.get("Scenarios")))
+        max_threads = min(MAX_CONCURRENCY, len(scenarios_config.get("Scenarios")))
         clients = [ProxmoxAPI(backend_name="https") for _ in range(max_threads)]
         [client_queue.put(c) for c in clients]
     else:

@@ -4,7 +4,7 @@ import asyncio
 
 from cluster_tasks.configure_logging import config_logger
 from cluster_tasks.tasks.node_tasks_async import NodeTasksAsync
-from config.config import ConfigLoader
+from config.config import ConfigLoader, configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 from loader_scene import ScenarioFactory
@@ -12,17 +12,21 @@ from loader_scene import ScenarioFactory
 
 logger = logging.getLogger(f"CT.{__name__}")
 
+MAX_CONCURRENCY = configuration.get("SCENARIOS.MAX_CONCURRENCY", 4)
+semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
+
 
 async def scenario_run(api, scenario_config, scenario_name: str = None):
-    node_tasks = NodeTasksAsync(api=api)
-    scenario_file = scenario_config.get("file")
-    config = scenario_config.get("config")
-    # Create scenario instance using the factory
-    scenario = ScenarioFactory.create_scenario(
-        scenario_file, config, scenario_name, "async"
-    )
-    # Run the scenario asynchronously
-    await scenario.run(node_tasks)  # Assuming `run` is now an async method
+    async with semaphore:
+        node_tasks = NodeTasksAsync(api=api)
+        scenario_file = scenario_config.get("file")
+        config = scenario_config.get("config")
+        # Create scenario instance using the factory
+        scenario = ScenarioFactory.create_scenario(
+            scenario_file, config, scenario_name, "async"
+        )
+        # Run the scenario asynchronously
+        await scenario.run(node_tasks)  # Assuming `run` is now an async method
 
 
 async def main(concurrent: bool = False):
