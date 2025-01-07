@@ -100,8 +100,9 @@ class NodeTasksBase(BaseTasks):
             duration = time.time() - start_time
             formatted_duration = self.format_duration(duration)
             formatted_timeout = self.format_duration(self.timeout)
+            formated_upid = self.shorten_upid(upid, 1, 7)
             logger.info(
-                f"Waiting for task to finish... [ {formatted_duration} / {formatted_timeout} ]"
+                f"Waiting for task ({formated_upid}) to finish... [ {formatted_duration} / {formatted_timeout} ]"
             )
             time.sleep(self.polling_interval)
             if time.time() - start_time > self.timeout:
@@ -122,8 +123,9 @@ class NodeTasksBase(BaseTasks):
             duration = time.time() - start_time
             formatted_duration = self.format_duration(duration)
             formatted_timeout = self.format_duration(self.timeout)
+            formated_upid = self.shorten_upid(upid, 1, 7)
             logger.info(
-                f"Waiting for task to finish... [ {formatted_duration} / {formatted_timeout} ]"
+                f"Waiting for task ({formated_upid}) to finish... [ {formatted_duration} / {formatted_timeout} ]"
             )
             await asyncio.sleep(self.polling_interval)
             if time.time() - start_time > self.timeout:
@@ -162,6 +164,6 @@ class NodeTasksBase(BaseTasks):
         return data
 
     @staticmethod
-    def shorten_upid(upid: str, length: int = 7) -> str | None:
+    def shorten_upid(upid: str, start: int = 0, length: int = 7) -> str | None:
         if upid:
-            return ":".join(upid.split(":")[:length])
+            return ":".join(upid.split(":")[start:length])
