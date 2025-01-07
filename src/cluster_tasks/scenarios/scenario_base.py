@@ -13,7 +13,7 @@ class ScenarioBase(ABC):
         self.scenario_name = name or self.__class__.__name__
 
     @abstractmethod
-    def run(self, node_tasks: ProxmoxTasksBase, *args, **kwargs):
+    def run(self, proxmox_tasks: ProxmoxTasksBase, *args, **kwargs):
         """Method to execute the scenario"""
         ...
 

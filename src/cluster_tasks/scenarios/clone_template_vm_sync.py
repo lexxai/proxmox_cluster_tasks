@@ -22,7 +22,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         full (int): Flag indicating whether to clone the full VM or just the template.
     """
 
-    def run(self, node_tasks: ProxmoxTasksSync, *args, **kwargs) -> bool | None:
+    def run(self, proxmox_tasks: ProxmoxTasksSync, *args, **kwargs) -> bool | None:
         """
         Runs the scenario of cloning a VM from a template.
 
@@ -30,7 +30,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         proceeds to clone the VM from the template.
 
         Args:
-            node_tasks (ProxmoxTasksSync): The object responsible for performing the sync operations
+            proxmox_tasks (ProxmoxTasksSync): The object responsible for performing the sync operations
                                          like checking VM status, deleting a VM, and cloning a VM.
             *args: Additional positional arguments.
             **kwargs: Additional keyword arguments.
@@ -42,40 +42,40 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         # Perform the specific API logic for this scenario
         try:
             # Check if the VM already exists asynchronously
-            self.check_existing_destination_vm(node_tasks)
+            self.check_existing_destination_vm(proxmox_tasks)
 
             # Clone the VM from the template asynchronously
-            self.vm_clone(node_tasks)
+            self.vm_clone(proxmox_tasks)
 
             # Configure Network
-            self.configure_network(node_tasks)
+            self.configure_network(proxmox_tasks)
 
             # Configure Tags
-            self.configure_tags(node_tasks)
+            self.configure_tags(proxmox_tasks)
 
             # Migration VM
-            self.vm_migration(node_tasks)
+            self.vm_migration(proxmox_tasks)
             logger.info(f"*** Scenario '{self.scenario_name}' completed successfully")
             return True
         except Exception as e:
             logger.error(f"Failed to run scenario '{self.scenario_name}': {e}")
 
     @staticmethod
-    def check_vm_is_exists_in_cluster(node_tasks, vm_id) -> str | None:
-        resources = node_tasks.get_resources(resource_type="qemu")
+    def check_vm_is_exists_in_cluster(proxmox_tasks, vm_id) -> str | None:
+        resources = proxmox_tasks.get_resources(resource_type="qemu")
         for resource in resources:
             if resource.get("vmid") == vm_id:
                 return resource.get("node")
         return None
 
-    def check_existing_destination_vm(self, node_tasks):
+    def check_existing_destination_vm(self, proxmox_tasks):
         logger.info(f"Checking if destination Node:'{self.destination_node}' is online")
-        online_nodes = node_tasks.get_nodes(online=True)
+        online_nodes = proxmox_tasks.get_nodes(online=True)
         if self.destination_node not in online_nodes:
             raise Exception(f"Node:'{self.destination_node}' is offline")
         logger.info(f"Checking if VM {self.destination_vm_id} already exists")
         present_node = self.check_vm_is_exists_in_cluster(
-            node_tasks, self.destination_vm_id
+            proxmox_tasks, self.destination_vm_id
         )
         if present_node:
             if not self.overwrite_destination:
@@ -90,13 +90,13 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             logger.info(
                 f"VM {self.destination_vm_id} already exists on node:'{present_node}'. Deleting..."
             )
-            is_deleted = node_tasks.vm_delete(present_node, self.destination_vm_id)
+            is_deleted = proxmox_tasks.vm_delete(present_node, self.destination_vm_id)
             if is_deleted:
                 logger.info(f"VM {self.destination_vm_id} deleted successfully")
             else:
                 raise Exception(f"Failed to delete VM {self.destination_vm_id}")
 
-    def configure_network(self, node_tasks):
+    def configure_network(self, proxmox_tasks):
         logger.info(f"Configuring Network for VM {self.destination_vm_id}")
         config = {
             "ip": self.ip,
@@ -104,7 +104,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             "increase_ip": self.increase_ip,
             "decrease_ip": self.decrease_ip,
         }
-        result = node_tasks.vm_config_network_set(
+        result = proxmox_tasks.vm_config_network_set(
             self.node, self.destination_vm_id, config=config
         )
         if result is None:
@@ -112,13 +112,13 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         self.vm_network = result
         logger.info(f"Configured Network for VM {self.destination_vm_id} successfully")
 
-    def vm_migration(self, node_tasks):
+    def vm_migration(self, proxmox_tasks):
         # Migration VM
         if self.destination_node:
             logger.info(
                 f"Migrating VM {self.destination_vm_id} to node: {self.destination_node}"
             )
-            is_migrated = node_tasks.vm_migrate_create(
+            is_migrated = proxmox_tasks.vm_migrate_create(
                 self.node, self.destination_vm_id, self.destination_node
             )
             if is_migrated:
@@ -126,7 +126,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             else:
                 raise Exception(f"Failed to migrate VM {self.destination_vm_id}")
 
-    def vm_clone(self, node_tasks):
+    def vm_clone(self, proxmox_tasks):
         # Clone the VM from the template asynchronously
         logger.info(f"Cloning VM from {self.source_vm_id} to {self.destination_vm_id}")
         logger.debug(f"full clone: {self.full}")
@@ -135,18 +135,18 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             "name": self.name,
             "full": self.full,
         }
-        is_created = node_tasks.vm_clone(self.node, self.source_vm_id, data)
+        is_created = proxmox_tasks.vm_clone(self.node, self.source_vm_id, data)
         if is_created:
             logger.info(f"VM {self.destination_vm_id} cloned successfully")
         else:
             raise Exception(f"Failed to clone VM {self.destination_vm_id}")
 
-    def configure_tags(self, node_tasks):
+    def configure_tags(self, proxmox_tasks):
         if not self.tags:
             return
         tags = self.calculate_tags(self.tags)
         logger.info(f"Configuring tags for VM {self.destination_vm_id}")
-        is_configured = node_tasks.vm_config_tags_set(
+        is_configured = proxmox_tasks.vm_config_tags_set(
             self.node, self.destination_vm_id, tags
         )
         if is_configured:

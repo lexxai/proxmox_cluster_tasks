@@ -94,5 +94,5 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
         tags = tags.translate(str.maketrans("_.:", "---", "{}<>[]()"))
         return tags
 
-    def run(self, node_tasks: ProxmoxTasksAsync, *args, **kwargs):
+    def run(self, proxmox_tasks: ProxmoxTasksAsync, *args, **kwargs):
         raise NotImplementedError
