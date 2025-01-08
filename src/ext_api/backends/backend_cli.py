@@ -36,7 +36,7 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         endpoint = endpoint.rstrip("/")
         method = method.strip().lower()
         method = self.METHOD_MAP.get(method, method)
-        if params:
+        if endpoint_params:
             endpoint = endpoint.format(**endpoint_params)
         command = [self.entry_point, method, endpoint]
         if params:
