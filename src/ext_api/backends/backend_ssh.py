@@ -106,7 +106,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         success = exit_status == 0
         if error:
             if hasattr(error, "decode"):
-                error = repr(error.decode().strip())
+                error = error.decode().strip()
             logger.debug(f"SSH Error: {error}")
         if hasattr(output, "decode"):
             output = output.decode("utf-8")
@@ -194,8 +194,8 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         success = exit_status == 0
         if error:
             if hasattr(error, "decode"):
-                error = repr(error.decode().strip())
-            logger.debug(f"SSH Error: {error}")
+                error = error.decode().strip()
+            logger.debug(f"SSH Error: {repr(error)}")
         decoded = output.strip()
         if not decoded:
             return {
