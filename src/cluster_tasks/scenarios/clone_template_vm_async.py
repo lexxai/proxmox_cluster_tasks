@@ -62,6 +62,9 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             # Migration VM
             await self.vm_migration(proxmox_tasks)
 
+            # Replication jobs for VM
+            await self.vm_replication(proxmox_tasks)
+
             logger.info(f"*** Scenario '{self.scenario_name}' completed successfully")
             return True
         except Exception as e:
@@ -167,4 +170,32 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
         else:
             raise Exception(
                 f"Failed to configure tags:'{tags}' for VM {self.destination_vm_id}"
+            )
+
+    async def vm_replication(self, proxmox_tasks):
+        if not self.destination_vm_id:
+            return
+        logger.info(f"Creating replication jobs for VM:{self.destination_vm_id}")
+        vm_id = self.destination_vm_id
+        for replication in self.replications:
+            target_node = replication.get("node")
+            if not target_node:
+                logger.warning(f"vm_replication {vm_id}, node is not defined, skip")
+                continue
+            data = {"target_node": target_node}
+            schedule = replication.get("schedule")
+            comment = replication.get("comment")
+            disable = replication.get("disable")
+            if schedule:
+                data["schedule"] = schedule
+            if comment:
+                data["comment"] = comment
+            if disable is not None:
+                data["disable"] = int(disable)
+
+            result = await proxmox_tasks.create_replication_job(
+                vm_id, target_node, data=data
+            )
+            logger.info(
+                f"Created replication job VM:{vm_id} for node:'{target_node}'. With result: {result}"
             )
