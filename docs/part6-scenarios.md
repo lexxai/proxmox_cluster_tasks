@@ -50,6 +50,14 @@ Scenarios:
         increase_ip: 2
       tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
       full: True
+      replications:
+        - node "c04":
+          - schedule: "*/30"
+          - rate: 50.0
+          - comment: "Replication to c04"
+          - disable: False
+        - node "c07":
+          - schedule: "*/30"
   CloneTemplateVM-3:
     file: "clone_template_vm"
     config:
@@ -90,32 +98,44 @@ INFO: *** Running Scenario Template VM Clone: 'CloneTemplateVM-2'
 INFO: Checking if destination Node:'c02' is online
 INFO: Checking if VM 202 already exists
 INFO: VM 202 already exists on node:'c02'. Deleting...
-INFO: Waiting for task (c02:0038BA3D:0557BA28:677D0CC9:qmdestroy:202) to finish... [ 0:00:00 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:00 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:02 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:04 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:06 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:08 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:11 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:13 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:15 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:17 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:19 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:21 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:24 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:26 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:28 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:30 / 0:10:00 ]
+INFO: Waiting for task (c02:003E455F:05DAFD8E:677E5CD2:qmdestroy:202) to finish... [ 0:00:00 / 0:10:00 ]
 INFO: VM 202 deleted successfully
 INFO: Cloning VM from 1004 to 202
-INFO: Waiting for task (c01:00381E06:0557C232:677D0CCB:qmclone:1004) to finish... [ 0:00:00 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E06:0557C232:677D0CCB:qmclone:1004) to finish... [ 0:00:02 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E06:0557C232:677D0CCB:qmclone:1004) to finish... [ 0:00:04 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E06:0557C232:677D0CCB:qmclone:1004) to finish... [ 0:00:06 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E06:0557C232:677D0CCB:qmclone:1004) to finish... [ 0:00:08 / 0:10:00 ]
+INFO: Waiting for task (c01:003D9445:05DB0598:677E5CD4:qmclone:1004) to finish... [ 0:00:00 / 0:10:00 ]
+INFO: Waiting for task (c01:003D9445:05DB0598:677E5CD4:qmclone:1004) to finish... [ 0:00:02 / 0:10:00 ]
+INFO: Waiting for task (c01:003D9445:05DB0598:677E5CD4:qmclone:1004) to finish... [ 0:00:04 / 0:10:00 ]
+INFO: Waiting for task (c01:003D9445:05DB0598:677E5CD4:qmclone:1004) to finish... [ 0:00:06 / 0:10:00 ]
 INFO: VM 202 cloned successfully
 INFO: Configuring Network for VM 202
 INFO: Configured Network for VM 202 successfully
 INFO: Configuring tags for VM 202
 INFO: VM 202 configured tags:'tag1,dot-002,ip-192-0-2-2' successfully
 INFO: Migrating VM 202 to node: c02
-INFO: Waiting for task (c01:00381E6F:0557C703:677D0CD8:qmigrate:202) to finish... [ 0:00:00 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E6F:0557C703:677D0CD8:qmigrate:202) to finish... [ 0:00:02 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E6F:0557C703:677D0CD8:qmigrate:202) to finish... [ 0:00:04 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E6F:0557C703:677D0CD8:qmigrate:202) to finish... [ 0:00:06 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E6F:0557C703:677D0CD8:qmigrate:202) to finish... [ 0:00:08 / 0:10:00 ]
-INFO: Waiting for task (c01:00381E6F:0557C703:677D0CD8:qmigrate:202) to finish... [ 0:00:11 / 0:10:00 ]
+INFO: Waiting for task (c01:003D94AD:05DB0981:677E5CDE:qmigrate:202) to finish... [ 0:00:00 / 0:10:00 ]
+INFO: Waiting for task (c01:003D94AD:05DB0981:677E5CDE:qmigrate:202) to finish... [ 0:00:02 / 0:10:00 ]
+INFO: Waiting for task (c01:003D94AD:05DB0981:677E5CDE:qmigrate:202) to finish... [ 0:00:04 / 0:10:00 ]
+INFO: Waiting for task (c01:003D94AD:05DB0981:677E5CDE:qmigrate:202) to finish... [ 0:00:06 / 0:10:00 ]
+INFO: Waiting for task (c01:003D94AD:05DB0981:677E5CDE:qmigrate:202) to finish... [ 0:00:09 / 0:10:00 ]
+INFO: Waiting for task (c01:003D94AD:05DB0981:677E5CDE:qmigrate:202) to finish... [ 0:00:11 / 0:10:00 ]
 INFO: VM 202 migrated successfully
 INFO: *** Scenario 'CloneTemplateVM-2' completed successfully
-INFO: *** Running Scenario Template VM Clone: 'CloneTemplateVM-3'
-INFO: Checking if destination Node:'c03' is online
-ERROR: Failed to run scenario 'CloneTemplateVM-3': Node:'c03' is offline
 INFO: Proxmox Cluster Tasks: Finished
+
 Process finished with exit code 0
 ```
 </details>
