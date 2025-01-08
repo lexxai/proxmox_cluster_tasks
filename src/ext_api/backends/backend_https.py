@@ -124,6 +124,7 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         *args,
         **kwargs,
     ):
@@ -136,7 +137,7 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
             )
             one_time = True
         try:
-            url = self.format_url(endpoint, params)
+            url = self.format_url(endpoint, endpoint_params)
             # logger.debug(f"Request: {method=}, {url=}, {data=}, {params=}")
             response = self._client.request(method, url, data=data, params=params)
             return self.response_analyze(response)
@@ -173,6 +174,7 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         *args,
         **kwargs,
     ):
@@ -185,7 +187,7 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
             )
             one_time = True
         try:
-            url = self.format_url(endpoint, params)
+            url = self.format_url(endpoint, endpoint_params)
             # logger.debug(f"Request: {method=}, {url=}, {data=}, {params=}")
             response = await self._client.request(method, url, data=data, params=params)
             return self.response_analyze(response)
