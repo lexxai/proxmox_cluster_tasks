@@ -81,6 +81,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         **kwargs,
     ):
         one_time = False
@@ -90,7 +91,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
                 "SSH client session is not initialized. Use 'with' context to start a session. Creating onetime client instance."
             )
             one_time = True
-        command = self.format_command(endpoint, params, method, data)
+        command = self.format_command(endpoint, params, method, data, endpoint_params)
         try:
             stdin, stdout, stderr = self._client.exec_command(command)
         except paramiko.ssh_exception.SSHException as e:
@@ -164,6 +165,7 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         **kwargs,
     ):
         # Implement async SSH command execution here
@@ -175,7 +177,7 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
             )
             one_time = True
 
-        command = self.format_command(endpoint, params, method, data)
+        command = self.format_command(endpoint, params, method, data, endpoint_params)
         try:
             result = await self._client.run(command, check=True)
         except asyncssh.ProcessError as e:
