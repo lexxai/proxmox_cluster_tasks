@@ -245,7 +245,7 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         data["target"] = target_node
         data["type"] = "local"
         result = await self.api.cluster.replication.create(
-            data=data, filter_keys={"_raw_": True}
+            data=data, filter_keys="_raw_"
         )
         # logger.debug(f"finished {result}")
         return result.get("success")
@@ -266,7 +266,7 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
                 data["keep"] = int(keep)
             if job_id:
                 result = await self.api.cluster.replication(job_id).delete(
-                    data=data, filter_keys={"_raw_": True}
+                    data=data, filter_keys="_raw_"
                 )
                 results.append(result.get("success"))
         return all(results)

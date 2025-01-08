@@ -220,7 +220,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         data["target"] = target_node
         data["type"] = "local"
         result = self.api.cluster.replication.create(
-            data=data, filter_keys={"_raw_": True}
+            data=data, filter_keys="_raw_"
         )
         # logger.debug(f"finished {result}")
         return result.get("success")
@@ -241,7 +241,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
                 data["keep"] = int(keep)
             if job_id:
                 result = self.api.cluster.replication(job_id).delete(
-                    data=data, filter_keys={"_raw_": True}
+                    data=data, filter_keys="_raw_"
                 )
                 results.append(result.get("success"))
         return all(results)
