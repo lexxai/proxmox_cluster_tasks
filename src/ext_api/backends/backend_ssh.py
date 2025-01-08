@@ -105,14 +105,18 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         error = stderr.read()
         success = exit_status == 0
         if error:
-            logger.error(f"SSH Error: {error.decode()}")
-            return {"response": {}, "status_code": exit_status, "success": success}
-        decoded = output.decode().strip()
+            if hasattr(error, "decode"):
+                error = repr(error.decode().strip())
+            logger.debug(f"SSH Error: {error}")
+        if hasattr(output, "decode"):
+            output = output.decode("utf-8")
+        decoded = output.strip() if isinstance(output, str) else None
         if not decoded:
             return {
                 "response": {"data": {}},
                 "status_code": exit_status,
                 "success": success,
+                "error": error
             }
         try:
             json.loads(decoded)
@@ -124,7 +128,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
                 "success": success,
             }
         return {
-            "response": {"data": json.loads(output.decode())},
+            "response": {"data": json.loads(output)},
             "status_code": exit_status,
             "success": success,
         }
@@ -189,14 +193,16 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         output, error, exit_status = result.stdout, result.stderr, result.exit_status
         success = exit_status == 0
         if error:
-            logger.error(f"SSH Error: {error.decode()}")
-            return {"response": {}, "status_code": exit_status, "success": success}
+            if hasattr(error, "decode"):
+                error = repr(error.decode().strip())
+            logger.debug(f"SSH Error: {error}")
         decoded = output.strip()
         if not decoded:
             return {
                 "response": {"data": {}},
                 "status_code": exit_status,
                 "success": success,
+                "error": error,
             }
         try:
             json.loads(decoded)
