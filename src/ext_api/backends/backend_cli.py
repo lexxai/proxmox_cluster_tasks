@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import shlex
 import subprocess
 
 from ext_api.backends.backend_abstract import ProxmoxBackend
@@ -40,9 +41,9 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
             endpoint = endpoint.format(**endpoint_params)
         command = [self.entry_point, method, endpoint]
         if params:
-            command.extend([f"--{k}={v}" for k, v in params.items()])
+            command.extend([f"--{k}={shlex.quote(str(v))}" for k, v in params.items()])
         if data:
-            command.extend([f"--{k}={v}" for k, v in data.items()])
+            command.extend([f"--{k}={shlex.quote(str(v))}" for k, v in data.items()])
         command.append("--output-format=json")
         command = " ".join(command)
         logger.debug("Formatted command: %s", command)
@@ -104,7 +105,9 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
                 raise subprocess.CalledProcessError(
                     returncode=process.returncode, cmd=command, output=stderr
                 )
-            result = stdout.decode("utf-8").strip()
+            if hasattr(stdout, "decode"):
+                stdout = stdout.decode("utf-8")
+            result = stdout.strip() if isinstance(stdout, str) else None
             success = process.returncode == 0
             return {
                 "response": {"data": result},
