@@ -22,7 +22,9 @@ async def debug_replication(proxmox_tasks):
     await asyncio.sleep(5)
     # target_node = None
     logger.info(
-        await proxmox_tasks.remove_replication_job(vm_id, target_node=target_node)
+        await proxmox_tasks.remove_replication_job(
+            vm_id, target_node=target_node, wait=True
+        )
     )
 
 

@@ -1,5 +1,7 @@
+import asyncio
 import ipaddress
 import logging
+import time
 
 from cluster_tasks.tasks.proxmox_tasks_base import ProxmoxTasksBase
 
@@ -251,7 +253,12 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         return result.get("success")
 
     async def remove_replication_job(
-        self, vm_id: int, target_node: str = None, force: bool = None, keep: bool = None
+        self,
+        vm_id: int,
+        target_node: str = None,
+        force: bool = None,
+        keep: bool = None,
+        wait: bool = False,
     ):
         jobs = await self.get_replication_jobs(filter_keys={"guest": vm_id})
         if target_node:
@@ -269,4 +276,37 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
                     data=data, filter_keys="_raw_"
                 )
                 results.append(result.get("success"))
-        return all(results)
+        success_results = all(results)
+        if success_results and wait:
+            await self.wait_replication_removed(vm_id, target_node)
+        return success_results
+
+    async def is_created_replication_job(self, vm_id: int, target_node: str = None):
+        jobs = await self.get_replication_jobs(filter_keys={"guest": vm_id})
+        if target_node:
+            for job in jobs:
+                if job.get("target") == target_node:
+                    return True
+        return False
+
+    async def wait_replication_removed(
+        self, vm_id: int, target_node: str = None
+    ) -> bool:
+        """
+        Asynchronously waits for a replication remove to complete.
+        """
+        start_time = time.time()
+        while await self.is_created_replication_job(vm_id, target_node):
+            duration = time.time() - start_time
+            formatted_duration = self.format_duration(duration)
+            formatted_timeout = self.format_duration(self.timeout)
+            logger.info(
+                f"Waiting for replication job ({vm_id} to {target_node}) is removed... [ {formatted_duration} / {formatted_timeout} ]"
+            )
+            await asyncio.sleep(self.polling_interval)
+            if time.time() - start_time > self.timeout:
+                logger.warning(
+                    f"Timeout reached while waiting for replication job is removed. ({vm_id} to {target_node}) ..."
+                )
+                break
+        return False
