@@ -175,21 +175,24 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
     async def vm_replication(self, proxmox_tasks):
         if not self.destination_vm_id:
             return
-        logger.info(f"Creating replication jobs for VM:{self.destination_vm_id}")
+        logger.info(f"Creating replication jobs for VM {self.destination_vm_id}")
         vm_id = self.destination_vm_id
         for replication in self.replications:
             target_node = replication.get("node")
             if not target_node:
-                logger.warning(f"vm_replication {vm_id}, node is not defined, skip")
+                logger.warning(f"vm_replication vm {vm_id}, node is not defined, skip")
                 continue
-            data = {"target_node": target_node}
+            data = {}
             schedule = replication.get("schedule")
             comment = replication.get("comment")
             disable = replication.get("disable")
+            rate = replication.get("rate")
             if schedule:
                 data["schedule"] = schedule
             if comment:
                 data["comment"] = comment
+            if rate:
+                data["rate"] = rate
             if disable is not None:
                 data["disable"] = int(disable)
 
@@ -197,5 +200,5 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
                 vm_id, target_node, data=data
             )
             logger.info(
-                f"Created replication job VM:{vm_id} for node:'{target_node}'. With result: {result}"
+                f"Created replication job VM {vm_id} for node '{target_node}' with result: {result} {data=}"
             )

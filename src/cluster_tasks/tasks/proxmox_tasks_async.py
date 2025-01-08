@@ -234,8 +234,7 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         target_node: str,
         data: dict = None,
     ):
-        if not data:
-            data = {}
+        data_job = data.copy() if data is not None else {}
         # calculate job id
         jobs = await self.get_replication_jobs(filter_keys={"guest": vm_id})
         max_job_num = 0
@@ -247,11 +246,11 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
                 return False
             max_job_num = max(max_job_num, int(job.get("jobnum", 0)))
         job_id = max_job_num + 1 if len(jobs) else 0
-        data["id"] = f"{vm_id}-{job_id}"
-        data["target"] = target_node
-        data["type"] = "local"
+        data_job["id"] = f"{vm_id}-{job_id}"
+        data_job["target"] = target_node
+        data_job["type"] = "local"
         result = await self.api.cluster.replication.create(
-            data=data, filter_keys="_raw_"
+            data=data_job, filter_keys="_raw_"
         )
         # logger.debug(f"finished {result}")
         return result.get("success")
