@@ -200,5 +200,5 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
                 vm_id, target_node, data=data
             )
             logger.info(
-                f"Created replication job VM {vm_id} for node '{target_node}' with result: {result} {data=}"
+                f"Created replication job VM {vm_id} for node '{target_node}' with result: {result}"
             )

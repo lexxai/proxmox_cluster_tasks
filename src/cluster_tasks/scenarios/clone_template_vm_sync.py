@@ -55,6 +55,10 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
 
             # Migration VM
             self.vm_migration(proxmox_tasks)
+
+            # Replication jobs for VM
+            self.vm_replication(proxmox_tasks)
+
             logger.info(f"*** Scenario '{self.scenario_name}' completed successfully")
             return True
         except Exception as e:
@@ -155,3 +159,32 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             )
         else:
             f"Failed to configure tags:'{tags}' for VM {self.destination_vm_id}"
+
+    def vm_replication(self, proxmox_tasks):
+        if not self.destination_vm_id:
+            return
+        logger.info(f"Creating replication jobs for VM {self.destination_vm_id}")
+        vm_id = self.destination_vm_id
+        for replication in self.replications:
+            target_node = replication.get("node")
+            if not target_node:
+                logger.warning(f"vm_replication vm {vm_id}, node is not defined, skip")
+                continue
+            data = {}
+            schedule = replication.get("schedule")
+            comment = replication.get("comment")
+            disable = replication.get("disable")
+            rate = replication.get("rate")
+            if schedule:
+                data["schedule"] = schedule
+            if comment:
+                data["comment"] = comment
+            if rate:
+                data["rate"] = rate
+            if disable is not None:
+                data["disable"] = int(disable)
+
+            result = proxmox_tasks.create_replication_job(vm_id, target_node, data=data)
+            logger.info(
+                f"Created replication job VM {vm_id} for node '{target_node}' with result: {result}"
+            )
