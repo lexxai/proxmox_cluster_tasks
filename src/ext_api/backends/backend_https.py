@@ -65,13 +65,13 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         }
         return headers
 
-    def format_url(self, endpoint: str, params: dict = None) -> str:
+    def format_url(self, endpoint: str, endpoint_params: dict = None) -> str:
         if endpoint is None:
             raise ValueError("HTTPS backend: Endpoint is required")
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.strip("/")
-        if params:
-            endpoint = endpoint.format(**params)
+        if endpoint_params:
+            endpoint = endpoint.format(**endpoint_params)
         logger.debug(f"Formatted endpoint: /{self.entry_point}/{endpoint}")
         return f"{self.base_url}/{self.entry_point}/{endpoint.lstrip('/')}"
 
