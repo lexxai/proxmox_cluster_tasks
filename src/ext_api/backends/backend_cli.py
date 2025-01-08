@@ -23,7 +23,12 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         self.entry_point = entry_point.strip("/")
 
     def format_command(
-        self, endpoint: str, params: dict = None, method: str = None, data: dict = None
+        self,
+        endpoint: str,
+        params: dict = None,
+        method: str = None,
+        data: dict = None,
+        endpoint_params: dict = None,
     ) -> str:
         if endpoint is None:
             raise ValueError("CLI backend: Endpoint is required")
@@ -32,7 +37,7 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         method = method.strip().lower()
         method = self.METHOD_MAP.get(method, method)
         if params:
-            endpoint = endpoint.format(**params)
+            endpoint = endpoint.format(**endpoint_params)
         command = [self.entry_point, method, endpoint]
         if params:
             command.extend([f"--{k}={v}" for k, v in params.items()])
@@ -52,10 +57,11 @@ class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         *args,
         **kwargs,
     ):
-        command = self.format_command(endpoint, params, method, data)
+        command = self.format_command(endpoint, params, method, data, endpoint_params)
         if command is None:
             return {"response": None, "status_code": -1, "success": False}
         try:
@@ -81,10 +87,11 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         *args,
         **kwargs,
     ):
-        command = self.format_command(endpoint, params, method, data)
+        command = self.format_command(endpoint, params, method, data, endpoint_params)
 
         if command is None:
             return {"response": None, "status_code": -1, "success": False}
