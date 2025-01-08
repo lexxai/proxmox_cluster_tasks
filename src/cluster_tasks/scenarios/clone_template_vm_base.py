@@ -74,6 +74,7 @@ class ScenarioCloneTemplateVmBase(ScenarioBase):
         self.tags = config.get("tags")
         if self.tags and isinstance(self.tags, list):
             self.tags = ",".join(self.tags)
+        self.replications = config.get("replications")
 
     def calculate_tags(self, tags: str) -> str:
         if self.vm_network:
