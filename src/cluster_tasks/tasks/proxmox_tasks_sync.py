@@ -219,9 +219,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         data["id"] = f"{vm_id}-{job_id}"
         data["target"] = target_node
         data["type"] = "local"
-        result = self.api.cluster.replication.create(
-            data=data, filter_keys="_raw_"
-        )
+        result = self.api.cluster.replication.create(data=data, filter_keys="_raw_")
         # logger.debug(f"finished {result}")
         return result.get("success")
 
