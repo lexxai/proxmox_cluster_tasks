@@ -13,19 +13,18 @@ logger = logging.getLogger(f"CT.{__name__}")
 async def debug_replication(proxmox_tasks):
     vm_id = 202
     target_node = "c07"
-    data = {"schedule": "*/30", "disable": 0, "comment": "repl 1", "rate": 200.2}
+    data = {"schedule": "*/30", "comment": "repl 1"}
     # data = None
     logger.info(
         await proxmox_tasks.create_replication_job(vm_id, target_node, data=data)
     )
+    logger.info(await proxmox_tasks.create_replication_job(vm_id, "c04", data=data))
     logger.info("Sleep 5")
     await asyncio.sleep(5)
     # target_node = None
-    logger.info(
-        await proxmox_tasks.remove_replication_job(
-            vm_id, target_node=target_node, wait=True
-        )
-    )
+    # logger.info(
+    #     await proxmox_tasks.remove_replication_job(vm_id, target_node=None, wait=True)
+    # )
 
 
 async def async_main():

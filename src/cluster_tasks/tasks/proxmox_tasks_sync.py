@@ -1,5 +1,6 @@
 import ipaddress
 import logging
+import time
 
 from cluster_tasks.tasks.proxmox_tasks_base import ProxmoxTasksBase
 
@@ -37,7 +38,9 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         )
         return int(status_vm) if status_vm else 0
 
-    def vm_delete(self, node: str, vm_id: int, wait: bool = True) -> str | bool | None:
+    def vm_delete(
+        self, node: str, vm_id: int, wait: bool = True, with_replications: bool = True
+    ) -> str | bool | None:
         """
         Deletes a virtual machine and optionally waits for the deletion task to complete.
 
@@ -45,12 +48,15 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             node (str): The name of the Proxmox node.
             vm_id (int): The ID of the virtual machine.
             wait (bool): Whether to wait for the task to complete (default is True).
+            with_replications (bool): Before delete try to remove all replications of VM (default is True).
 
         Returns:
             str | bool | None: The task UPID if `wait` is False;
                                `True` if task is completed successfully,
                                `False` if task timed out.
         """
+        if with_replications:
+            self.remove_replication_job(vm_id, wait=True)
         upid = self.api.nodes(node).qemu(vm_id).delete()
         if wait:
             return self.wait_task_done_sync(upid, node)
@@ -224,7 +230,12 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         return result.get("success")
 
     def remove_replication_job(
-        self, vm_id: int, target_node: str = None, force: bool = None, keep: bool = None
+        self,
+        vm_id: int,
+        target_node: str = None,
+        force: bool = None,
+        keep: bool = None,
+        wait: bool = False,
     ):
         jobs = self.get_replication_jobs(filter_keys={"guest": vm_id})
         if target_node:
@@ -242,4 +253,36 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
                     data=data, filter_keys="_raw_"
                 )
                 results.append(result.get("success"))
-        return all(results)
+        success_results = all(results)
+        # logger.debug(f"success {success_results}, {wait=}")
+        if wait:
+            self.wait_empty_replications(vm_id, target_node)
+        return success_results
+
+    def is_created_replication_job(self, vm_id: int, target_node: str = None):
+        jobs = self.get_replication_jobs(filter_keys={"guest": vm_id})
+        if target_node:
+            for job in jobs:
+                if job.get("target") == target_node:
+                    return True
+        return len(jobs or []) > 0
+
+    def wait_empty_replications(self, vm_id: int, target_node: str = None) -> bool:
+        """
+        synchronously waits for a replication remove to complete.
+        """
+        start_time = time.time()
+        while self.is_created_replication_job(vm_id, target_node):
+            duration = time.time() - start_time
+            formatted_duration = self.format_duration(duration)
+            formatted_timeout = self.format_duration(self.timeout)
+            logger.info(
+                f"Waiting for replication job ({vm_id} to {target_node or "any"}) is removed... [ {formatted_duration} / {formatted_timeout} ]"
+            )
+            time.sleep(self.polling_interval)
+            if time.time() - start_time > self.timeout:
+                logger.warning(
+                    f"Timeout reached while waiting for replication job is removed. ({vm_id} to {target_node or "any"}) ..."
+                )
+                break
+        return False

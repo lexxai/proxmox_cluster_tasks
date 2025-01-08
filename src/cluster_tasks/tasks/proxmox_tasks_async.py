@@ -46,7 +46,7 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         return int(status_vm) if status_vm else 0
 
     async def vm_delete(
-        self, node: str, vm_id: int, wait: bool = True
+        self, node: str, vm_id: int, wait: bool = True, with_replications: bool = True
     ) -> str | bool | None:
         """
         Deletes a virtual machine and optionally waits for the deletion task to complete.
@@ -55,12 +55,16 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             node (str): The name of the Proxmox node.
             vm_id (int): The ID of the virtual machine.
             wait (bool): Whether to wait for the task to complete (default is True).
+            with_replications (bool): Before delete try to remove all replications of VM (default is True).
+
 
         Returns:
             str | bool | None: The task UPID if `wait` is False;
                                `True` if task is completed successfully,
                                `False` if task timed out.
         """
+        if with_replications:
+            await self.remove_replication_job(vm_id, wait=True)
         upid = await self.api.nodes(node).qemu(vm_id).delete()
         if wait:
             return await self.wait_task_done_async(upid, node)
