@@ -277,8 +277,9 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
                 )
                 results.append(result.get("success"))
         success_results = all(results)
-        if success_results and wait:
-            await self.wait_replication_removed(vm_id, target_node)
+        # logger.debug(f"success {success_results}, {wait=}")
+        if wait:
+            await self.wait_empty_replications(vm_id, target_node)
         return success_results
 
     async def is_created_replication_job(self, vm_id: int, target_node: str = None):
@@ -287,9 +288,9 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             for job in jobs:
                 if job.get("target") == target_node:
                     return True
-        return False
+        return len(jobs or []) > 0
 
-    async def wait_replication_removed(
+    async def wait_empty_replications(
         self, vm_id: int, target_node: str = None
     ) -> bool:
         """
@@ -301,12 +302,12 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             formatted_duration = self.format_duration(duration)
             formatted_timeout = self.format_duration(self.timeout)
             logger.info(
-                f"Waiting for replication job ({vm_id} to {target_node}) is removed... [ {formatted_duration} / {formatted_timeout} ]"
+                f"Waiting for replication job ({vm_id} to {target_node or "any"}) is removed... [ {formatted_duration} / {formatted_timeout} ]"
             )
             await asyncio.sleep(self.polling_interval)
             if time.time() - start_time > self.timeout:
                 logger.warning(
-                    f"Timeout reached while waiting for replication job is removed. ({vm_id} to {target_node}) ..."
+                    f"Timeout reached while waiting for replication job is removed. ({vm_id} to {target_node or "any"}) ..."
                 )
                 break
         return False
