@@ -116,7 +116,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
                 "response": {"data": {}},
                 "status_code": exit_status,
                 "success": success,
-                "error": error
+                "error": error,
             }
         try:
             json.loads(decoded)
