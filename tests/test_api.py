@@ -49,8 +49,15 @@ def test_api_version_cli(mock_backend_settings, get_api, mocker):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("get_api_async", [{"backend_name": "https"}], indirect=True)
-async def test_api_version_https_async(get_api_async):
+async def test_api_version_https_async(mock_backend_settings, get_api_async, mocker):
     async with get_api_async as api:
+        if mock_backend_settings.get("HTTPS"):
+            http_result = '{"data":{"repoid":"3e76eec21c4a14a7","release":"mock-8.3","version":"8.3.2"}}'
+
+            async def mock_request(method, url, **kwargs):
+                return httpx.Response(status_code=200, text=http_result)
+
+            mocker.patch.object(api.backend.client, "request", side_effect=mock_request)
         version = await api.version.get()
     assert version
     assert version.get("release")
