@@ -27,10 +27,15 @@ class BackendRequestTest(unittest.TestCase):
         #     }
 
         # self.backend = MockBackend()
+        register_backends()
         backend_name = "cli"
-        register_backends(backend_name)
         backend_cls = BackendRegistry.get_backend(backend_name)
-        self.backend = backend_cls(entry_point="echo")
+        self.backend_cli = backend_cls(entry_point="echo")
+        backend_name = "ssh"
+        backend_cls = BackendRegistry.get_backend(backend_name)
+        self.backend_ssh = backend_cls(
+            entry_point="echo", hostname="localhost", username="fake_user"
+        )
 
     @patch("subprocess.run")
     def test_request_success_cli_backend_sync(self, mock_subprocess_run):
@@ -47,7 +52,7 @@ class BackendRequestTest(unittest.TestCase):
             "method": "get",
             "endpoint": "version",
         }
-        result = self.backend.request(**request_params)
+        result = self.backend_cli.request(**request_params)
         self.assertIsNotNone(result)
         response = result.get("response")
         self.assertIsNotNone(response)
@@ -61,26 +66,27 @@ class BackendRequestTest(unittest.TestCase):
     def test_request_failure_cli_backend_sync(self, mock_subprocess_run):
         # Mock a subprocess that raises CalledProcessError
         mock_subprocess_run.side_effect = subprocess.CalledProcessError(
-            returncode=1, cmd="mock_command", output="error output", stderr="error"
+            returncode=1, cmd="echo", output="error output", stderr="error"
         )
         request_params = {
             "method": "get",
             "endpoint": "version",
         }
-        result = self.backend.request(**request_params)
+        result = self.backend_cli.request(**request_params)
         self.assertIsNone(result["response"])
         self.assertEqual(result["status_code"], 1)
         self.assertFalse(result["success"])
 
-    #
-    # @patch("subprocess.run")
-    # def test_request_no_command(self, mock_subprocess_run):
-    #     # Test behavior when format_command returns None
-    #     self.backend.format_command = lambda *args, **kwargs: None
-    #     result = self.backend.request("GET", "/version")
-    #     self.assertIsNone(result["response"])
-    #     self.assertEqual(result["status_code"], -1)
-    #     self.assertFalse(result["success"])
+    def test_request_no_command_cli_backend_sync(self):
+        # Test behavior when format_command returns None
+        request_params = {
+            "method": "get",
+            "endpoint": "",
+        }
+        result = self.backend_cli.request(**request_params)
+        self.assertIsNone(result["response"])
+        self.assertEqual(result["status_code"], -1)
+        self.assertFalse(result["success"])
 
 
 if __name__ == "__main__":
