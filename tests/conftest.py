@@ -2,7 +2,8 @@ import logging
 
 import pytest
 
-from old._api import APIHandler
+from ext_api.backends.registry import register_backends
+from ext_api.proxmox_api import ProxmoxAPI
 
 
 class CTLoggerFilter(logging.Filter):
@@ -20,30 +21,42 @@ def pytest_configure(config):
     for handler in logging.root.handlers:
         handler.addFilter(CTLoggerFilter())  # Apply the filter globally
 
+    register_backends()
+
 
 # @pytest.fixture(scope="session")
 # def api_handler():
-#     return APIHandler()
+#     return ProxmoxAPI()
 
 
 @pytest.fixture(scope="session")
-def api_handler() -> APIHandler:
-    with APIHandler() as handler:
-        yield handler
+def get_api(request) -> ProxmoxAPI:
+    backend_name = (
+        request.param.get("backend_name", "https")
+        if hasattr(request, "param")
+        else "https"
+    )
+    with ProxmoxAPI(backend_name=backend_name, backend_type="sync") as api:
+        yield api
 
 
 # @pytest.fixture(scope="function")
-# async def api_handler_async() -> APIHandler:
-#     async with APIHandler() as handler:
+# async def api_handler_async() -> ProxmoxAPI:
+#     async with ProxmoxAPI() as handler:
 #         yield handler
 
 
 @pytest.fixture(scope="session")
-def api_handler_async() -> APIHandler:
-    return APIHandler()
+def get_api_async(request) -> ProxmoxAPI:
+    backend_name = (
+        request.param.get("backend_name", "https")
+        if hasattr(request, "param")
+        else "https"
+    )
+    return ProxmoxAPI(backend_name=backend_name, backend_type="async")
 
 
 # @pytest.fixture(scope="session")
-# async def api_handler_async() -> APIHandler:
-#     async with APIHandler() as handler:
+# async def api_handler_async() -> ProxmoxAPI:
+#     async with ProxmoxAPI() as handler:
 #         yield handler
