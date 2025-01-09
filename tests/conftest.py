@@ -1,6 +1,13 @@
 import logging
+import sys
+from pathlib import Path
 
 import pytest
+
+project_root = Path(__file__).resolve().parent.parent
+src_path = project_root / "src"
+sys.path.insert(0, str(src_path))
+
 
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
@@ -24,11 +31,6 @@ def pytest_configure(config):
     register_backends()
 
 
-# @pytest.fixture(scope="session")
-# def api_handler():
-#     return ProxmoxAPI()
-
-
 @pytest.fixture(scope="session")
 def get_api(request) -> ProxmoxAPI:
     backend_name = (
@@ -40,12 +42,6 @@ def get_api(request) -> ProxmoxAPI:
         yield api
 
 
-# @pytest.fixture(scope="function")
-# async def api_handler_async() -> ProxmoxAPI:
-#     async with ProxmoxAPI() as handler:
-#         yield handler
-
-
 @pytest.fixture(scope="session")
 def get_api_async(request) -> ProxmoxAPI:
     backend_name = (
@@ -54,9 +50,3 @@ def get_api_async(request) -> ProxmoxAPI:
         else "https"
     )
     return ProxmoxAPI(backend_name=backend_name, backend_type="async")
-
-
-# @pytest.fixture(scope="session")
-# async def api_handler_async() -> ProxmoxAPI:
-#     async with ProxmoxAPI() as handler:
-#         yield handler
