@@ -26,7 +26,23 @@ def test_api_version_https(mock_backend_settings, get_api, mocker):
 
 
 @pytest.mark.parametrize("get_api", [{"backend_name": "ssh"}], indirect=True)
-def test_api_version_ssh(get_api):
+def test_api_version_ssh(mock_backend_settings, get_api, mocker):
+    if mock_backend_settings.get("SSH"):
+        ssh_result = '{"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+
+        mock_stdout = mocker.MagicMock()
+        mock_stdout.read.return_value = ssh_result.encode()
+        mock_stdout.channel.recv_exit_status.return_value = 0
+
+        mock_stderr = mocker.MagicMock()
+        mock_stderr.read.return_value = b""  # Simulating empty stderr
+
+        def mock_exec(command, *args, **kwargs):
+            return (None, mock_stdout, mock_stderr)
+
+        mocker.patch.object(
+            get_api.backend.client, "exec_command", side_effect=mock_exec
+        )
     version = get_api.version.get()
     assert version
     assert version.get("release")
