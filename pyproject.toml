@@ -32,6 +32,8 @@ addopts = [
     "--import-mode=importlib",
 ]
 pythonpath = "src"
+asyncio_default_fixture_loop_scope = "function"
+
 
 [tool.poetry.scripts]
 proxmox-cluster-tasks = "cluster_tasks:main"
