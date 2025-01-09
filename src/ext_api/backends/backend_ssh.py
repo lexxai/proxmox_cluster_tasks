@@ -43,6 +43,40 @@ class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
             paramiko.client.SSHClient | asyncssh.SSHClientConnection | None
         ) = None
 
+    @staticmethod
+    def result_analyze(output, error, exit_status) -> dict:
+        success = exit_status == 0
+        if error:
+            if hasattr(error, "decode"):
+                error = error.decode().strip()
+            logger.debug(f"SSH Error: {repr(error)}")
+        if hasattr(output, "decode"):
+            output = output.decode()
+        decoded = output.strip() if isinstance(output, str) else output
+        if not decoded:
+            return {
+                "response": {"data": {}},
+                "status_code": exit_status,
+                "success": success,
+                "error": error,
+            }
+        try:
+            json.loads(decoded)
+        except json.JSONDecodeError:
+            logger.debug(
+                f"SSH Error of decode JSON result: {decoded.splitlines()[-1]}..."
+            )
+            return {
+                "response": {"data": decoded.splitlines()[-1]},
+                "status_code": exit_status,
+                "success": success,
+            }
+        return {
+            "response": {"data": json.loads(decoded)},
+            "status_code": exit_status,
+            "success": success,
+        }
+
 
 class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
 
@@ -96,42 +130,12 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
             stdin, stdout, stderr = self._client.exec_command(command)
         except paramiko.ssh_exception.SSHException as e:
             logger.error(f"SSH Error: {e}")
-            return {"response": {}, "status_code": 1}
+            return {"response": {}, "status_code": 1, "error": str(e)}
         finally:
             if one_time:
                 self.close()
         exit_status = stdout.channel.recv_exit_status()
-        output = stdout.read()
-        error = stderr.read()
-        success = exit_status == 0
-        if error:
-            if hasattr(error, "decode"):
-                error = error.decode().strip()
-            logger.debug(f"SSH Error: {error}")
-        if hasattr(output, "decode"):
-            output = output.decode("utf-8")
-        decoded = output.strip() if isinstance(output, str) else None
-        if not decoded:
-            return {
-                "response": {"data": {}},
-                "status_code": exit_status,
-                "success": success,
-                "error": error,
-            }
-        try:
-            json.loads(decoded)
-        except json.JSONDecodeError:
-            logger.debug(f"SSH Error of decode JSON result: {decoded.splitlines()[-1]}")
-            return {
-                "response": {"data": decoded.splitlines()[-1]},
-                "status_code": exit_status,
-                "success": success,
-            }
-        return {
-            "response": {"data": json.loads(output)},
-            "status_code": exit_status,
-            "success": success,
-        }
+        return self.result_analyze(stdout.read(), stderr.read(), exit_status)
 
 
 class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
@@ -186,37 +190,8 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
             result = await self._client.run(command, check=True)
         except asyncssh.ProcessError as e:
             logger.error(f"Async SSH Error: {e}")
-            return {"response": {}, "status_code": e.exit_status}
+            return {"response": {}, "status_code": e.exit_status, "error": e.stderr}
         finally:
             if one_time:
                 await self.close()
-        output, error, exit_status = result.stdout, result.stderr, result.exit_status
-        success = exit_status == 0
-        if error:
-            if hasattr(error, "decode"):
-                error = error.decode().strip()
-            logger.debug(f"SSH Error: {repr(error)}")
-        decoded = output.strip()
-        if not decoded:
-            return {
-                "response": {"data": {}},
-                "status_code": exit_status,
-                "success": success,
-                "error": error,
-            }
-        try:
-            json.loads(decoded)
-        except json.JSONDecodeError:
-            logger.debug(
-                f"SSH Error of decode JSON result: {decoded.splitlines()[-1]}..."
-            )
-            return {
-                "response": {"data": decoded.splitlines()[-1]},
-                "status_code": exit_status,
-                "success": success,
-            }
-        return {
-            "response": {"data": json.loads(decoded)},
-            "status_code": exit_status,
-            "success": success,
-        }
+        return self.result_analyze(result.stdout, result.stderr, result.exit_status)
