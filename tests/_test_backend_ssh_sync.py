@@ -67,5 +67,5 @@ class BackendRequestSSHTest(unittest.TestCase):
         self.assertFalse(result["success"])
 
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()
