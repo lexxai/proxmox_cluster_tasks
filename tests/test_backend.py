@@ -57,17 +57,21 @@ class BackendRequestTest(unittest.TestCase):
         self.assertEqual(result["status_code"], 0)
         self.assertTrue(result["success"])
 
-    # @patch("subprocess.run")
-    # def test_request_failure(self, mock_subprocess_run):
-    #     # Mock a subprocess that raises CalledProcessError
-    #     mock_subprocess_run.side_effect = subprocess.CalledProcessError(
-    #         returncode=1, cmd="mock_command", output="error output", stderr="error"
-    #     )
-    #
-    #     result = self.backend.request("GET", "/version")
-    #     self.assertIsNone(result["response"])
-    #     self.assertEqual(result["status_code"], 1)
-    #     self.assertFalse(result["success"])
+    @patch("subprocess.run")
+    def test_request_failure_cli_backend_sync(self, mock_subprocess_run):
+        # Mock a subprocess that raises CalledProcessError
+        mock_subprocess_run.side_effect = subprocess.CalledProcessError(
+            returncode=1, cmd="mock_command", output="error output", stderr="error"
+        )
+        request_params = {
+            "method": "get",
+            "endpoint": "version",
+        }
+        result = self.backend.request(**request_params)
+        self.assertIsNone(result["response"])
+        self.assertEqual(result["status_code"], 1)
+        self.assertFalse(result["success"])
+
     #
     # @patch("subprocess.run")
     # def test_request_no_command(self, mock_subprocess_run):
