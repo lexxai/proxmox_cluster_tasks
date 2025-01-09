@@ -18,6 +18,26 @@ To install pytest and the necessary plugins using pip, run:
 pip install pytest pytest-mock pytest-asyncio
 ````
 
+### Configuring Tests
+To customize test behavior, you can configure environment variables before running tests. The following variables control which backend mock implementations are used:
+
+```plain
+MOCK_BACKEND_HTTPS=true
+MOCK_BACKEND_SSH=true
+MOCK_BACKEND_CLI=true
+```
+- If a value is set to true or not set, the corresponding backend (HTTPS, SSH, or CLI) will use predefined fake/mock data during the tests instead of real interactions.
+- If the value is false, the tests will use real data or connections where applicable. 
+
+You can set these variables in your terminal before running tests:
+```bash
+export MOCK_BACKEND_HTTPS=true
+export MOCK_BACKEND_SSH=false
+export MOCK_BACKEND_CLI=true
+```
+Alternatively, you can define them in a .env file if supported by your environment setup.
+
+
 ### Running Tests
 To execute the tests, simply run:
 ```bash
