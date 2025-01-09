@@ -85,6 +85,10 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         }
         return result
 
+    @property
+    def client(self):
+        return self._client
+
 
 class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
     """
@@ -96,10 +100,6 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
     *args: Additional positional arguments.
     **kwargs: Additional keyword arguments.
     """
-
-    @property
-    def client(self):
-        return self._client
 
     def connect(self):
         # logger.debug(f"Connecting to Proxmox API... {self.verify_ssl=}")
