@@ -42,6 +42,7 @@ The primary goal of this project is to streamline Proxmox VE cluster management,
   - [Filtering results](docs/part4-3-proxmoxapi-filtering.md)
   - [Debug Results](docs/part4-4-debug.md)
 - [Configuration](docs/part5-configuration.md)
+- [Testing](docs/part7-testing.md)
 
 
 
