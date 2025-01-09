@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 import shlex
 import subprocess
@@ -49,6 +50,40 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         logger.debug("Formatted command: %s", command)
         return command
 
+    @staticmethod
+    def result_analyze(output, error, exit_status) -> dict:
+        success = exit_status == 0
+        if error:
+            if hasattr(error, "decode"):
+                error = output.decode().strip()
+            logger.debug(f"CLI Error: {repr(error)}")
+        if hasattr(output, "decode"):
+            output = output.decode("utf-8")
+        decoded = output.strip() if isinstance(output, str) else None
+        if not decoded:
+            return {
+                "response": {"data": {}},
+                "status_code": exit_status,
+                "success": success,
+                "error": error,
+            }
+        try:
+            json.loads(decoded)
+        except json.JSONDecodeError:
+            logger.debug(
+                f"CLI Error of decode JSON result: {decoded.splitlines()[-1]}..."
+            )
+            return {
+                "response": {"data": decoded.splitlines()[-1]},
+                "status_code": exit_status,
+                "success": success,
+            }
+        return {
+            "response": {"data": json.loads(decoded)},
+            "status_code": exit_status,
+            "success": success,
+        }
+
 
 class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
 
@@ -69,13 +104,10 @@ class ProxmoxCLIBackend(ProxmoxCLIBaseBackend):
             process = subprocess.run(
                 command, shell=True, capture_output=True, text=True, check=True
             )
-            result = process.stdout.strip()
-            success = process.returncode == 0
-            return {
-                "response": {"data": result},
-                "status_code": process.returncode,
-                "success": success,
-            }
+            output = process.stdout
+            error = process.stderr
+            exit_status = process.returncode
+            return self.result_analyze(output, error, exit_status)
         except subprocess.CalledProcessError as e:
             return {"response": None, "status_code": e.returncode, "success": False}
 
@@ -100,19 +132,12 @@ class ProxmoxAsyncCLIBackend(ProxmoxCLIBaseBackend):
             process = await asyncio.create_subprocess_shell(
                 command, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
             )
-            stdout, stderr = await process.communicate()
-            if process.returncode != 0:
+            output, error = await process.communicate()
+            exit_status = process.returncode
+            if exit_status != 0:
                 raise subprocess.CalledProcessError(
-                    returncode=process.returncode, cmd=command, output=stderr
+                    returncode=exit_status, cmd=command, output=output
                 )
-            if hasattr(stdout, "decode"):
-                stdout = stdout.decode("utf-8")
-            result = stdout.strip() if isinstance(stdout, str) else None
-            success = process.returncode == 0
-            return {
-                "response": {"data": result},
-                "status_code": process.returncode,
-                "success": success,
-            }
+            return self.result_analyze(output, error, exit_status)
         except subprocess.CalledProcessError as e:
             return {"response": None, "status_code": e.returncode, "success": False}
