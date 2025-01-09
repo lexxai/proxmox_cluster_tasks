@@ -31,9 +31,12 @@ class ProxmoxCLIBaseBackend(ProxmoxBackend):
         method: str = None,
         data: dict = None,
         endpoint_params: dict = None,
-    ) -> str:
+    ) -> str | None:
         if endpoint is None:
             raise ValueError("CLI backend: Endpoint is required")
+        if not endpoint:
+            logger.debug("WARING_BACKEND: Formatted endpoint: None")
+            return None
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.rstrip("/")
         method = method.strip().lower()
