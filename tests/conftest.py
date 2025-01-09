@@ -1,4 +1,5 @@
 import logging
+import os
 
 import pytest
 
@@ -29,6 +30,15 @@ def pytest_configure(config):
         handler.addFilter(CTLoggerFilter())  # Apply the filter globally
 
     register_backends()
+
+
+@pytest.fixture(scope="session")
+def mock_backend_settings():
+    return {
+        "HTTPS": os.getenv("MOCK_BACKEND_HTTPS", "true").lower() == "true",
+        "SSH": os.getenv("MOCK_BACKEND_SSH", "true").lower() == "true",
+        "CLI": os.getenv("MOCK_BACKEND_CLI", "true").lower() == "true",
+    }
 
 
 @pytest.fixture(scope="session")
