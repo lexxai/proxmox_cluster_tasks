@@ -21,11 +21,11 @@ def test_api_version_ssh(get_api):
     assert version.get("release")
 
 
-# @pytest.mark.parametrize("get_api", [{"backend_name": "cli"}], indirect=True)
-# def test_api_version_cli(get_api):
-#     version = get_api.version.get()
-#     assert version
-#     assert version.get("release")
+@pytest.mark.parametrize("get_api", [{"backend_name": "cli"}], indirect=True)
+def test_api_version_cli(get_api):
+    version = get_api.version.get()
+    assert version
+    assert version.get("release")
 
 
 @pytest.mark.asyncio
