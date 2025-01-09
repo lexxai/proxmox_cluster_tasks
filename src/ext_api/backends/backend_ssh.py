@@ -77,6 +77,10 @@ class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
             "success": success,
         }
 
+    @property
+    def client(self):
+        return self._client
+
 
 class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
 
