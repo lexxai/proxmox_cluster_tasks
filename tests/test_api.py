@@ -1,3 +1,5 @@
+import subprocess
+
 import pytest
 
 
@@ -22,19 +24,54 @@ def test_api_version_ssh(get_api):
 
 
 @pytest.mark.parametrize("get_api", [{"backend_name": "cli"}], indirect=True)
-def test_api_version_cli(get_api):
+def test_api_version_cli(get_api, mocker):
+    subprocess_result = (
+        '{"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+    )
+    mock_subprocess = mocker.patch("subprocess.run")
+    mock_subprocess.return_value = subprocess.CompletedProcess(
+        args=["command"], returncode=0, stdout=subprocess_result
+    )
     version = get_api.version.get()
+    assert version
+    assert version.get("version") == "8.3.2"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("get_api_async", [{"backend_name": "https"}], indirect=True)
+async def test_api_version_https_async(get_api_async):
+    async with get_api_async as api:
+        version = await api.version.get()
     assert version
     assert version.get("release")
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("get_api_async", [{"backend_name": "https"}], indirect=True)
-async def test_api_version_async(get_api_async):
+@pytest.mark.parametrize("get_api_async", [{"backend_name": "ssh"}], indirect=True)
+async def test_api_version_ssh_async(get_api_async):
     async with get_api_async as api:
         version = await api.version.get()
     assert version
     assert version.get("release")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("get_api_async", [{"backend_name": "cli"}], indirect=True)
+async def test_api_version_cli_async(get_api_async, mocker):
+    subprocess_result = (
+        '{"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+    )
+    mock_process = mocker.MagicMock()
+    mock_process.communicate = mocker.AsyncMock(
+        return_value=(subprocess_result.encode(), b"")
+    )
+    mock_process.returncode = 0
+    mocker.patch("asyncio.create_subprocess_shell", return_value=mock_process)
+
+    async with get_api_async as api:
+        version = await api.version.get()
+    assert version
+    assert version.get("version") == "8.3.2"
 
 
 # @pytest.mark.asyncio
