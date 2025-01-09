@@ -23,13 +23,16 @@ def test_api_version_https(mock_backend_settings, get_api, mocker):
     version = get_api.version.get()
     assert version
     assert version.get("release")
-    assert version.get("release") == "mock-8.3"
+    if mock_backend_settings.get("HTTPS"):
+        assert version.get("release") == "mock-8.3"
 
 
 @pytest.mark.parametrize("get_api", [{"backend_name": "ssh"}], indirect=True)
 def test_api_version_ssh(mock_backend_settings, get_api, mocker):
     if mock_backend_settings.get("SSH"):
-        ssh_result = '{"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+        ssh_result = (
+            '{"release":"mock-8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+        )
 
         mock_stdout = mocker.MagicMock()
         mock_stdout.read.return_value = ssh_result.encode()
@@ -47,13 +50,15 @@ def test_api_version_ssh(mock_backend_settings, get_api, mocker):
     version = get_api.version.get()
     assert version
     assert version.get("release")
+    if mock_backend_settings.get("SSH"):
+        assert version.get("release") == "mock-8.3"
 
 
 @pytest.mark.parametrize("get_api", [{"backend_name": "cli"}], indirect=True)
 def test_api_version_cli(mock_backend_settings, get_api, mocker):
     if mock_backend_settings.get("CLI"):
         subprocess_result = (
-            '{"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+            '{"release":"mock-8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
         )
         mock_subprocess = mocker.patch("subprocess.run")
         mock_subprocess.return_value = subprocess.CompletedProcess(
@@ -61,7 +66,8 @@ def test_api_version_cli(mock_backend_settings, get_api, mocker):
         )
     version = get_api.version.get()
     assert version
-    assert version.get("version") == "8.3.2"
+    if mock_backend_settings.get("CLI"):
+        assert version.get("release") == "mock-8.3"
 
 
 @pytest.mark.asyncio
@@ -78,6 +84,8 @@ async def test_api_version_https_async(mock_backend_settings, get_api_async, moc
         version = await api.version.get()
     assert version
     assert version.get("release")
+    if mock_backend_settings.get("HTTPS"):
+        assert version.get("release") == "mock-8.3"
 
 
 @pytest.mark.asyncio
@@ -109,7 +117,7 @@ async def test_api_version_ssh_async(mock_backend_settings, get_api_async, mocke
 async def test_api_version_cli_async(mock_backend_settings, get_api_async, mocker):
     if mock_backend_settings.get("CLI"):
         subprocess_result = (
-            '{"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+            '{"release":"mock-8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
         )
         mock_process = mocker.MagicMock()
         mock_process.communicate = mocker.AsyncMock(
@@ -121,7 +129,8 @@ async def test_api_version_cli_async(mock_backend_settings, get_api_async, mocke
     async with get_api_async as api:
         version = await api.version.get()
     assert version
-    assert version.get("version") == "8.3.2"
+    if mock_backend_settings.get("CLI"):
+        assert version.get("release") == "mock-8.3"
 
 
 # @pytest.mark.asyncio
