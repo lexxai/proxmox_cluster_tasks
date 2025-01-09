@@ -1,5 +1,6 @@
 import subprocess
 
+import httpx
 import pytest
 
 
@@ -10,10 +11,18 @@ import pytest
 
 #
 @pytest.mark.parametrize("get_api", [{"backend_name": "https"}], indirect=True)
-def test_api_version_https(get_api):
+def test_api_version_https(mock_backend_settings, get_api, mocker):
+    if mock_backend_settings.get("HTTPS"):
+        http_result = '{"data":{"repoid":"3e76eec21c4a14a7","release":"mock-8.3","version":"8.3.2"}}'
+
+        def mock_request(method, url, **kwargs):
+            return httpx.Response(status_code=200, text=http_result)
+
+        mocker.patch.object(get_api.backend.client, "request", side_effect=mock_request)
     version = get_api.version.get()
     assert version
     assert version.get("release")
+    assert version.get("release") == "mock-8.3"
 
 
 @pytest.mark.parametrize("get_api", [{"backend_name": "ssh"}], indirect=True)
