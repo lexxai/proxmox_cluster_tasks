@@ -2,6 +2,7 @@ import subprocess
 
 import httpx
 import pytest
+from asyncssh import SSHCompletedProcess
 
 
 # logger = logging.getLogger("CT")
@@ -81,11 +82,26 @@ async def test_api_version_https_async(mock_backend_settings, get_api_async, moc
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("get_api_async", [{"backend_name": "ssh"}], indirect=True)
-async def test_api_version_ssh_async(get_api_async):
+async def test_api_version_ssh_async(mock_backend_settings, get_api_async, mocker):
     async with get_api_async as api:
+        if mock_backend_settings.get("SSH"):
+            ssh_result = (
+                '{"release":"mock-8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}'
+            )
+
+            mock_process = mocker.MagicMock()
+            mock_process.stdout = ssh_result
+            mock_process.stderr = ""  # Simulate empty stderr
+            mock_process.exit_status = 0
+            # Mocking the async run method
+            mock_run = mocker.AsyncMock(return_value=mock_process)
+            mocker.patch.object(api.backend.client, "run", side_effect=mock_run)
+
         version = await api.version.get()
     assert version
     assert version.get("release")
+    if mock_backend_settings.get("SSH"):
+        assert version.get("release") == "mock-8.3"
 
 
 @pytest.mark.asyncio
