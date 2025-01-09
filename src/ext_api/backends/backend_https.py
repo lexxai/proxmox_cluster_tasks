@@ -97,6 +97,10 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
     **kwargs: Additional keyword arguments.
     """
 
+    @property
+    def client(self):
+        return self._client
+
     def connect(self):
         # logger.debug(f"Connecting to Proxmox API... {self.verify_ssl=}")
         self._client = httpx.Client(
