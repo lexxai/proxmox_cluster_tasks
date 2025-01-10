@@ -277,12 +277,12 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             formatted_duration = self.format_duration(duration)
             formatted_timeout = self.format_duration(self.timeout)
             logger.info(
-                f"Waiting for replication job ({vm_id} to {target_node or "any"}) is removed... [ {formatted_duration} / {formatted_timeout} ]"
+                f"Waiting for replication job ({vm_id} to {target_node or 'any'}) is removed... [ {formatted_duration} / {formatted_timeout} ]"
             )
             time.sleep(self.polling_interval)
             if time.time() - start_time > self.timeout:
                 logger.warning(
-                    f"Timeout reached while waiting for replication job is removed. ({vm_id} to {target_node or "any"}) ..."
+                    f"Timeout reached while waiting for replication job is removed. ({vm_id} to {target_node or 'any'}) ..."
                 )
                 break
         return False
