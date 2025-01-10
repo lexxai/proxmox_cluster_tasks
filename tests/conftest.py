@@ -3,6 +3,8 @@ import os
 
 import pytest
 
+from cluster_tasks.debug_api_sync import clients
+
 # import sys
 # from pathlib import Path
 # project_root = Path(__file__).resolve().parent.parent
@@ -41,22 +43,36 @@ def mock_backend_settings():
     }
 
 
-@pytest.fixture(scope="session")
-def get_api(request) -> ProxmoxAPI:
+@pytest.fixture(scope="function")
+def get_api(request, mocker, mock_backend_settings) -> ProxmoxAPI:
     backend_name = (
         request.param.get("backend_name", "https")
         if hasattr(request, "param")
         else "https"
     )
-    with ProxmoxAPI(backend_name=backend_name, backend_type="sync") as api:
+    proxmox_api = ProxmoxAPI(backend_name=backend_name, backend_type="sync")
+    backend = proxmox_api.backend
+    if mock_backend_settings.get(backend_name.upper()) and hasattr(backend, "connect"):
+        mock_connect = mocker.MagicMock()
+        backend._client = mocker.MagicMock()
+        mocker.patch.object(backend, "connect", side_effect=mock_connect)
+
+    with proxmox_api as api:
         yield api
 
 
-@pytest.fixture(scope="session")
-def get_api_async(request) -> ProxmoxAPI:
+@pytest.fixture(scope="function")
+def get_api_async(request, mocker, mock_backend_settings) -> ProxmoxAPI:
     backend_name = (
         request.param.get("backend_name", "https")
         if hasattr(request, "param")
         else "https"
     )
-    return ProxmoxAPI(backend_name=backend_name, backend_type="async")
+    proxmox_api = ProxmoxAPI(backend_name=backend_name, backend_type="async")
+    backend = proxmox_api.backend
+    if mock_backend_settings.get(backend_name.upper()) and hasattr(backend, "connect"):
+        mock_connect = mocker.AsyncMock()
+        backend._client = mocker.AsyncMock()
+        backend.close = mocker.AsyncMock()
+        mocker.patch.object(backend, "connect", side_effect=mock_connect)
+    return proxmox_api

@@ -47,6 +47,7 @@ def test_api_version_ssh(mock_backend_settings, get_api, mocker):
         mocker.patch.object(
             get_api.backend.client, "exec_command", side_effect=mock_exec
         )
+
     version = get_api.version.get()
     assert version
     assert version.get("release")
