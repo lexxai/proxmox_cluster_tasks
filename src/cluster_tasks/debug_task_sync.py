@@ -10,10 +10,14 @@ from loader_scene import ScenarioFactory
 
 logger = logging.getLogger(f"CT.{__name__}")
 
+
 def sanitize_config(config):
     sensitive_keys = ["API.TOKEN_SECRET", "API.TOKEN_ID"]
-    sanitized_config = {k: (v if k not in sensitive_keys else "****") for k, v in config.items()}
+    sanitized_config = {
+        k: (v if k not in sensitive_keys else "****") for k, v in config.items()
+    }
     return sanitized_config
+
 
 def main():
     config_file = Path(__file__).parent / "scenarios_configs.yaml"
@@ -28,8 +32,8 @@ def main():
             node_tasks = ProxmoxTasksSync(api=api)
             for v in scenarios_config.get("Scenarios").values():
                 config = v.get("config")
-                sanitized_config = sanitize_config(config)
-                logger.debug(f"Config: {sanitized_config}")
+                # sanitized_config = sanitize_config(config)
+                # logger.debug(f"Config: {sanitized_config}")
                 node = config.get("node")
                 source_vm_id = config.get("source_vm_id")
                 destination_vm_id = config.get("destination_vm_id")
@@ -55,7 +59,7 @@ def main():
                 result = node_tasks.vm_config_network_set(
                     node, destination_vm_id, config=setconfig
                 )
-                logger.info(f"VM configuration network set result: {result}")
+                # logger.info(f"VM configuration network set result: {result}")
                 logger.info(
                     api.nodes(node)
                     .qemu(destination_vm_id)
