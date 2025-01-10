@@ -50,7 +50,7 @@ def main():
                 result = node_tasks.vm_config_network_set(
                     node, destination_vm_id, config=setconfig
                 )
-                logger.info(result, setconfig)
+                logger.info(f"VM configuration network set result: {result}")
                 logger.info(
                     api.nodes(node)
                     .qemu(destination_vm_id)
