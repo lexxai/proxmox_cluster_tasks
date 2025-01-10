@@ -77,6 +77,10 @@ class ProxmoxBaseAPI:
                     "key_filename": kwargs.get("key_filename")
                     or configuration.get("SSH.KEY_FILENAME"),
                     "agent": kwargs.get("agent", configuration.get("SSH.AGENT")),
+                    "disable_host_key_checking": kwargs.get(
+                        "disable_host_key_checking",
+                        configuration.get("SSH.DISABLE_HOST_KEY_CHECKING", False),
+                    ),
                 }
             case _:
                 params = {}

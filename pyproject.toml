@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "proxmox-cluster-tasks"
-version = "0.6.3"
+version = "0.6.4"
 description = ""
 authors = ["lexxai <lexxai@gmail.com>"]
 readme = "README.md"

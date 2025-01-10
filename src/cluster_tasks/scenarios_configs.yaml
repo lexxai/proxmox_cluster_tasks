@@ -1,5 +1,5 @@
 API:
-  backend: "https"
+  backend: "ssh"
 Scenarios:
   CloneTemplateVM-2:
     file: "clone_template_vm"

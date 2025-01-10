@@ -28,6 +28,7 @@ class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
         password: str = None,
         key_filename: str = None,
         agent: bool = False,
+        disable_host_key_checking: bool = False,
         port: int = 22,
         *args,
         **kwargs,
@@ -39,9 +40,14 @@ class ProxmoxSSHBaseBackend(ProxmoxCLIBaseBackend):
         self.password: str = password
         self.key_filename: str = key_filename
         self.agent: bool = agent
+        self.disable_host_key_checking: bool = disable_host_key_checking
         self._client: (
             paramiko.client.SSHClient | asyncssh.SSHClientConnection | None
         ) = None
+        if disable_host_key_checking:
+            logger.warning(
+                "SSH host key checking is disabled. This is not recommended for production use."
+            )
 
     @staticmethod
     def result_analyze(output, error, exit_status) -> dict:
@@ -86,7 +92,9 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
 
     def connect(self):
         self._client = paramiko.SSHClient()
-        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if self.disable_host_key_checking:
+            self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self._client.preferred_keys = ["ssh-ed25519", "ssh-rsa"]
         self._client.load_system_host_keys()
         self._client.connect(
             self.hostname,
@@ -95,6 +103,9 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
             password=self.password or None,
             key_filename=self.key_filename or None,
         )
+
+        self.show_host_key(self._client)
+
         if self.agent:
             # use System Agent
             s = self._client.get_transport().open_session()
@@ -141,6 +152,18 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         exit_status = stdout.channel.recv_exit_status()
         return self.result_analyze(stdout.read(), stderr.read(), exit_status)
 
+    def show_host_key(self, client):
+        if self.disable_host_key_checking:
+            # Retrieve the server's host key
+            host_key = client.get_transport().get_remote_server_key()
+            key_type = host_key.get_name()
+            key_data = host_key.get_base64()
+            # Format the host key entry
+            host_key_entry = f"{self.hostname} {key_type} {key_data}"
+            logger.info(
+                f"You can add this SSH host key entry, manually to your known_hosts file and enable host key checking again in config:\n'{host_key_entry}'"
+            )
+
 
 class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
 
@@ -154,7 +177,13 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         if self.key_filename:
             params["client_keys"] = [self.key_filename]
 
+        if self.disable_host_key_checking:
+            params["known_hosts"] = None
+            params["server_host_key_algs"] = ["ssh-ed25519", "ssh-rsa"]
+
         self._client = await asyncssh.connect(**params)
+
+        self.show_host_key(self._client)
 
     async def close(self):
         if self._client:
@@ -199,3 +228,14 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
             if one_time:
                 await self.close()
         return self.result_analyze(result.stdout, result.stderr, result.exit_status)
+
+    def show_host_key(self, client):
+        if self.disable_host_key_checking:
+            host_key = client.get_server_host_key()
+            exported_key = host_key.export_public_key()
+            if isinstance(exported_key, bytes):
+                exported_key = exported_key.decode("utf-8").strip()
+            host_key_entry = f"{self.hostname} {exported_key}"
+            logger.info(
+                f"You can add this SSH host key entry, manually to your known_hosts file and enable host key checking again in config:\n'{host_key_entry}'"
+            )
