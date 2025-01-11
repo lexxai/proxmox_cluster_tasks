@@ -3,10 +3,10 @@ API_TOKEN_SECRET=....
 API_BASE_URL="https://example.com:8006"
 
 SSH_HOSTNAME="example.com"
-SSH_USERNAME=""
-SSH_PASSWORD=""
-SSH_AGENT=false
-SSH_KEY_FILENAME=""
+SSH_USERNAME=....
 
-NODES=["c01", "c02", "c03", "c04", "c05"]
 DEBUG=False
+
+MOCK_BACKEND_HTTPS=true
+MOCK_BACKEND_SSH=true
+MOCK_BACKEND_CLI=true

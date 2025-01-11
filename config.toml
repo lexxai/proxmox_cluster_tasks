@@ -18,17 +18,10 @@ PASSWORD = ""
 PORT = 22
 AGENT = false
 KEY_FILENAME = ""
+DISABLE_HOST_KEY_CHECKING  = false
 
-#[API_HANDLERS]
-#TICKET = "/api2/json/access/ticket"
-#VERSION = "/api2/json/version"
-#STATUS = "/api2/json/nodes/{TARGETNODE}/status"
-#HA_GROUPS = "/api2/json/cluster/ha/groups"
-#
-#[CLI_COMMANDS]
-#VERSION = "pvesh get /version"
-##VERSION = "sleep 5"
-#HA_GROUPS = "pvesh get /cluster/ha/groups"
-#HA_GROUPS_CREATE = "pvesh create /cluster/ha/groups --group={NAME} --nodes={NODES} --comment={COMMENT} --nofailback={NOFAILBACK} --restricted={RESTRICTED}"
+[SCENARIOS]
+MAX_CONCURRENCY = 10
+
 
 

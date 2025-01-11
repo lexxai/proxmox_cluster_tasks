@@ -30,23 +30,5 @@ The **Proxmox Cluster Tasks** repository is designed to simplify and automate da
 
 The primary goal of this project is to streamline Proxmox VE cluster management, reduce manual effort, and improve operational consistency.
 
-## Documentation
 
-- [API Reference](docs/part2-api-reference.md)
-- [Setup Instructions](docs/part3-setup.md)
-- [Scenarios](docs/part6-scenarios.md)
-- NodeTasks Class
-- ProxmoxAPI Class
-  - [Examples](docs/part4-1-proxmoxapi-examples.md)
-  - [Advanced Concurrent Usage and Low-Level API Requests](docs/part4-2-advanced-examples.md)
-  - [Filtering results](docs/part4-3-proxmoxapi-filtering.md)
-  - [Debug Results](docs/part4-4-debug.md)
-- [Configuration](docs/part5-configuration.md)
-- [Testing](docs/part7-testing.md)
-
-
-
-## Acknowledgments
-
-Special thanks to the [proxmoxer](https://github.com/proxmoxer/proxmoxer) project for providing inspiration and solutions that influenced the development of this library.
-
+[README](../README.md)

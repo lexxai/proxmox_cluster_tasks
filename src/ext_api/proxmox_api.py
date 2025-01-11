@@ -1,227 +1,280 @@
+import asyncio
 import logging
+import threading
+import uuid
+from typing import Self
 
-from nacl.pwhash.argon2i import verify
-
+from cluster_tasks.configure_logging import config_logger
 from config.config import configuration
-from ext_api.backends.backend_abstract import ProxmoxBackend
 from ext_api.backends.registry import register_backends
-from ext_api.backends.backend_registry import (
-    BackendRegistry,
-    BackendType,
-)
+from ext_api.proxmox_base_api import ProxmoxBaseAPI
 
 logger = logging.getLogger(f"CT.{__name__}")
 
 
-class ProxmoxAPI:
-    def __init__(
-        self,
-        backend: ProxmoxBackend | None = None,
-        backend_type: str | BackendType | None = BackendType.SYNC,
-        backend_name: str = "https",
-        **kwargs,
-    ):
-        try:
-            self.backend_type = (
-                BackendType(backend_type.strip().lower())
-                if isinstance(backend_type, str)
-                else backend_type
-            )
-        except ValueError:
-            raise ValueError(
-                f"Unsupported backend type: {backend_type}, available: {[k.lower() for k in BackendType.__members__]}"
-            )
-        self.backend_name = backend_name.strip().lower() if backend_name else None
-        # Verify backend_name is registered
-        if backend is not None:
-            backend_name, backend_type = BackendRegistry.get_name_type(backend)
-            if all([backend_name, backend_type]):
-                self.backend_name = backend_name
-                self.backend_type = backend_type
-                self._backend = backend
+class ProxmoxAPI(ProxmoxBaseAPI):
+    METHODS = ["get", "post", "put", "delete"]
+    METHOD_MAP = {"create": "post", "set": "put"}
+    _PRIVATE_METHODS = ["api", "shape", "request", "async_request"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._context_path: dict[str, list] = {}
+        self._lock = threading.Lock()
+        self._task_id: str | None = None
+
+    def _new_task(self) -> str:
+        with self._lock:
+            self._task_id = str(uuid.uuid4())
+        logger.debug(f"Forced a new task_id: {self._task_id}")
+        return self._task_id
+
+    def _get_task_id(self, is_async: bool) -> str:
+        if is_async:
+            if self._task_id is None:
+                self._task_id = str(uuid.uuid4())
+                logger.debug(f"Generated a new task ID: {self._task_id}")
         else:
-            self._backend = self._create_backend(**kwargs)
+            if self._task_id is None:
+                with self._lock:
+                    self._task_id = str(uuid.uuid4())
+                logger.debug(f"Generated a new task ID: {self._task_id}")
+        return self._task_id
 
-    def _create_backend(self, **kwargs) -> ProxmoxBackend:
-        """Factory method to create the appropriate backend."""
-        logger.debug(
-            f"Creating backend: {self.backend_name} of type: {self.backend_type}"
-        )
-        match self.backend_name:
-            case "https":
-                verify_ssl: bool = kwargs.get(
-                    "verify_ssl", configuration.get("API.VERIFY_SSL")
-                )
-                params = {
-                    "base_url": kwargs.get("base_url")
-                    or configuration.get("API.BASE_URL"),
-                    "entry_point": kwargs.get("entry_point")
-                    or configuration.get("API.ENTRY_POINT"),
-                    "token": kwargs.get("token") or configuration.get("API.TOKEN"),
-                    "verify_ssl": verify_ssl,
-                }
-            case "cli":
-                params = {
-                    "entry_point": kwargs.get("entry_point")
-                    or configuration.get("CLI.ENTRY_POINT"),
-                }
-            case "ssh":
-                params = {
-                    "entry_point": kwargs.get("entry_point")
-                    or configuration.get("CLI.ENTRY_POINT"),
-                    "hostname": kwargs.get("hostname")
-                    or configuration.get("SSH.HOSTNAME"),
-                    "username": kwargs.get("username")
-                    or configuration.get("SSH.USERNAME"),
-                    "password": kwargs.get("password")
-                    or configuration.get("SSH.PASSWORD"),
-                    "port": kwargs.get("port") or configuration.get("SSH.PORT"),
-                    "key_filename": kwargs.get("key_filename")
-                    or configuration.get("SSH.KEY_FILENAME"),
-                    "agent": kwargs.get("agent", configuration.get("SSH.AGENT")),
-                }
-            case _:
-                params = {}
+    def _cleanup(self, task_id: str, is_async: bool = None):
+        """Callback to clean up context when a task finishes."""
+        # task_id = id(task)
+        if is_async:
+            self._context_path.pop(task_id, None)
+        else:
+            with self._lock:
+                self._context_path.pop(task_id, None)
+        self._task_id = None
 
-        backend_cls: type[ProxmoxBackend] = BackendRegistry.get_backend(
-            self.backend_name, self.backend_type
-        )
-        if backend_cls:
-            kwargs.update(params)
-            return backend_cls(**kwargs)
-        raise ValueError(
-            f"Unsupported backend: {self.backend_name} of this type: {self.backend_type}"
-        )
-
-    def __enter__(self):
-        """Enter context for synchronous backends."""
-        if self.backend_type != BackendType.SYNC:
-            raise RuntimeError("Use 'async with' for asynchronous backends.")
-        if hasattr(self._backend, "__enter__"):
-            self._backend.__enter__()
+    def __getattr__(self, name) -> Self:
+        if name.startswith("_") or (name in self._PRIVATE_METHODS):
+            # Ignore private methods
+            return self
+        is_async = self._is_async()
+        task_id = self._get_task_id(is_async)
+        if is_async:
+            if task_id not in self._context_path:
+                self._context_path[task_id] = []
+            self._context_path[task_id].append(name)
+        else:
+            with self._lock:
+                if task_id not in self._context_path:
+                    self._context_path[task_id] = []
+                self._context_path[task_id].append(name)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Exit context for synchronous backends."""
-        if self.backend_type == BackendType.SYNC:
-            if hasattr(self._backend, "__exit__"):
-                self._backend.__exit__(exc_type, exc_val, exc_tb)
+    @staticmethod
+    def _is_async():
+        try:
+            return asyncio.get_running_loop().is_running()
+        except RuntimeError:
+            return False
 
-    async def __aenter__(self):
-        """Enter context for asynchronous backends."""
-        if self.backend_type != BackendType.ASYNC:
-            raise RuntimeError("Use 'with' for synchronous backends.")
-        if hasattr(self._backend, "__aenter__"):
-            await self._backend.__aenter__()
-        return self
+    def __call__(self, *args, **kwargs):
+        is_async = self._is_async()
+        if is_async:
+            return self.__acall__(*args, **kwargs)
+        if "_task_id" in kwargs:
+            task_id = kwargs.pop("_task_id")
+        else:
+            task_id = self._get_task_id(is_async)
+        if args and not kwargs:
+            # all args force to string type
+            args = map(str, args)
+            with self._lock:
+                self._context_path[task_id].extend(args)
+            return self
+        if kwargs.get("get_request_param"):
+            kwargs.pop("get_request_param")
+            return self._request_prepare(*args, **kwargs)
+        kwargs["task_id"] = task_id
+        with self._lock:
+            self._task_id = None
+        result = self._execute(*args, **kwargs)
+        return result
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Exit context for asynchronous backends."""
-        if self.backend_type == BackendType.ASYNC:
-            if hasattr(self._backend, "__aexit__"):
-                await self._backend.__aexit__(exc_type, exc_val, exc_tb)
+    def __acall__(self, *args, **kwargs):
+        if "_task_id" in kwargs:
+            task_id = kwargs.pop("_task_id")
+        else:
+            task_id = self._get_task_id(True)
+        if args and not kwargs:
+            # all args force to string type
+            args = map(str, args)
+            self._context_path[task_id].extend(args)
+            return self
+        if kwargs.get("get_request_param"):
+            kwargs.pop("get_request_param")
+            return self._request_prepare(*args, **kwargs)
+        # pulled task_id information to later use in _async_execute, and forgot in class instance
+        kwargs["task_id"] = task_id
+        self._task_id = None
+        # logger.debug("ACALL before execute")
+        # here async code will be wait real awaited execution
+        result = self._async_execute(*args, **kwargs)
+        return result
 
-    def request(self, *args, **kwargs):
-        """Make a synchronous request."""
-        if self.backend_type != "sync":
-            raise RuntimeError("This instance is configured for asynchronous requests.")
-        return self._backend.request(*args, **kwargs)
-
-    async def async_request(self, *args, **kwargs):
-        """Make an asynchronous request."""
-        if self.backend_type != "async":
-            raise RuntimeError("This instance is configured for synchronous requests.")
-        return await self._backend.async_request(*args, **kwargs)
-
-
-class ProxmoxSSHBackend:
-    pass
-
-
-# TEST JUST
-if __name__ == "__main__":
-    import asyncio
-
-    logger = logging.getLogger("CT")
-    logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
-
-    class ColoredFormatter(logging.Formatter):
-        # Define color codes
-        COLORS = {
-            "DEBUG": "\033[94m",  # Blue
-            "INFO": "\033[92m",  # Green
-            "ERROR": "\033[91m",  # Red
-            "RESET": "\033[0m",  # Reset color
+    def _request_prepare(
+        self, data=None, task_id: str = None, params: dict = None
+    ) -> dict:
+        is_async = self._is_async()
+        # used task_id or pulled for later async run code or directly in class instance for sync code
+        task_id = task_id or self._task_id
+        # logger.debug(f"_request_prepare: {task_id}")
+        if task_id is None:
+            raise ValueError("_request_prepare: Task ID must be defied")
+        if is_async:
+            action = self._context_path[task_id].pop()
+            endpoint = "/".join(self._context_path[task_id])
+            self._context_path[task_id] = (
+                []
+            )  # Clear the path after generating the endpoint
+            self._cleanup(task_id, is_async)
+        else:
+            action = self._context_path[task_id][-1]
+            endpoint = "/".join(self._context_path[task_id][:-1])
+            with self._lock:
+                self._context_path[task_id] = []
+            self._cleanup(task_id, is_async)
+        method = self.METHOD_MAP.get(action, action)
+        if method not in self.METHODS:
+            raise ValueError(f"Unsupported action: {action}")
+        return {
+            "method": method,
+            "endpoint": endpoint,
+            "data": data,
+            "params": params,
         }
 
-        def format(self, record):
-            log_color = self.COLORS.get(record.levelname, self.COLORS["RESET"])
-            message = super().format(record)
-            return f"{log_color}{message}{self.COLORS['RESET']}"
+    @staticmethod
+    def _get_nested_value(data, key_path):
+        """
+        Helper function to fetch values from nested dictionaries or lists using a dotted key path.
 
-    # Setup colored logger
-    handler = logging.StreamHandler()
-    handler.setFormatter(ColoredFormatter("%(levelname)s: %(message)s"))
-    logger.addHandler(handler)
-    # logger.addHandler(logging.StreamHandler())
+        :param data: The dictionary or list to search through.
+        :param key_path: The dotted key path (e.g., "kernel.cpu").
+        :return: The value found at the specified key path, or None if not found.
+        """
+        keys = key_path.split(".")  # Split the dotted path into individual keys
+        for key in keys:
+            if isinstance(data, dict):
+                data = data.get(key, None)
+            elif isinstance(data, list) and key.isdigit():  # If key is an index
+                try:
+                    data = data[int(key)]
+                except (ValueError, IndexError):
+                    return None
+            else:
+                return None
+            if data is None:
+                return None
+        return data
 
-    node = configuration.get("NODES", [])[0]
+    def _filter_response(self, response_data, filter_keys=None):
+        """
+        Filters the response data based on the specified filter_keys, allowing for nested dotted keys.
 
-    # Register backend with the registry
-    try:
-        register_backends()
+        :param response_data: The data to filter (could be a list or dictionary).
+        :param filter_keys: A string or list of strings specifying the keys to filter.
+        :return: The filtered data.
+        """
+        if not filter_keys:
+            return response_data
 
-        # backend = None
-        # Now you can use ProxmoxAPI with the backend you registered
-        # backend = BackendRegistry.get_backend("https", backend_type=BackendType.SYNC)
+        if isinstance(response_data, list):
+            if isinstance(filter_keys, str):
+                response_data = [
+                    self._get_nested_value(item, filter_keys) for item in response_data
+                ]
+            else:
+                response_data = [
+                    {
+                        key: self._get_nested_value(item, key)
+                        for key in filter_keys
+                        if self._get_nested_value(item, key) is not None
+                    }
+                    for item in response_data
+                ]
+        elif isinstance(response_data, dict):
+            if isinstance(filter_keys, str):
+                response_data = self._get_nested_value(response_data, filter_keys)
+            else:
+                response_data = {
+                    key: self._get_nested_value(response_data, key)
+                    for key in filter_keys
+                    if self._get_nested_value(response_data, key) is not None
+                }
 
-        api = ProxmoxAPI(backend_name="ssh")
+        return response_data
 
-        with api as proxmox:
-            response = proxmox.request("get", "version")
-            logger.info(response)
-            # response = proxmox.request(
-            #     "create",
-            #     "/cluster/ha/groups",
-            #     params={"node": node},
-            #     data={"name": "test-node"},
-            # )
-            # logger.info(response)
-
-    except Exception as e:
-        logger.error(f"ERROR: {e}")
-
-    logger.info("\n\nTESTING ASYNC --------\n")
-
-    async def async_main():
-        # Register backend with the registry
-
+    def _response_analyze(self, response, filter_keys=None) -> str | list | dict | None:
         try:
-            # Now you can use ProxmoxAPI with the backend you registered
-            api = ProxmoxAPI(
-                backend_type="async",
-                backend_name="ssh",
-            )
-            response = await api.async_request("get", "version")
-            logger.info(response)
-
-            async with api as proxmox:
-                response = await proxmox.async_request("get", "version")
-                logger.info(response)
-                # response = await proxmox.async_request(
-                #     "post",
-                #     "/cluster/ha/groups",
-                #     params={},
-                #     data={"group": "test-group", "nodes": "c01:100,c02,c03"},
-                # )
-                # logger.info(response)
-                response = await proxmox.async_request(
-                    "get",
-                    "/cluster/ha/groups",
-                    params={},
-                )
-                logger.info(response)
+            if filter_keys and isinstance(filter_keys, str) and filter_keys == "_raw_":
+                return response
+            if response is None or not response.get("success"):
+                raise Exception(response)
+            response = response.get("response", {})
+            if response is None:
+                raise Exception(response)
+            response_data = response.get("data")
+            if response_data is None:
+                return None
+            return self._filter_response(response_data, filter_keys)
         except Exception as e:
-            logger.error(f"ERROR: {e}")
+            logger.debug(f"WARING: Failed to execute: {e}")
+            return None
 
-    asyncio.run(async_main())
+    def _execute(
+        self,
+        data=None,
+        filter_keys=None,
+        params: dict = None,
+        task_id: str = None,
+        request_params: dict = None,
+    ) -> str | list | dict | None:
+        # logger.debug("_execute")
+        request_params = request_params or self._request_prepare(
+            data, task_id=task_id, params=params
+        )
+        response = self.request(**request_params)
+        return self._response_analyze(response, filter_keys=filter_keys)
+
+    async def _async_execute(
+        self,
+        data=None,
+        filter_keys=None,
+        params: dict = None,
+        task_id: str = None,
+        request_params: dict = None,
+    ) -> str | list | dict | None:
+        # logger.debug("_async_execute")
+        request_params = request_params or self._request_prepare(
+            data, task_id=task_id, params=params
+        )
+        response = await self.async_request(**request_params)
+        return self._response_analyze(response, filter_keys=filter_keys)
+
+
+if __name__ == "__main__":
+    # Example usage
+    logger = logging.getLogger("CT")
+    logger.setLevel("DEBUG" if configuration.get("DEBUG") else "INFO")
+    config_logger(logger)
+    register_backends()
+    API = ProxmoxAPI(backend_name="https")
+    with API as api:
+        # Simulate API calls
+        logger.info(api.version.get())
+
+        # logger.info(sorted([n.get("id") for n in api.nodes.get()]))
+        # logger.info(api.nodes.get(filter_keys=["node", "status"]))
+        # logger.info(api.nodes.get())
+        # logger.info(api.nodes("c01").status.get())
+        # logger.info(api.cluster.ha.groups.create(name="test-gr02", nodes="c01,c02:100"))
+
+        # print(response2)

@@ -2,7 +2,9 @@ from collections import namedtuple
 from enum import StrEnum
 from typing import TypeVar, Type
 
-T = TypeVar("T", bound="ProxmoxBackend")
+from ext_api.backends.backend_abstract import ProxmoxBackend
+
+T = TypeVar("T", bound=ProxmoxBackend)
 
 BackendKey = namedtuple("BackendKey", ["name", "backend_type"])
 

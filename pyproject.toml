@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "proxmox-cluster-tasks"
-version = "0.2.0"
+version = "0.6.4"
 description = ""
 authors = ["lexxai <lexxai@gmail.com>"]
 readme = "README.md"
@@ -8,19 +8,33 @@ packages = [{include = "cluster_tasks", from = "src"}]
 
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 python-dotenv = "==1.0.1"
 httpx = {extras = ["http2"], version = "^0.28.1"}
 paramiko = "^3.5.0"
 asyncssh = "^2.19.0"
+pyyaml = "^6.0.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
 pytest-asyncio = "^0.25.0"
+pytest-mock = "^3.14.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+#[tool.pytest.ini_options]
+#python_paths = ["src"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+pythonpath = "src"
+asyncio_default_fixture_loop_scope = "function"
+log_cli = true
+
 
 [tool.poetry.scripts]
 proxmox-cluster-tasks = "cluster_tasks:main"

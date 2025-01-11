@@ -1,11 +1,14 @@
 import logging
 
-import httpx
+logger = logging.getLogger("CT.{__name__}")
+
+try:
+    import httpx
+except ImportError as e:
+    logger.error(f"HTTPS Backend require load module: {e}")
+    exit(1)
 
 from ext_api.backends.backend_abstract import ProxmoxBackend
-
-
-logger = logging.getLogger("CT.{__name__}")
 
 
 """
@@ -48,11 +51,12 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         self.base_url = base_url
         self.entry_point = entry_point.strip("/")
         self.token = token
+        self.token_delimiter = "="
         self.verify_ssl = verify_ssl
         self._client: httpx.Client | httpx.AsyncClient | None = None
 
     def get_authorization(self, token: str | None = None):
-        return f"PVEAPIToken={token or self.token}"
+        return f"PVEAPIToken{self.token_delimiter}{token or self.token}"
 
     def build_headers(self, token: str | None = None):
         headers = {
@@ -61,21 +65,29 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         }
         return headers
 
-    def format_url(self, endpoint: str, params: dict = None) -> str:
+    def format_url(self, endpoint: str, endpoint_params: dict = None) -> str:
+        if endpoint is None:
+            raise ValueError("HTTPS backend: Endpoint is required")
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.strip("/")
-        if params:
-            endpoint = endpoint.format(**params)
+        if endpoint_params:
+            endpoint = endpoint.format(**endpoint_params)
         logger.debug(f"Formatted endpoint: /{self.entry_point}/{endpoint}")
         return f"{self.base_url}/{self.entry_point}/{endpoint.lstrip('/')}"
 
     @staticmethod
-    def response_analyzer(response: httpx.Response):
+    def response_analyze(response: httpx.Response):
+        success = response.status_code < 400
         result = {
-            "response": response.json() if response.status_code < 400 else {},
+            "response": response.json() if success else {},
             "status_code": response.status_code,
+            "success": success,
         }
         return result
+
+    @property
+    def client(self):
+        return self._client
 
 
 class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
@@ -116,6 +128,7 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         *args,
         **kwargs,
     ):
@@ -128,9 +141,10 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
             )
             one_time = True
         try:
-            url = self.format_url(endpoint, params)
-            response = self._client.request(method, url, data=data)
-            return self.response_analyzer(response)
+            url = self.format_url(endpoint, endpoint_params)
+            # logger.debug(f"Request: {method=}, {url=}, {data=}, {params=}")
+            response = self._client.request(method, url, data=data, params=params)
+            return self.response_analyze(response)
         finally:
             if one_time:
                 self.close()
@@ -164,6 +178,7 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
         endpoint: str = None,
         params: dict = None,
         data: dict = None,
+        endpoint_params: dict = None,
         *args,
         **kwargs,
     ):
@@ -176,9 +191,11 @@ class ProxmoxAsyncHTTPSBackend(ProxmoxHTTPBaseBackend):
             )
             one_time = True
         try:
-            url = self.format_url(endpoint, params)
-            response = await self._client.request(method, url, data=data)
-            return self.response_analyzer(response)
+            url = self.format_url(endpoint, endpoint_params)
+            # logger.debug(f"Request: {method=}, {url=}, {data=}, {params=}")
+            response = await self._client.request(method, url, data=data, params=params)
+            return self.response_analyze(response)
+
         finally:
             if one_time:
                 await self.close()

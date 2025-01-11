@@ -17,6 +17,8 @@ def register_backends(names: list[str] | str = None):
         names = [names]
 
     for name in names:
+        if name is None:
+            continue
         name = name.strip().lower()
         if name not in BACKENDS_NAMES:
             logger.error(f"Unsupported backend: {name}")
