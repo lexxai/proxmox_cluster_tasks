@@ -57,7 +57,6 @@ class BackendRequestSSHTest(unittest.TestCase):
         return_value=None,
         return_code: int = 0,
         is_error: bool = False,
-        mock_subprocess_run=None,
     ):
         patcher = None
         if self.mock_backend_settings.get(self.backend_name.upper(), True):
@@ -85,12 +84,12 @@ class BackendRequestSSHTest(unittest.TestCase):
             )
             patcher.start()
 
-            try:
-                result = self.backend.request(**request_params)
-            finally:
-                if patcher:
-                    patcher.stop()
-            return result
+        try:
+            result = self.backend.request(**request_params)
+        finally:
+            if patcher:
+                patcher.stop()
+        return result
 
     def test_request_success_backend_sync(self):
         request_data = self.common_request_data.get("version.get")
@@ -107,14 +106,12 @@ class BackendRequestSSHTest(unittest.TestCase):
         self.assertEqual(result["status_code"], 0)
         self.assertTrue(result["success"])
 
-    @mock.patch("subprocess.run")
-    def test_request_failure_backend_sync(self, mock_subprocess_run):
+    def test_request_failure_backend_sync(self):
         request_data = self.common_request_data.get("version.get")
         result = self._request_backend_sync(
             request_params=request_data.get("request_params"),
             return_value=request_data.get("return_value"),
             is_error=True,
-            mock_subprocess_run=mock_subprocess_run,
         )
         self.assertIsNotNone(result["response"])
         self.assertNotEqual(result["status_code"], 0)
