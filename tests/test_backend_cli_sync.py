@@ -36,6 +36,7 @@ class BackendRequestCLITest(unittest.TestCase):
             mock.patch.object(backend, "connect", side_effect=mock_connect)
 
         self.backend = backend
+        self.backend_name = backend_name
 
     def _request_backend_sync(
         self,
@@ -46,7 +47,7 @@ class BackendRequestCLITest(unittest.TestCase):
         mock_subprocess_run=None,
     ):
         if (
-            self.mock_backend_settings.get("CLI", True)
+            self.mock_backend_settings.get(self.backend_name.upper(), True)
             and mock_subprocess_run is not None
         ):
             # Mock a successful subprocess run
