@@ -66,7 +66,7 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         return headers
 
     def format_url(self, endpoint: str, endpoint_params: dict = None) -> str:
-        if endpoint is None:
+        if not endpoint:
             raise ValueError("HTTPS backend: Endpoint is required")
         """Format the full URL for a given endpoint."""
         endpoint = endpoint.strip("/")
@@ -141,10 +141,18 @@ class ProxmoxHTTPSBackend(ProxmoxHTTPBaseBackend):
             )
             one_time = True
         try:
-            url = self.format_url(endpoint, endpoint_params)
             # logger.debug(f"Request: {method=}, {url=}, {data=}, {params=}")
-            response = self._client.request(method, url, data=data, params=params)
-            return self.response_analyze(response)
+            try:
+                url = self.format_url(endpoint, endpoint_params)
+                response = self._client.request(method, url, data=data, params=params)
+                return self.response_analyze(response)
+            except Exception as exc:
+                return {
+                    "response": {},
+                    "status_code": 999,
+                    "error": str(exc),
+                    "success": False,
+                }
         finally:
             if one_time:
                 self.close()
