@@ -34,13 +34,17 @@ def pytest_configure(config):
     register_backends()
 
 
-@pytest.fixture(scope="session")
-def mock_backend_settings():
+def export_mock_backend_settings():
     return {
         "HTTPS": os.getenv("MOCK_BACKEND_HTTPS", "true").lower() == "true",
         "SSH": os.getenv("MOCK_BACKEND_SSH", "true").lower() == "true",
         "CLI": os.getenv("MOCK_BACKEND_CLI", "true").lower() == "true",
     }
+
+
+@pytest.fixture(scope="session")
+def mock_backend_settings():
+    return export_mock_backend_settings()
 
 
 @pytest.fixture(scope="function")
