@@ -51,20 +51,23 @@ rootdir: /Users/lex/PycharmProjects/proxmox_cluster_tasks
 configfile: pyproject.toml
 plugins: anyio-4.7.0, mock-3.14.0, asyncio-0.25.1
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=function
-collected 12 items                                                                                                                
+collected 15 items                                                                                                                
 
-tests/test_api.py::test_api_version_https[get_api0] PASSED                                                                  [  8%]
-tests/test_api.py::test_api_version_ssh[get_api0] PASSED                                                                    [ 16%]
-tests/test_api.py::test_api_version_cli[get_api0] PASSED                                                                    [ 25%]
-tests/test_api.py::test_api_version_https_async[get_api_async0] PASSED                                                      [ 33%]
-tests/test_api.py::test_api_version_ssh_async[get_api_async0] PASSED                                                        [ 41%]
-tests/test_api.py::test_api_version_cli_async[get_api_async0] PASSED                                                        [ 50%]
-tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_failure_backend_sync PASSED                             [ 58%]
-tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_no_command_backend_sync PASSED                          [ 66%]
-tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_success_backend_sync PASSED                             [ 75%]
-tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_failure_backend_sync PASSED                             [ 83%]
-tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_no_command_backend_sync PASSED                          [ 91%]
+tests/test_api.py::test_api_version_https[get_api0] PASSED                                                                  [  6%]
+tests/test_api.py::test_api_version_ssh[get_api0] PASSED                                                                    [ 13%]
+tests/test_api.py::test_api_version_cli[get_api0] PASSED                                                                    [ 20%]
+tests/test_api.py::test_api_version_https_async[get_api_async0] PASSED                                                      [ 26%]
+tests/test_api.py::test_api_version_ssh_async[get_api_async0] PASSED                                                        [ 33%]
+tests/test_api.py::test_api_version_cli_async[get_api_async0] PASSED                                                        [ 40%]
+tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_failure_backend_sync PASSED                             [ 46%]
+tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_no_command_backend_sync PASSED                          [ 53%]
+tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_success_backend_sync PASSED                             [ 60%]
+tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_failure_backend_sync PASSED                         [ 66%]
+tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_no_command_backend_sync PASSED                      [ 73%]
+tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_success_backend_sync PASSED                         [ 80%]
+tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_failure_backend_sync PASSED                             [ 86%]
+tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_no_command_backend_sync PASSED                          [ 93%]
 tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_success_backend_sync PASSED                             [100%]
 
-======================================================= 12 passed in 0.15s ========================================================
+======================================================= 15 passed in 0.25s ========================================================
 ```
