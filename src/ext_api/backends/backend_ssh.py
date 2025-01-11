@@ -144,7 +144,7 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
         try:
             stdin, stdout, stderr = self._client.exec_command(command)
         except paramiko.ssh_exception.SSHException as e:
-            logger.error(f"SSH Error: {e}")
+            logger.debug(f"SSH Error: {e}")
             return {"response": {}, "status_code": 1, "error": str(e), "success": False}
         finally:
             if one_time:
