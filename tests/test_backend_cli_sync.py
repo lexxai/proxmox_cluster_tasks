@@ -1,3 +1,4 @@
+import copy
 import unittest
 
 from unittest import mock
@@ -95,7 +96,8 @@ class BackendRequestCLITest(unittest.TestCase):
 
     def test_request_no_command_backend_sync(self):
         # Test behavior when format_command returns None
-        request_data = self.common_request_data.get("version.get")
+        request_data = copy.deepcopy(self.common_request_data.get("version.get"))
+        request_data["request_params"]["endpoint"] = ""
         result = self._request_backend_sync(
             request_params=request_data.get("request_params"),
         )
