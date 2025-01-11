@@ -142,10 +142,12 @@ class ProxmoxSSHBackend(ProxmoxSSHBaseBackend):
             one_time = True
         command = self.format_command(endpoint, params, method, data, endpoint_params)
         try:
+            if not command:
+                raise ValueError("SSH command is empty")
             stdin, stdout, stderr = self._client.exec_command(command)
-        except paramiko.ssh_exception.SSHException as e:
-            logger.error(f"SSH Error: {e}")
-            return {"response": {}, "status_code": 1, "error": str(e)}
+        except Exception as e:
+            logger.debug(f"SSH Error: {e}")
+            return {"response": {}, "status_code": 1, "error": str(e), "success": False}
         finally:
             if one_time:
                 self.close()
