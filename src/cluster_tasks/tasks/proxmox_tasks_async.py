@@ -378,5 +378,5 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             case _:
                 logger.error(f"vm_status_set : Unknown status {status}")
         if wait and upid:
-            return await self.wait_task_done_async(upid, node)
+            return await self.wait_task_done_async(upid, node) is not None
         return upid is not None
