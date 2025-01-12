@@ -343,3 +343,31 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         data["group"] = group
         await self.api.cluster.ha.groups.post(data=data)
         return True
+
+    async def vm_status_current_get(self, vm_id: int, target_node: str) -> str:
+        return (
+            await self.api.nodes(target_node)
+            .qemu(vm_id)
+            .status.current.get(filter_keys="status")
+        )
+
+    async def vm_status_set(
+        self, vm_id: int, node: str, status: str, wait: bool = True
+    ) -> bool:
+        status = status.strip().lower()
+        status_current = await self.vm_status_current_get(vm_id, node)
+        upid = None
+        match status:
+            case "start":
+                if status_current and status_current == "running":
+                    return True
+                upid = await self.api.nodes(node).qemu(vm_id).status.start.post()
+            case "stop":
+                if status_current and status_current == "stopped":
+                    return True
+                upid = await self.api.nodes(node).qemu(vm_id).status.stop.post()
+            case _:
+                logger.error(f"vm_status_set : Unknown status {status}")
+        if wait and upid:
+            return await self.wait_task_done_async(upid, node)
+        return upid is not None

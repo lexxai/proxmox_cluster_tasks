@@ -34,6 +34,7 @@ async def debug_ha_groups(proxmox_tasks):
             "test_group_name1", "c01,c02,c96", overwrite=False
         )
     )
+    logger.info(await proxmox_tasks.vm_status_set(202, "c02", "stop"))
     # logger.info(await proxmox_tasks.ha_groups_get())
     # logger.info(await proxmox_tasks.ha_group_delete("test_group_name"))
 
