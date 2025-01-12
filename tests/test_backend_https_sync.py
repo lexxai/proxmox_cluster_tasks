@@ -21,7 +21,7 @@ class BackendRequestHTTPSTest(unittest.TestCase):
                 "method": "get",
                 "endpoint": "version",
             },
-            "return_value": '{data: {"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}}',
+            "return_value": '{"data": {"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}}',
             "return_code": 200,
         }
     }
