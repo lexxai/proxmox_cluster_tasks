@@ -27,13 +27,17 @@ async def debug_replication(proxmox_tasks):
     # )
 
 
+async def debug_ha_groups(proxmox_tasks):
+    logger.info(await proxmox_tasks.ha_groups_get())
+
+
 async def async_main():
     register_backends()
     async with ProxmoxAPI(backend_type="async") as api:
         try:
             proxmox_tasks = ProxmoxTasksAsync(api=api)
-            await debug_replication(proxmox_tasks)
-
+            # await debug_replication(proxmox_tasks)
+            await debug_ha_groups(proxmox_tasks)
         except Exception as e:
             logger.error(f"ERROR async_main: {e}")
 

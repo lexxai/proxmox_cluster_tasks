@@ -314,3 +314,6 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
                 )
                 break
         return False
+
+    async def ha_groups_get(self):
+        return await self.api.cluster.ha.groups.get(filter_keys="group")
