@@ -286,3 +286,31 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
                 )
                 break
         return False
+
+    def ha_groups_get(self):
+        return self.api.cluster.ha.groups.get(filter_keys="group")
+
+    def ha_group_delete(self, group) -> bool:
+        self.api.cluster.ha.groups(group).delete()
+        return True
+
+    def ha_group_create(
+        self,
+        group: str,
+        nodes: str,
+        data: dict = None,
+        overwrite: bool = False,
+    ) -> bool:
+        groups = self.ha_groups_get()
+        exist = groups and (group in groups)
+        if exist and not overwrite:
+            return True
+        if not data:
+            data = {}
+        data["nodes"] = nodes
+        if exist and overwrite:
+            self.api.cluster.ha.groups(group).put(data=data)
+            return True
+        data["group"] = group
+        self.api.cluster.ha.groups.post(data=data)
+        return True
