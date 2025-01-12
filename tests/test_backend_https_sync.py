@@ -21,7 +21,7 @@ class BackendRequestHTTPSTest(unittest.TestCase):
                 "method": "get",
                 "endpoint": "version",
             },
-            "return_value": '{"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}',
+            "return_value": '{data: {"release":"8.3","repoid":"3e76eec21c4a14a7","version":"8.3.2"}}',
             "return_code": 200,
         }
     }
@@ -46,12 +46,11 @@ class BackendRequestHTTPSTest(unittest.TestCase):
                 token=configuration.get("API.TOKEN"),
             )
 
-        if self.mock_backend_settings.get(backend_name.upper()) and hasattr(
-            backend, "connect"
-        ):
-            mock_connect = mock.MagicMock()
-            backend._client = mock.MagicMock()
-            mock.patch.object(backend, "connect", side_effect=mock_connect)
+        if self.mock_backend_settings.get(backend_name.upper()):
+            if hasattr(backend, "connect"):
+                mock_connect = mock.MagicMock()
+                backend._client = mock.MagicMock()
+                mock.patch.object(backend, "connect", side_effect=mock_connect)
 
         self.backend = backend
         self.backend_name = backend_name
@@ -63,16 +62,8 @@ class BackendRequestHTTPSTest(unittest.TestCase):
         return_code: int = 200,
         is_error: bool = False,
     ):
-        patcher = None
         if self.mock_backend_settings.get(self.backend_name.upper(), True):
             mock_response = httpx_Response(status_code=return_code, text=return_value)
-            # mock_stdout.read.return_value = (
-            #     return_value.encode() if return_value else b""
-            # )
-            # mock_stdout.channel.recv_exit_status.return_value = return_code
-            #
-            # mock_stderr = mock.MagicMock()
-            # mock_stderr.read.return_value = b""  # Simulating empty stderr
 
             def mock_request(method, url, data=None, params=None, *args, **kwargs):
                 # print("mock_exec", command)
@@ -84,16 +75,18 @@ class BackendRequestHTTPSTest(unittest.TestCase):
                     )
                 return mock_response
 
-            patcher = mock.patch.object(
+            client = mock.patch.object(
                 self.backend.client, "request", side_effect=mock_request
             )
-            patcher.start()
+        else:
+            client = self.backend
+            if is_error:
+                request_params = request_params.copy()
+                request_params["endpoint"] = None
 
-        try:
+        with client:
             result = self.backend.request(**request_params)
-        finally:
-            if patcher:
-                patcher.stop()
+
         return result
 
     def test_request_success_backend_sync(self):
@@ -103,7 +96,8 @@ class BackendRequestHTTPSTest(unittest.TestCase):
             return_value=request_data.get("return_value"),
         )
         self.assertIsNotNone(result)
-        data = result.get("response")
+        response = result.get("response")
+        data = response.get("data")
         self.assertIsNotNone(data)
         self.assertIsNotNone(data.get("release"))
         self.assertEqual(result["status_code"], request_data.get("return_code"))
