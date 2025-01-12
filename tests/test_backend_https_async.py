@@ -1,10 +1,5 @@
-import asyncio
 import copy
-
-# from asynctest import patch as asynctest_patch
 import unittest
-
-
 from unittest import mock
 
 from httpx import Response as httpx_Response
@@ -79,23 +74,25 @@ class BackendRequestHTTPSTestAsync(unittest.IsolatedAsyncioTestCase):
                             url, 400, "mock error output"
                         )
                     )
-                await asyncio.sleep(0)
                 return mock_response
 
-            client = asynctest_patch.object(
+            client = mock.patch.object(
                 self.backend.client,
-                "async_request",
+                "request",
                 side_effect=mock_request,
             )
+            with client:
+                result = await self.backend.async_request(**request_params)
+                return result
         else:
+            # Real request to backend
             client = self.backend
             if is_error:
                 request_params = request_params.copy()
                 request_params["endpoint"] = None
-
-        async with client:
-            result = await self.backend.async_request(**request_params)
-            return result
+            async with client:
+                result = await self.backend.async_request(**request_params)
+                return result
 
     async def test_request_success_backend_async(self):
         request_data = self.common_request_data.get("version.get")
