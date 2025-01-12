@@ -216,4 +216,5 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             nodes = self.ha.get("nodes")
             if nodes:
                 overwrite = self.ha.get("overwrite", False)
+                logger.info(f"HA Group '{group}' creating with nodes '{nodes}'")
                 await proxmox_tasks.ha_group_create(group, nodes, overwrite=overwrite)
