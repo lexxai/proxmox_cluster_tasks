@@ -51,23 +51,26 @@ rootdir: /Users/lex/PycharmProjects/proxmox_cluster_tasks
 configfile: pyproject.toml
 plugins: anyio-4.7.0, mock-3.14.0, asyncio-0.25.1
 asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=function
-collected 15 items                                                                                                                
+collected 18 items                                                                                                                
 
-tests/test_api.py::test_api_version_https[get_api0] PASSED                                                                  [  6%]
-tests/test_api.py::test_api_version_ssh[get_api0] PASSED                                                                    [ 13%]
-tests/test_api.py::test_api_version_cli[get_api0] PASSED                                                                    [ 20%]
-tests/test_api.py::test_api_version_https_async[get_api_async0] PASSED                                                      [ 26%]
-tests/test_api.py::test_api_version_ssh_async[get_api_async0] PASSED                                                        [ 33%]
-tests/test_api.py::test_api_version_cli_async[get_api_async0] PASSED                                                        [ 40%]
-tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_failure_backend_sync PASSED                             [ 46%]
-tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_no_command_backend_sync PASSED                          [ 53%]
-tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_success_backend_sync PASSED                             [ 60%]
-tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_failure_backend_sync PASSED                         [ 66%]
-tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_no_command_backend_sync PASSED                      [ 73%]
-tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_success_backend_sync PASSED                         [ 80%]
-tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_failure_backend_sync PASSED                             [ 86%]
-tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_no_command_backend_sync PASSED                          [ 93%]
+tests/test_api.py::test_api_version_https[get_api0] PASSED                                                                  [  5%]
+tests/test_api.py::test_api_version_ssh[get_api0] PASSED                                                                    [ 11%]
+tests/test_api.py::test_api_version_cli[get_api0] PASSED                                                                    [ 16%]
+tests/test_api.py::test_api_version_https_async[get_api_async0] PASSED                                                      [ 22%]
+tests/test_api.py::test_api_version_ssh_async[get_api_async0] PASSED                                                        [ 27%]
+tests/test_api.py::test_api_version_cli_async[get_api_async0] PASSED                                                        [ 33%]
+tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_failure_backend_sync PASSED                             [ 38%]
+tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_no_command_backend_sync PASSED                          [ 44%]
+tests/test_backend_cli_sync.py::BackendRequestCLITest::test_request_success_backend_sync PASSED                             [ 50%]
+tests/test_backend_https_async.py::BackendRequestHTTPSTestAsync::test_request_failure_backend_async PASSED                  [ 55%]
+tests/test_backend_https_async.py::BackendRequestHTTPSTestAsync::test_request_no_command_backend_async PASSED               [ 61%]
+tests/test_backend_https_async.py::BackendRequestHTTPSTestAsync::test_request_success_backend_async PASSED                  [ 66%]
+tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_failure_backend_sync PASSED                         [ 72%]
+tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_no_command_backend_sync PASSED                      [ 77%]
+tests/test_backend_https_sync.py::BackendRequestHTTPSTest::test_request_success_backend_sync PASSED                         [ 83%]
+tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_failure_backend_sync PASSED                             [ 88%]
+tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_no_command_backend_sync PASSED                          [ 94%]
 tests/test_backend_ssh_sync.py::BackendRequestSSHTest::test_request_success_backend_sync PASSED                             [100%]
 
-======================================================= 15 passed in 0.25s ========================================================
+======================================================= 18 passed in 0.27s ========================================================
 ```
