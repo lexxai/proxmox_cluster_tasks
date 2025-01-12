@@ -1,5 +1,5 @@
 API:
-  backend: "ssh"
+  backend: "https"
 Scenarios:
   CloneTemplateVM-2:
     file: "clone_template_vm"
@@ -25,9 +25,9 @@ Scenarios:
         - node: "c07"
           schedule: "*/30"
       ha:
-        group: "gr-02f-04-05-07":
-          nodes: "c02:100,c04,c05,c07"
-          overwrite: True
+        group: "gr-02f-04-05-07"
+        nodes: "c02:100,c04,c05,c07"
+        overwrite: True
 
 
 #  CloneTemplateVM-3:

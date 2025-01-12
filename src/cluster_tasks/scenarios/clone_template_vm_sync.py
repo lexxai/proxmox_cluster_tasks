@@ -188,3 +188,15 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             logger.info(
                 f"Created replication job VM {vm_id} for node '{target_node}' with result: {result}"
             )
+
+    def vm_ha_setup(self, proxmox_tasks):
+        if not self.destination_vm_id:
+            return
+        logger.info(f"Setup HA for VM {self.destination_vm_id}")
+        # setup HA Group
+        group = self.ha.get("group")
+        if group:
+            nodes = self.ha.get("nodes")
+            if nodes:
+                overwrite = self.ha.get("overwrite", False)
+                proxmox_tasks.ha_group_create(group, nodes, overwrite=overwrite)
