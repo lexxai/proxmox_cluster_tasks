@@ -2,6 +2,7 @@ import asyncio
 import ipaddress
 import logging
 import time
+from tokenize import group
 
 from cluster_tasks.tasks.proxmox_tasks_base import ProxmoxTasksBase
 
@@ -317,3 +318,28 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
 
     async def ha_groups_get(self):
         return await self.api.cluster.ha.groups.get(filter_keys="group")
+
+    async def ha_group_delete(self, group) -> bool:
+        await self.api.cluster.ha.groups(group).delete()
+        return True
+
+    async def ha_group_create(
+        self,
+        group: str,
+        nodes: str,
+        data: dict = None,
+        overwrite: bool = False,
+    ) -> bool:
+        groups = await self.ha_groups_get()
+        exist = groups and (group in groups)
+        if exist and not overwrite:
+            return True
+        if not data:
+            data = {}
+        data["nodes"] = nodes
+        if exist and overwrite:
+            await self.api.cluster.ha.groups(group).put(data=data)
+            return True
+        data["group"] = group
+        await self.api.cluster.ha.groups.post(data=data)
+        return True

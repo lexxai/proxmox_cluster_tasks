@@ -28,7 +28,14 @@ async def debug_replication(proxmox_tasks):
 
 
 async def debug_ha_groups(proxmox_tasks):
-    logger.info(await proxmox_tasks.ha_groups_get())
+    # logger.info(await proxmox_tasks.ha_groups_get())
+    logger.info(
+        await proxmox_tasks.ha_group_create(
+            "test_group_name1", "c01,c02,c96", overwrite=False
+        )
+    )
+    # logger.info(await proxmox_tasks.ha_groups_get())
+    # logger.info(await proxmox_tasks.ha_group_delete("test_group_name"))
 
 
 async def async_main():
