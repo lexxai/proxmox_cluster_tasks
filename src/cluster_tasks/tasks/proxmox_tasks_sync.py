@@ -31,7 +31,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             vm_id (int): The ID of the virtual machine.
 
         Returns:
-            int: The status of the virtual machine (e.g., running, stopped).
+            int: id of vm if present else 0
         """
         status_vm = (
             self.api.nodes(node).qemu(vm_id).status.current.get(filter_keys="vmid")
@@ -39,7 +39,12 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         return int(status_vm) if status_vm else 0
 
     def vm_delete(
-        self, node: str, vm_id: int, wait: bool = True, with_replications: bool = True
+        self,
+        node: str,
+        vm_id: int,
+        wait: bool = True,
+        with_replications: bool = True,
+        force_stop: bool = True,
     ) -> str | bool | None:
         """
         Deletes a virtual machine and optionally waits for the deletion task to complete.
@@ -49,6 +54,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             vm_id (int): The ID of the virtual machine.
             wait (bool): Whether to wait for the task to complete (default is True).
             with_replications (bool): Before delete try to remove all replications of VM (default is True).
+            force_stop (bool): Before delete try to stop VM (default is True).
 
         Returns:
             str | bool | None: The task UPID if `wait` is False;
@@ -57,6 +63,8 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         """
         if with_replications:
             self.remove_replication_job(vm_id, wait=True)
+        if force_stop:
+            self.vm_status_set(vm_id, node, "stop", wait=True)
         upid = self.api.nodes(node).qemu(vm_id).delete()
         if wait:
             return self.wait_task_done_sync(upid, node)
@@ -332,10 +340,12 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             case "start":
                 if status_current and status_current == "running":
                     return True
+                logger.info(f"VM {vm_id} starting on {node} ...")
                 upid = self.api.nodes(node).qemu(vm_id).status.start.post()
             case "stop":
                 if status_current and status_current == "stopped":
                     return True
+                logger.info(f"VM {vm_id} stopping on {node} ...")
                 upid = self.api.nodes(node).qemu(vm_id).status.stop.post()
             case _:
                 logger.error(f"vm_status_set : Unknown status {status}")
