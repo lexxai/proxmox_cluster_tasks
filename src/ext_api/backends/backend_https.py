@@ -49,7 +49,7 @@ class ProxmoxHTTPBaseBackend(ProxmoxBackend):
         """
         super().__init__(*args, **kwargs)
         self.base_url = base_url
-        self.entry_point = entry_point.strip("/")
+        self.entry_point = entry_point.strip("/") if entry_point else []
         self.token = token
         self.token_delimiter = "="
         self.verify_ssl = verify_ssl

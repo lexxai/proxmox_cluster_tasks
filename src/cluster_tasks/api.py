@@ -3,7 +3,7 @@ import logging
 
 from config.config import configuration
 from old._api import APIHandler
-from cluster_tasks.main import acluster_tasks
+from main import acluster_tasks
 
 logger = logging.getLogger("CT")
 

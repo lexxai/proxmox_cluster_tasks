@@ -8,7 +8,7 @@ from cluster_tasks.tasks.proxmox_tasks_sync import ProxmoxTasksSync
 from config.config import ConfigLoader, configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
-from loader_scene import ScenarioFactory
+from .loader_scene import ScenarioFactory
 
 logger = logging.getLogger(f"CT.{__name__}")
 
@@ -36,9 +36,11 @@ def scenario_run(api, scenario_config, scenario_name: str = None):
     scenario.run(node_tasks)  # Assuming `run` is now an async method
 
 
-def main(concurrent: bool = False):
-    config_file = Path(__file__).parent / "scenarios_configs.yaml"
-    scenarios_config = ConfigLoader(file_path=config_file)
+def main(cli_args=None, **kwargs):
+    concurrent = cli_args.get("concurrent", False)
+    scenarios_config_file = cli_args.get("scenarios_config_file")
+    # config_file = Path(__file__).parent / "scenarios_configs.yaml"
+    scenarios_config = ConfigLoader(file_path=scenarios_config_file)
     # Iterate over the scenarios and run them
     # logger.debug(f"Scenarios config: {scenarios_config}")
     backend_name = scenarios_config.get("API.backend", "https")

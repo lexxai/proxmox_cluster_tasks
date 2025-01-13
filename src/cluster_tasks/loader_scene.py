@@ -4,7 +4,7 @@ from ext_api.proxmox_api import ProxmoxAPI
 
 
 class ScenarioFactory:
-    base_module = "scenarios"
+    base_module = "cluster_tasks.scenarios"
     prefix_class = "Scenario"
     suffix_file = {"sync": "_sync", "async": "_async"}
 

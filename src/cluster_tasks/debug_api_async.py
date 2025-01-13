@@ -1,7 +1,6 @@
 import asyncio
 import logging
 from datetime import timedelta
-from importlib.metadata import version
 
 from cluster_tasks.configure_logging import config_logger
 from config.config import configuration
