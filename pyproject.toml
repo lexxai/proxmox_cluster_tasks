@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "proxmox-cluster-tasks"
-version = "0.8.0"
+version = "0.8.1"
 description = ""
 authors = ["lexxai <lexxai@gmail.com>"]
 readme = "README.md"
-packages = [{include = "cluster_tasks", from = "src",  to = "proxmox_cluster_tasks/src"},
-            {include = "config", from = "src",  to = "proxmox_cluster_tasks/src"},
-            {include = "ext_api", from = "src",  to = "proxmox_cluster_tasks/src"},
-            {include = "*.py", from = "src", to = "proxmox_cluster_tasks/src"},
+packages = [{include = "cluster_tasks", from = "src",  to = "proxmox_cluster_tasks"},
+            {include = "config", from = "src",  to = "proxmox_cluster_tasks"},
+            {include = "ext_api", from = "src",  to = "proxmox_cluster_tasks"},
+            {include = "*.py", from = "src", to = "proxmox_cluster_tasks"},
             ]
 
 include = [ "configs/*" ]
@@ -41,6 +41,6 @@ log_cli = true
 
 
 [tool.poetry.scripts]
-proxmox-cluster-tasks = "proxmox_cluster_tasks.src.main:cli"
+proxmox-cluster-tasks = "proxmox_cluster_tasks.main:cli"
 
 # Correct placement for package inclusion
