@@ -21,17 +21,35 @@ Example:
 ```
 
 ### Config
+
+The configuration files for the project are located in the `configs/` folder:
+
+- **General Configuration**: Defined in `configs/configs.toml`.
+- **Scenarios Configuration**: Defined in `configs/scenarios_configs.yaml`.
+
+When running the package using `python -m proxmox-cluster-tasks` or `proxmox-cluster-tasks`, the application searches for the `configs/` folder in the current working directory where the command is executed.
+
+If the folder is not found in the working directory, the application defaults to using the `configs/` folder located in the package root directory.
+
+#### Custom Config Paths
+
+The paths to the configuration files can be customized using the following parameters in the `main` function:
+
+- `--config_file`: Specifies the path to the general configuration file.
+- `--scenarios_config_file`: Specifies the path to the scenarios configuration file.
+
+This flexibility allows users to override default configurations and tailor the application to their specific requirements.
+
 #### Folder tree
 
 ```bash
 cluster_tasks
-├── scenarios_configs.yaml
 ├── scenarios
 │   ├── clone_template_vm_base.py  (class ScenarioCloneTemplateVmBase)
 │   ├── clone_template_vm_async.py (class ScenarioCloneTemplateVmAsync)
 │   ├── clone_template_vm_sync.py  (class ScenarioCloneTemplateVmSync)
 ````
-#### Scenarios config `scenarios_configs.yaml`
+#### Scenarios config `configs/scenarios_configs.yaml`
 ```yaml
 API:
   backend: "https"
@@ -87,9 +105,10 @@ This flexibility allows for maintaining existing values or updating them as need
 
 #### Result Running Scenario Template VM Clone
 <details>
-<summary>src/cluster_tasks/main.py</summary>
+<summary>src/main.py</summary>
 
 ``` bash
+This action is dangerous. Are you sure you want to continue? (yes/no): yes
 INFO: *** Running Scenario Template VM Clone: 'CloneTemplateVM-2'
 INFO: Checking if destination Node:'c02' is online
 INFO: Checking if VM 202 already exists
