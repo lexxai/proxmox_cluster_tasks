@@ -59,6 +59,15 @@ Scenarios:
         - node: "c05"
         - node: "c07"
           schedule: "*/30"
+      ha:
+        group: "gr-02f-04-05-07"
+        nodes: "c02:100,c04,c05,c07"
+        overwrite: True
+        resource:
+          create: True
+          overwrite: True
+          state: "ignored"
+          comment: "HA resource for VM 202"
 ```
 #### VM network
 The cloned VM can either retain the network settings of the source VM or be assigned a new network configuration. 
