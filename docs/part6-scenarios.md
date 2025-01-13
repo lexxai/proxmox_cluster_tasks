@@ -98,36 +98,56 @@ INFO: Waiting for replication job (202 to any) is removed... [ 0:00:00 / 0:10:00
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:02 / 0:10:00 ]
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:04 / 0:10:00 ]
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:06 / 0:10:00 ]
-INFO: Waiting for replication job (202 to any) is removed... [ 0:00:09 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:08 / 0:10:00 ]
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:11 / 0:10:00 ]
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:13 / 0:10:00 ]
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:15 / 0:10:00 ]
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:17 / 0:10:00 ]
-INFO: Waiting for replication job (202 to any) is removed... [ 0:00:20 / 0:10:00 ]
-INFO: Waiting for replication job (202 to any) is removed... [ 0:00:22 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:19 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:21 / 0:10:00 ]
 INFO: Waiting for replication job (202 to any) is removed... [ 0:00:24 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:26 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:28 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:30 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:32 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:35 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:37 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:39 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:41 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:43 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:45 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:48 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:50 / 0:10:00 ]
+INFO: Waiting for replication job (202 to any) is removed... [ 0:00:52 / 0:10:00 ]
+INFO: VM 202 deleting resource ...
+INFO: Waiting for task (c02:0009C84B:00E62D42:678578BD:qmdestroy:202) to finish... [ 0:00:00 / 0:10:00 ]
 INFO: VM 202 deleted successfully
 INFO: Cloning VM from 1004 to 202
-INFO: Waiting for task (c01:003DC818:05DF9910:677E688B:qmclone:1004) to finish... [ 0:00:00 / 0:10:00 ]
-INFO: Waiting for task (c01:003DC818:05DF9910:677E688B:qmclone:1004) to finish... [ 0:00:02 / 0:10:00 ]
-INFO: Waiting for task (c01:003DC818:05DF9910:677E688B:qmclone:1004) to finish... [ 0:00:04 / 0:10:00 ]
-INFO: Waiting for task (c01:003DC818:05DF9910:677E688B:qmclone:1004) to finish... [ 0:00:06 / 0:10:00 ]
+INFO: Waiting for task (c01:0009805A:00E63036:678578BF:qmclone:1004) to finish... [ 0:00:00 / 0:10:00 ]
+INFO: Waiting for task (c01:0009805A:00E63036:678578BF:qmclone:1004) to finish... [ 0:00:02 / 0:10:00 ]
+INFO: Waiting for task (c01:0009805A:00E63036:678578BF:qmclone:1004) to finish... [ 0:00:04 / 0:10:00 ]
+INFO: Waiting for task (c01:0009805A:00E63036:678578BF:qmclone:1004) to finish... [ 0:00:06 / 0:10:00 ]
 INFO: VM 202 cloned successfully
 INFO: Configuring Network for VM 202
 INFO: Configured Network for VM 202 successfully
 INFO: Configuring tags for VM 202
 INFO: VM 202 configured tags:'tag1,dot-002,ip-192-0-2-2' successfully
 INFO: Migrating VM 202 to node: c02
-INFO: Waiting for task (c01:003DC88A:05DF9D27:677E6896:qmigrate:202) to finish... [ 0:00:00 / 0:10:00 ]
-INFO: Waiting for task (c01:003DC88A:05DF9D27:677E6896:qmigrate:202) to finish... [ 0:00:02 / 0:10:00 ]
-INFO: Waiting for task (c01:003DC88A:05DF9D27:677E6896:qmigrate:202) to finish... [ 0:00:04 / 0:10:00 ]
-INFO: Waiting for task (c01:003DC88A:05DF9D27:677E6896:qmigrate:202) to finish... [ 0:00:07 / 0:10:00 ]
-INFO: Waiting for task (c01:003DC88A:05DF9D27:677E6896:qmigrate:202) to finish... [ 0:00:09 / 0:10:00 ]
+INFO: Waiting for task (c01:000980C1:00E63430:678578CA:qmigrate:202) to finish... [ 0:00:00 / 0:10:00 ]
+INFO: Waiting for task (c01:000980C1:00E63430:678578CA:qmigrate:202) to finish... [ 0:00:02 / 0:10:00 ]
+INFO: Waiting for task (c01:000980C1:00E63430:678578CA:qmigrate:202) to finish... [ 0:00:04 / 0:10:00 ]
+INFO: Waiting for task (c01:000980C1:00E63430:678578CA:qmigrate:202) to finish... [ 0:00:06 / 0:10:00 ]
+INFO: Waiting for task (c01:000980C1:00E63430:678578CA:qmigrate:202) to finish... [ 0:00:08 / 0:10:00 ]
+INFO: Waiting for task (c01:000980C1:00E63430:678578CA:qmigrate:202) to finish... [ 0:00:11 / 0:10:00 ]
 INFO: VM 202 migrated successfully
 INFO: Creating replication jobs for VM 202
 INFO: Created replication job VM 202 for node 'c04' with result: True
 INFO: Created replication job VM 202 for node 'c05' with result: True
 INFO: Created replication job VM 202 for node 'c07' with result: True
+INFO: Setup HA for VM 202
+INFO: HA Group 'gr-02f-04-05-07' creating with nodes 'c02:100,c04,c05,c07'
+INFO: HA Resource for '202' with group 'gr-02f-04-05-07' creating ...
+INFO: VM 202 creating resource ...
 INFO: *** Scenario 'CloneTemplateVM-2' completed successfully
 INFO: Proxmox Cluster Tasks: Finished
 

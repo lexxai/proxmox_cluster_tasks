@@ -17,13 +17,13 @@ Scenarios:
       tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
       replications:
         - node: "c04"
-#          schedule: "*/30"
-#          rate: 50.0
-#          comment: "Replication to c04"
-#          disable: False
-#        - node: "c05"
-#        - node: "c07"
-#          schedule: "*/30"
+          schedule: "*/30"
+          rate: 50.0
+          comment: "Replication to c04"
+          disable: False
+        - node: "c05"
+        - node: "c07"
+          schedule: "*/30"
       ha:
         group: "gr-02f-04-05-07"
         nodes: "c02:100,c04,c05,c07"
