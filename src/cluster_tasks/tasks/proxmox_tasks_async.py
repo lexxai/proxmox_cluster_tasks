@@ -394,27 +394,42 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             )
             return resources
 
-        sid = f"vm:{vid_id}"
+        sid = f"{type_resource}:{vid_id}"
         resources = await self.api.cluster.ha.resources(sid).get()
-        if return_group_only:
+        if resources and return_group_only:
             return resources.get("group")
         else:
             return resources
 
     async def ha_resources_create(
         self,
+        vid_id: int,
+        group: str,
         type_resource: str = "vm",
-        vid_id: int = None,
-        return_group_only: bool = False,
+        data: dict = None,
+        overwrite: bool = False,
     ):
-
-        resources = await self.api.cluster.ha.resources.get(
-            params={"type": type_resource}
+        sid = f"{type_resource}:{vid_id}"
+        data = data.copy() if data is not None else {}
+        data["group"] = group
+        if overwrite:
+            exist_group = await self.ha_resources_get(
+                vid_id=vid_id, type_resource=type_resource, return_group_only=True
+            )
+            if exist_group:
+                if exist_group == group:
+                    return True
+                result = await self.api.cluster.ha.resources(sid).put(
+                    data=data, filter_keys="_raw_"
+                )
+                return result.get("success") if result else False
+        data["sid"] = sid
+        result = await self.api.cluster.ha.resources.post(
+            data=data, filter_keys="_raw_"
         )
-        if vid_id is not None:
-            sid = f"vm:{vid_id}"
-            if return_group_only:
-                return [r.get("group") for r in resources if r.get("sid") == sid]
-            else:
-                return [r for r in resources if r.get("sid") == sid]
-        return resources
+        return result.get("success") if result else False
+
+    async def ha_resources_delete(self, vid_id: int, type_resource: str = "vm"):
+        sid = f"{type_resource}:{vid_id}"
+        result = await self.api.cluster.ha.resources(sid).delete(filter_keys="_raw_")
+        return result.get("success") if result else False

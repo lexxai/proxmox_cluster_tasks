@@ -365,7 +365,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             )
             return resources
 
-        sid = f"vm:{vid_id}"
+        sid = f"{type_resource}:{vid_id}"
         resources = self.api.cluster.ha.resources(sid).get()
         if return_group_only:
             return resources.get("group")
