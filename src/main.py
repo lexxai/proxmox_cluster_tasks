@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cluster_tasks.configure_logging import config_logger
 from cluster_tasks.controller_sync import main as controller_sync
 from cluster_tasks.controller_async import main as controller_async
-from config_loader.config import configuration
+from config_loader.config import configuration, initialize
 
 try:
     from __version__ import __version__
@@ -112,7 +112,7 @@ def cli():
     config_logger(logger, debug=args.debug)
 
     if args.config_file:
-        if not config.initialize(args.config_file):
+        if not initialize(args.config_file):
             exit(1)
 
     cli_args = vars(args)
