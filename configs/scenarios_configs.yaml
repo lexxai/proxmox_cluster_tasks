@@ -31,6 +31,8 @@ Scenarios:
         resource:
           create: True
           overwrite: True
+          state: "ignored"
+          comment: "HA resource for VM 202"
 
 
 #  CloneTemplateVM-3:

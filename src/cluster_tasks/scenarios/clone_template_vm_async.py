@@ -230,8 +230,16 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
                 logger.info(
                     f"HA Resource for '{self.destination_vm_id}' with group '{group}' creating ..."
                 )
+                data = {
+                    "comment": resource.get("comment"),
+                    "state": resource.get("state"),
+                    "max_relocate": resource.get("max_relocate"),
+                    "max_restart": resource.get("max_restart"),
+                }
+                data = {k: v for k, v in data.items() if v is not None}
+
                 result = await proxmox_tasks.ha_resources_create(
-                    self.destination_vm_id, group, overwrite=overwrite
+                    self.destination_vm_id, group, overwrite=overwrite, data=data
                 )
                 if not result:
                     raise Exception(
