@@ -4,7 +4,7 @@ import asyncio
 
 from cluster_tasks.configure_logging import config_logger
 from cluster_tasks.tasks.proxmox_tasks_async import ProxmoxTasksAsync
-from config.config import ConfigLoader, configuration
+from config_loader.config import ConfigLoader, configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 from .loader_scene import ScenarioFactory

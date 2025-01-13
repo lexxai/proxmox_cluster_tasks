@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cluster_tasks.configure_logging import config_logger
 from cluster_tasks.controller_sync import main as controller_sync
 from cluster_tasks.controller_async import main as controller_async
-from config import config
+from config_loader.config import configuration
 
 try:
     from __version__ import __version__
@@ -56,7 +56,7 @@ def confirm_action():
 
 
 def cli():
-    config_folder = config.configuration.config_folder
+    config_folder = configuration.config_folder
     project_name = "Proxmox Cluster Tasks"
     arg_parser = argparse.ArgumentParser(project_name)
     arg_parser.add_argument(
