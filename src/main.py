@@ -44,6 +44,17 @@ async def async_main(cli_args=None, **kwargs):
     await controller_async(cli_args)
 
 
+def confirm_action():
+    response = (
+        input("This action is dangerous. Are you sure you want to continue? (yes/no): ")
+        .strip()
+        .lower()
+    )
+    if response != "yes":
+        print("Action canceled.")
+        sys.exit(1)
+
+
 def cli():
     config_folder = config.configuration.config_folder
     project_name = "Proxmox Cluster Tasks"
@@ -80,8 +91,18 @@ def cli():
         action="version",
         version=f"%(prog)s {get_version()}",
     )
+    arg_parser.add_argument(
+        "--no-confirm",
+        action="store_true",
+        help="Skip confirmation prompt (use with caution!)",
+    )
 
     args = arg_parser.parse_args()
+
+    # Check if confirmation is needed
+    if not args.no_confirm:
+        confirm_action()
+
     if args.debug.lower() == "true":
         args.debug = True
     elif args.debug.lower() == "false":
