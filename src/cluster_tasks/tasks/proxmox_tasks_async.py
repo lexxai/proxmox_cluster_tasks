@@ -54,6 +54,7 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         wait: bool = True,
         with_replications: bool = True,
         force_stop: bool = True,
+        force_remove_resource: bool = True,
     ) -> str | bool | None:
         """
         Deletes a virtual machine and optionally waits for the deletion task to complete.
@@ -64,6 +65,7 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             wait (bool): Whether to wait for the task to complete (default is True).
             with_replications (bool): Before delete try to remove all replications of VM (default is True).
             force_stop (bool): Before delete try to stop VM (default is True).
+            force_remove_resource (bool): Before delete try to remove resource (default is True).
 
         Returns:
             str | bool | None: The task UPID if `wait` is False;
@@ -72,6 +74,8 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         """
         if with_replications:
             await self.remove_replication_job(vm_id, wait=True)
+        if force_remove_resource:
+            await self.ha_resources_delete(vid_id=vm_id)
         if force_stop:
             await self.vm_status_set(vm_id, node, "stop", wait=True)
         upid = await self.api.nodes(node).qemu(vm_id).delete()
@@ -419,11 +423,13 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             if exist_group:
                 if exist_group == group:
                     return True
+                logger.info(f"VM {vid_id} updating resource ...")
                 result = await self.api.cluster.ha.resources(sid).put(
                     data=data, filter_keys="_raw_"
                 )
                 return result.get("success") if result else False
         data["sid"] = sid
+        logger.info(f"VM {vid_id} creating resource ...")
         result = await self.api.cluster.ha.resources.post(
             data=data, filter_keys="_raw_"
         )
@@ -436,5 +442,6 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         )
         if not exist_group:
             return True
+        logger.info(f"VM {vid_id} deleting resource ...")
         result = await self.api.cluster.ha.resources(sid).delete(filter_keys="_raw_")
         return result.get("success") if result else False

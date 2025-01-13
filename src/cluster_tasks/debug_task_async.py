@@ -45,15 +45,15 @@ async def debug_ha_resources(proxmox_tasks):
     logger.info(
         await proxmox_tasks.ha_resources_get(vid_id=202, return_group_only=True)
     )
-    # logger.info(
-    #     await proxmox_tasks.ha_resources_create(
-    #         vid_id=202, group="gr-02f-04-05-07", overwrite=True
-    #     )
-    # )
+    logger.info(
+        await proxmox_tasks.ha_resources_create(
+            vid_id=202, group="gr-02f-04-05-07", overwrite=True
+        )
+    )
     logger.info(
         await proxmox_tasks.ha_resources_get(vid_id=202, return_group_only=True)
     )
-    logger.info(await proxmox_tasks.ha_resources_delete(vid_id=202))
+    # logger.info(await proxmox_tasks.ha_resources_delete(vid_id=202))
 
 
 async def async_main():

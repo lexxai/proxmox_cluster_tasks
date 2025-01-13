@@ -45,6 +45,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         wait: bool = True,
         with_replications: bool = True,
         force_stop: bool = True,
+        force_remove_resource: bool = True,
     ) -> str | bool | None:
         """
         Deletes a virtual machine and optionally waits for the deletion task to complete.
@@ -55,6 +56,8 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
             wait (bool): Whether to wait for the task to complete (default is True).
             with_replications (bool): Before delete try to remove all replications of VM (default is True).
             force_stop (bool): Before delete try to stop VM (default is True).
+            force_remove_resource (bool): Before delete try to remove resource (default is True).
+
 
         Returns:
             str | bool | None: The task UPID if `wait` is False;
@@ -63,6 +66,8 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         """
         if with_replications:
             self.remove_replication_job(vm_id, wait=True)
+        if force_remove_resource:
+            self.ha_resources_delete(vid_id=vm_id)
         if force_stop:
             self.vm_status_set(vm_id, node, "stop", wait=True)
         upid = self.api.nodes(node).qemu(vm_id).delete()
@@ -367,7 +372,48 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
 
         sid = f"{type_resource}:{vid_id}"
         resources = self.api.cluster.ha.resources(sid).get()
-        if return_group_only:
+        if resources and return_group_only:
             return resources.get("group")
         else:
             return resources
+
+    def ha_resources_create(
+        self,
+        vid_id: int,
+        group: str,
+        type_resource: str = "vm",
+        data: dict = None,
+        overwrite: bool = False,
+    ):
+        sid = f"{type_resource}:{vid_id}"
+        data = data.copy() if data is not None else {}
+        data["group"] = group
+        if overwrite:
+            exist_group = self.ha_resources_get(
+                vid_id=vid_id, type_resource=type_resource, return_group_only=True
+            )
+            if exist_group:
+                if exist_group == group:
+                    return True
+                logger.info(f"VM {vid_id} updating resource ...")
+                result = self.api.cluster.ha.resources(sid).put(
+                    data=data, filter_keys="_raw_"
+                )
+                return result.get("success") if result else False
+        data["sid"] = sid
+        logger.info(f"VM {vid_id} creating resource ...")
+        result = self.api.cluster.ha.resources.post(
+            data=data, filter_keys="_raw_"
+        )
+        return result.get("success") if result else False
+
+    def ha_resources_delete(self, vid_id: int, type_resource: str = "vm"):
+        sid = f"{type_resource}:{vid_id}"
+        exist_group = self.ha_resources_get(
+            vid_id=vid_id, type_resource=type_resource, return_group_only=True
+        )
+        if not exist_group:
+            return True
+        logger.info(f"VM {vid_id} deleting resource ...")
+        result = self.api.cluster.ha.resources(sid).delete(filter_keys="_raw_")
+        return result.get("success") if result else False
