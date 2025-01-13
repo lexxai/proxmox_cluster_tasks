@@ -39,13 +39,20 @@ async def debug_ha_groups(proxmox_tasks):
     # logger.info(await proxmox_tasks.ha_group_delete("test_group_name"))
 
 
+async def debug_ha_resources(proxmox_tasks):
+    logger.info(
+        await proxmox_tasks.ha_resources_get(vid_id=102, return_group_only=True)
+    )
+
+
 async def async_main():
     register_backends()
     async with ProxmoxAPI(backend_type="async") as api:
         try:
             proxmox_tasks = ProxmoxTasksAsync(api=api)
             # await debug_replication(proxmox_tasks)
-            await debug_ha_groups(proxmox_tasks)
+            # await debug_ha_groups(proxmox_tasks)
+            await debug_ha_resources(proxmox_tasks)
         except Exception as e:
             logger.error(f"ERROR async_main: {e}")
 

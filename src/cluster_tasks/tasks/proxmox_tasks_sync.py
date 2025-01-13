@@ -352,3 +352,23 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         if wait and upid:
             return self.wait_task_done_sync(upid, node) is not None
         return upid is not None
+    
+    
+    def ha_resources_get(
+        self,
+        type_resource: str = "vm",
+        vid_id: int = None,
+        return_group_only: bool = False,
+    ):
+
+        resources = self.api.cluster.ha.resources.get(
+            params={"type": type_resource}
+        )
+        if vid_id is not None:
+            sid = f"vm:{vid_id}"
+            if return_group_only:
+                return [r.get("group") for r in resources if r.get("sid") == sid]
+            else:
+                return [r for r in resources if r.get("sid") == sid]
+        return resources
+
