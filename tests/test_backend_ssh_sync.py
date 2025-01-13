@@ -3,7 +3,7 @@ import unittest
 
 from unittest import mock
 
-from config.config import ConfigLoader
+from config_loader.config import ConfigLoader
 from ext_api.backends.backend_registry import BackendRegistry
 from ext_api.backends.registry import register_backends
 from tests.conftest import export_mock_backend_settings
