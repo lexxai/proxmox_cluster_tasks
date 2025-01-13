@@ -41,7 +41,7 @@ async def debug_ha_groups(proxmox_tasks):
 
 async def debug_ha_resources(proxmox_tasks):
     logger.info(
-        await proxmox_tasks.ha_resources_get(vid_id=102, return_group_only=True)
+        await proxmox_tasks.ha_resources_get(vid_id=102, return_group_only=False)
     )
 
 

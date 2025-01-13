@@ -2,6 +2,7 @@ import asyncio
 import ipaddress
 import logging
 import time
+import urllib
 from tokenize import group
 
 from cluster_tasks.tasks.proxmox_tasks_base import ProxmoxTasksBase
@@ -382,6 +383,25 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         return upid is not None
 
     async def ha_resources_get(
+        self,
+        type_resource: str = "vm",
+        vid_id: int = None,
+        return_group_only: bool = False,
+    ):
+        if vid_id is None:
+            resources = await self.api.cluster.ha.resources.get(
+                params={"type": type_resource}
+            )
+            return resources
+
+        sid = f"vm:{vid_id}"
+        resources = await self.api.cluster.ha.resources(sid).get()
+        if return_group_only:
+            return resources.get("group")
+        else:
+            return resources
+
+    async def ha_resources_create(
         self,
         type_resource: str = "vm",
         vid_id: int = None,
