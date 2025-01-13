@@ -217,4 +217,23 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             if nodes:
                 overwrite = self.ha.get("overwrite", False)
                 logger.info(f"HA Group '{group}' creating with nodes '{nodes}'")
-                await proxmox_tasks.ha_group_create(group, nodes, overwrite=overwrite)
+                result = await proxmox_tasks.ha_group_create(
+                    group, nodes, overwrite=overwrite
+                )
+                if not result:
+                    raise Exception(
+                        f"Failed to create HA Group for VM {self.destination_vm_id}"
+                    )
+            resource = self.ha.get("resource", {})
+            if resource.get("create", False):
+                overwrite = resource.get("overwrite", False)
+                logger.info(
+                    f"HA Resource for '{self.destination_vm_id}' with group '{group}' creating ..."
+                )
+                result = await proxmox_tasks.ha_resources_create(
+                    self.destination_vm_id, group, overwrite=overwrite
+                )
+                if not result:
+                    raise Exception(
+                        f"Failed to create HA Resource for VM {self.destination_vm_id}"
+                    )

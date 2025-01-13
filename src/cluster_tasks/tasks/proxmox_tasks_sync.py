@@ -402,9 +402,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
                 return result.get("success") if result else False
         data["sid"] = sid
         logger.info(f"VM {vid_id} creating resource ...")
-        result = self.api.cluster.ha.resources.post(
-            data=data, filter_keys="_raw_"
-        )
+        result = self.api.cluster.ha.resources.post(data=data, filter_keys="_raw_")
         return result.get("success") if result else False
 
     def ha_resources_delete(self, vid_id: int, type_resource: str = "vm"):
