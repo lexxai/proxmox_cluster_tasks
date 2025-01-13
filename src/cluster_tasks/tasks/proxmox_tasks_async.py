@@ -431,5 +431,10 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
 
     async def ha_resources_delete(self, vid_id: int, type_resource: str = "vm"):
         sid = f"{type_resource}:{vid_id}"
+        exist_group = await self.ha_resources_get(
+            vid_id=vid_id, type_resource=type_resource, return_group_only=True
+        )
+        if not exist_group:
+            return True
         result = await self.api.cluster.ha.resources(sid).delete(filter_keys="_raw_")
         return result.get("success") if result else False
