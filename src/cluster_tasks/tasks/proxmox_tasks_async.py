@@ -472,14 +472,14 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         if not get_pools:
             logger.info(f"Creating pool '{pool_id}' ...")
             result = await self.api.pools.post(data=data, filter_keys="_raw_")
-            print(result, data)
+            # print(result, data)
             created = result.get("success") if result else False
         else:
             created = True
         if created and vm_id:
             data["vms"] = vm_id
             data["allow-move"] = 1
-            logger.info(f"Update pool '{pool_id}' members with VM {vm_id} ...")
+            logger.info(f"Update pool '{pool_id}' members with VM '{vm_id}' ...")
             result = await self.api.pools.put(data=data, filter_keys="_raw_")
             return result.get("success") if result else False
         return created

@@ -415,3 +415,57 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         logger.info(f"VM {vid_id} deleting resource ...")
         result = self.api.cluster.ha.resources(sid).delete(filter_keys="_raw_")
         return result.get("success") if result else False
+
+    def get_pools(self, pool_type: str = "qemu", pool_id: str = None) -> list:
+        params = {}
+        filter_keys = None
+        if pool_type and pool_id:
+            params["type"] = pool_type
+        if pool_id:
+            params["poolid"] = pool_id
+            # filter_keys = "members"
+        result = self.api.pools.get(params=params, filter_keys=filter_keys)
+        return result
+
+    def create_pool_member(
+        self, pool_id, vm_id=None, overwrite: bool = False, data: dict = None
+    ) -> bool:
+        get_pools = self.get_pools(pool_id=pool_id)
+        # print(get_pools)
+        if get_pools:
+            members_vms = self.extract_pool_members(get_pools, pool_id)
+            vm_exist = vm_id in members_vms if vm_id else True
+            if vm_exist and not overwrite:
+                return True
+        data = data.copy() if data is not None else {}
+        data["poolid"] = pool_id
+        if not get_pools:
+            logger.info(f"Creating pool '{pool_id}' ...")
+            result = self.api.pools.post(data=data, filter_keys="_raw_")
+            # print(result, data)
+            created = result.get("success") if result else False
+        else:
+            created = True
+        if created and vm_id:
+            data["vms"] = vm_id
+            data["allow-move"] = 1
+            logger.info(f"Update pool '{pool_id}' members with VM '{vm_id}' ...")
+            result = self.api.pools.put(data=data, filter_keys="_raw_")
+            return result.get("success") if result else False
+        return created
+
+    def delete_pool_member(self, pool_id: str, vm_id: int = None) -> bool:
+        if not pool_id or not vm_id:
+            logger.debug(f"Deleting pool requires pool_id and vm_id. Skipping ...")
+            return False
+        pools = self.get_pools(pool_id=pool_id)
+        if not pools:
+            return True
+        members_vms = self.extract_pool_members(pools, pool_id)
+        vm_exist = vm_id in members_vms if vm_id else False
+        if vm_exist:
+            logger.info(f"Deleting pool '{pool_id}' ...")
+            data = {"poolid": pool_id, "vms": vm_id, "delete": 1}
+            result = self.api.pools.put(data=data, filter_keys="_raw_")
+            return result.get("success") if result else False
+        return True
