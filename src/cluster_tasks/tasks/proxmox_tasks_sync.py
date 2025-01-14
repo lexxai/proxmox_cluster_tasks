@@ -464,7 +464,7 @@ class ProxmoxTasksSync(ProxmoxTasksBase):
         members_vms = self.extract_pool_members(pools, pool_id)
         vm_exist = vm_id in members_vms if vm_id else False
         if vm_exist:
-            logger.info(f"Deleting pool '{pool_id}' ...")
+            logger.info(f"Deleting pool '{pool_id}' member '{vm_id}' ...")
             data = {"poolid": pool_id, "vms": vm_id, "delete": 1}
             result = self.api.pools.put(data=data, filter_keys="_raw_")
             return result.get("success") if result else False

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from cluster_tasks.configure_logging import config_logger
 from cluster_tasks.tasks.proxmox_tasks_sync import ProxmoxTasksSync
-from config_loader.config import ConfigLoader
+from config_loader.config import ConfigLoader, configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 from loader_scene import ScenarioFactory
@@ -20,7 +20,7 @@ def sanitize_config(config):
 
 
 def main():
-    config_file = Path(__file__).parent / "scenarios_configs.yaml"
+    config_file = configuration.config_folder / "scenarios_configs.yaml"
     scenarios_config = ConfigLoader(file_path=config_file)
     # Iterate over the scenarios and run them
     logger.debug(f"Scenarios config: {scenarios_config}")
