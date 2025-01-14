@@ -199,22 +199,23 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
         # setup HA Group
         group = self.ha.get("group")
         if group:
-            nodes = self.ha.get("nodes")
-            if nodes:
+            group_name = group.get("name")
+            nodes = group.get("nodes")
+            if group_name and nodes:
                 overwrite = self.ha.get("overwrite", False)
-                logger.info(f"HA Group '{group}' creating with nodes '{nodes}'")
+                logger.info(f"HA Group '{group_name}' creating with nodes '{nodes}'")
                 result = proxmox_tasks.ha_group_create(
-                    group, nodes, overwrite=overwrite
+                    group_name, nodes, overwrite=overwrite
                 )
                 if not result:
                     raise Exception(
                         f"Failed to create HA Group for VM {self.destination_vm_id}"
                     )
             resource = self.ha.get("resource", {})
-            if resource.get("create", False):
+            if resource and group_name:
                 overwrite = resource.get("overwrite", False)
                 logger.info(
-                    f"HA Resource for '{self.destination_vm_id}' with group '{group}' creating ..."
+                    f"HA Resource for '{self.destination_vm_id}' with group '{group_name}' creating ..."
                 )
                 data = {
                     "comment": resource.get("comment"),
@@ -225,7 +226,7 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
                 data = {k: v for k, v in data.items() if v is not None}
 
                 result = proxmox_tasks.ha_resources_create(
-                    self.destination_vm_id, group, overwrite=overwrite, data=data
+                    self.destination_vm_id, group_name, overwrite=overwrite, data=data
                 )
                 if not result:
                     raise Exception(

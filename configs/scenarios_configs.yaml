@@ -26,11 +26,11 @@ Scenarios:
         - node: "c07"
           schedule: "*/30"
       ha:
-        group: "gr-02f-04-05-07"
-        nodes: "c02:100,c04,c05,c07"
-        overwrite: True
+        group:
+          name: "gr-02f-04-05-07"
+          nodes: "c02:100,c04,c05,c07"
+          overwrite: True
         resource:
-          create: True
           overwrite: True
           state: "ignored"
           comment: "HA resource for VM 202"
