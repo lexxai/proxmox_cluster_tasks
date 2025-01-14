@@ -255,7 +255,7 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             return
         logger.info(f"Setup Pool for VM {self.destination_vm_id}")
 
-        result = await proxmox_tasks.create_pool(
+        result = await proxmox_tasks.create_pool_member(
             self.pool_id, vm_id=self.destination_vm_id
         )
         if not result:

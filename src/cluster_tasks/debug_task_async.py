@@ -59,7 +59,9 @@ async def debug_ha_resources(proxmox_tasks):
 async def debug_pools(proxmox_tasks):
     logger.info(await proxmox_tasks.get_pools())
     logger.info(await proxmox_tasks.get_pools(pool_id="pool1t"))
-    logger.info(await proxmox_tasks.create_pool(pool_id="pool1t", vm_id=202))
+    logger.info(await proxmox_tasks.create_pool_member(pool_id="pool1t", vm_id=202))
+    logger.info(await proxmox_tasks.get_pools(pool_id="pool1t"))
+    logger.info(await proxmox_tasks.delete_pool_member(pool_id="pool1t", vm_id=202))
     logger.info(await proxmox_tasks.get_pools(pool_id="pool1t"))
 
 
