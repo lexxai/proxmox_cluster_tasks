@@ -224,7 +224,7 @@ class ProxmoxAsyncSSHBackend(ProxmoxSSHBaseBackend):
         try:
             result = await self._client.run(command, check=True)
         except asyncssh.ProcessError as e:
-            logger.error(f"Async SSH Error: {e}")
+            logger.debug(f"Async SSH Error: {e}")
             return {"response": {}, "status_code": e.exit_status, "error": e.stderr}
         finally:
             if one_time:
