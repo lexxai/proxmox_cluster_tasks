@@ -68,6 +68,9 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
             # setup HA VM
             await self.vm_ha_setup(proxmox_tasks)
 
+            # setup pool for VM
+            await self.vm_pool_setup(proxmox_tasks)
+
             logger.info(f"*** Scenario '{self.scenario_name}' completed successfully")
             return True
         except Exception as e:
@@ -246,3 +249,14 @@ class ScenarioCloneTemplateVmAsync(ScenarioCloneTemplateVmBase):
                     raise Exception(
                         f"Failed to create HA Resource for VM {self.destination_vm_id}"
                     )
+
+    async def vm_pool_setup(self, proxmox_tasks):
+        if not self.destination_vm_id:
+            return
+        logger.info(f"Setup Pool for VM {self.destination_vm_id}")
+
+        result = await proxmox_tasks.create_pool(
+            self.pool_id, vm_id=self.destination_vm_id
+        )
+        if not result:
+            raise Exception(f"Failed to create Pool for VM {self.destination_vm_id}")

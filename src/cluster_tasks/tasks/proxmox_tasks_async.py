@@ -445,3 +445,48 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         logger.info(f"VM {vid_id} deleting resource ...")
         result = await self.api.cluster.ha.resources(sid).delete(filter_keys="_raw_")
         return result.get("success") if result else False
+
+    async def get_pools(self, pool_type: str = "qemu", pool_id: str = None) -> list:
+        params = {}
+        filter_keys = None
+        if pool_type and pool_id:
+            params["type"] = pool_type
+        if pool_id:
+            params["poolid"] = pool_id
+            # filter_keys = "members"
+        result = await self.api.pools.get(params=params, filter_keys=filter_keys)
+        return result
+
+    async def create_pool(
+        self, pool_id, vm_id=None, overwrite: bool = False, data: dict = None
+    ) -> bool:
+        get_pools = await self.get_pools(pool_id=pool_id)
+        # print(get_pools)
+        if get_pools:
+            get_pools = get_pools[0]
+            if get_pools and pool_id:
+                members = get_pools.get("members")
+                members_vms = [r.get("vmid") for r in members if isinstance(r, dict)]
+                vm_exist = vm_id in members_vms if vm_id else True
+                if vm_exist and not overwrite:
+                    return True
+        data = data.copy() if data is not None else {}
+        data["poolid"] = pool_id
+        if not get_pools:
+            logger.info(f"Creating pool '{pool_id}' ...")
+            result = await self.api.pools.post(data=data, filter_keys="_raw_")
+            print(result, data)
+            created = result.get("success") if result else False
+        else:
+            created = True
+        if created and vm_id:
+            data["vms"] = vm_id
+            data["allow-move"] = 1
+            logger.info(f"Update pool '{pool_id}' members with VM {vm_id} ...")
+            result = await self.api.pools.put(data=data, filter_keys="_raw_")
+            return result.get("success") if result else False
+
+        return created
+
+
+async def delete_pool(self, pool_id, vm_id=None) -> bool: ...

@@ -56,6 +56,13 @@ async def debug_ha_resources(proxmox_tasks):
     # logger.info(await proxmox_tasks.ha_resources_delete(vid_id=202))
 
 
+async def debug_pools(proxmox_tasks):
+    logger.info(await proxmox_tasks.get_pools())
+    logger.info(await proxmox_tasks.get_pools(pool_id="pool1t"))
+    logger.info(await proxmox_tasks.create_pool(pool_id="pool1t", vm_id=202))
+    logger.info(await proxmox_tasks.get_pools(pool_id="pool1t"))
+
+
 async def async_main():
     register_backends()
     async with ProxmoxAPI(backend_type="async") as api:
@@ -63,7 +70,8 @@ async def async_main():
             proxmox_tasks = ProxmoxTasksAsync(api=api)
             # await debug_replication(proxmox_tasks)
             # await debug_ha_groups(proxmox_tasks)
-            await debug_ha_resources(proxmox_tasks)
+            # await debug_ha_resources(proxmox_tasks)
+            await debug_pools(proxmox_tasks)
         except Exception as e:
             logger.error(f"ERROR async_main: {e}")
 
