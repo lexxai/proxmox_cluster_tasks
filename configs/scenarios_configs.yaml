@@ -1,52 +1,23 @@
 API:
   backend: "https"
 Scenarios:
-  CloneTemplateVM-2:
-    file: "clone_template_vm"
+  SequenceScenarios:
+    file: "sequence_scenarios"
     config:
-      node: "c01"
-      destination_node: "c02"
-      source_vm_id: 1004
-      destination_vm_id: 202
-      overwrite_destination: True
-      full: True
-      name: "Cloned01"
-      network:
-        ip: "192.0.2.0/24"
-        increase_ip: 2
-      tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
-      pool_id: "cxx"
-      replications:
-        - node: "c04"
-          schedule: "*/30"
-          rate: 50.0
-          comment: "Replication to c04"
-          disable: False
-        - node: "c05"
-        - node: "c07"
-          schedule: "*/30"
-      ha:
-        group:
-          name: "gr-02f-04-05-07"
-          nodes: "c02:100,c04,c05,c07"
-          overwrite: True
-        resource:
-          overwrite: True
-          state: "ignored"
-          comment: "HA resource for VM 202"
-
-
-#  CloneTemplateVM-3:
-#    file: "clone_template_vm"
-#    config:
-#      node: "c01"
-#      destination_node: "c04"
-#      source_vm_id: 1004
-#      destination_vm_id: 204
-#      overwrite_destination: True
-#      name: "Cloned03"
-#      network:
-#        ip: "192.0.2.0/24"
-#        increase_ip: 3
-#      tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
-#      full: True
+        name: "Scenario {id}"
+        file: "clone_template_vm"
+        variables:
+          destination_nodes: "all-online"
+          destination_vm_id_start: 400
+          destination_vm_id_increment: 1
+          network:
+            ip_start: "192.0.2.0/24"
+            ip_increment: 1
+          replications:
+            nodes:
+              - "{destination_node|-1}"
+              - "{destination_node|+1}"
+          ha:
+            group:
+              name: "gr-{destination_node|-1}-{destination_node}f-{destination_node|+1}"
+              nodes: "{destination_node|-1}:80,{destination_node}:100,{destination_node|+1}:60"

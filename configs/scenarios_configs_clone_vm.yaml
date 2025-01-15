@@ -1,0 +1,37 @@
+API:
+  backend: "https"
+Scenarios:
+  CloneTemplateVM-2:
+    file: "clone_template_vm"
+    config:
+      node: "c01"
+      destination_node: "c02"
+      source_vm_id: 1004
+      destination_vm_id: 202
+      overwrite_destination: True
+      full: True
+      name: "Cloned01"
+      network:
+        ip: "192.0.2.0/24"
+        increase_ip: 2
+      tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
+      pool_id: "cxx"
+      replications:
+        - node: "c04"
+          schedule: "*/30"
+          rate: 50.0
+          comment: "Replication to c04"
+          disable: False
+        - node: "c05"
+        - node: "c07"
+          schedule: "*/30"
+      ha:
+        group:
+          name: "gr-02f-04-05-07"
+          nodes: "c02:100,c04,c05,c07"
+          overwrite: True
+        resource:
+          overwrite: True
+          state: "ignored"
+          comment: "HA resource for VM 202"
+
