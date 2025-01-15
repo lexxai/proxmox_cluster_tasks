@@ -62,15 +62,10 @@ class SequenceScenariosBase(ScenarioBase):
             # Extract the prefix and suffix based on the match location
             prefix = result[:start]  # String before the match
             suffix = result[end:]  # String after the match
-
-            content = match.group(
-                1
-            )  # The content inside the braces (e.g., "destination_node|-1")
+            content = match.group(1)
             parts = content.split("|")
             key = parts[0]
             delta = int(parts[1]) if len(parts) > 1 else 0
-
-            # Calculate the context (e.g., adjusted value based on key and delta)
             if key == "destination_node":
                 if delta != 0:
                     # Use your existing function for pattern increment (you can modify this logic)
@@ -81,11 +76,7 @@ class SequenceScenariosBase(ScenarioBase):
                 else:
                     context = value
             else:
-                context = (
-                    content  # If the key doesn't match, return the original content
-                )
-
-            # Rebuild the result by inserting the context
+                context = content
             result = prefix + context + suffix
 
         return result
