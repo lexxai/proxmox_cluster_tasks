@@ -11,7 +11,7 @@ from cluster_tasks.tasks.proxmox_tasks_async import (
 logger = logging.getLogger("CT.{__name__}")
 
 
-class SequenceScenariosBase(ScenarioBase):
+class ScenarioSequenceScenariosBase(ScenarioBase):
     def __init__(self, name: str = None):
         super().__init__(name=name)
 
@@ -69,7 +69,7 @@ class SequenceScenariosBase(ScenarioBase):
             if key == "destination_node":
                 if delta != 0:
                     # Use your existing function for pattern increment (you can modify this logic)
-                    pattern_increment = SequenceScenariosBase.pattern_increment(
+                    pattern_increment = ScenarioSequenceScenariosBase.pattern_increment(
                         value, delta
                     )
                     context = pattern_increment
@@ -83,10 +83,13 @@ class SequenceScenariosBase(ScenarioBase):
 
 
 if __name__ == "__main__":
-    x1 = SequenceScenariosBase.destination_nodes_pattern(
-        "gr-{destination_node|-1}:80,{destination_node},{destination_node|+1}", "c02"
+    x1 = ScenarioSequenceScenariosBase.destination_nodes_pattern(
+        "gr-{destination_node|-1}-{destination_node}f-{destination_node|+1}", "c02"
     )
     print(x1)
 
-    x2 = SequenceScenariosBase.destination_nodes_pattern("{destination_node|+1}", "c02")
+    x2 = ScenarioSequenceScenariosBase.destination_nodes_pattern(
+        "{destination_node|-1}:80,{destination_node}:100,{destination_node|+1}:60",
+        "c02",
+    )
     print(x2)
