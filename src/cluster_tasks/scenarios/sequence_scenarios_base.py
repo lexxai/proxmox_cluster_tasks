@@ -48,24 +48,53 @@ class SequenceScenariosBase(ScenarioBase):
 
     @staticmethod
     def destination_nodes_pattern(input_str: str, value: str) -> str:
-        # Match the content inside curly braces
-        match = re.match(r"\{([^}]+)\}", input_str)
-        if match:
-            content = match.group(1)  # Extracts "destination_node|-1"
-            parts = content.split("|")  # Split by "|"
-            key = parts[0]  # "destination_node"
-            delta = int(parts[1])  # -1 (converted to integer)
+        # Start with the original input string
+        result = input_str
+        while True:
+            # Find the next match
+            match = re.search(r"\{([^}]+)\}", result)
+            if not match:
+                break  # No more matches
+
+            # Get the start and end of the match
+            start, end = match.span()
+
+            # Extract the prefix and suffix based on the match location
+            prefix = result[:start]  # String before the match
+            suffix = result[end:]  # String after the match
+
+            content = match.group(
+                1
+            )  # The content inside the braces (e.g., "destination_node|-1")
+            parts = content.split("|")
+            key = parts[0]
+            delta = int(parts[1]) if len(parts) > 1 else 0
+
+            # Calculate the context (e.g., adjusted value based on key and delta)
             if key == "destination_node":
-                pattern_increment = SequenceScenariosBase.pattern_increment(
-                    value, delta
+                if delta != 0:
+                    # Use your existing function for pattern increment (you can modify this logic)
+                    pattern_increment = SequenceScenariosBase.pattern_increment(
+                        value, delta
+                    )
+                    context = pattern_increment
+                else:
+                    context = value
+            else:
+                context = (
+                    content  # If the key doesn't match, return the original content
                 )
-                print(f"Key: {key}, Delta: {delta}")
-                return pattern_increment
-        return input_str
+
+            # Rebuild the result by inserting the context
+            result = prefix + context + suffix
+
+        return result
 
 
 if __name__ == "__main__":
-    x1 = SequenceScenariosBase.destination_nodes_pattern("{destination_node|-1}", "c02")
+    x1 = SequenceScenariosBase.destination_nodes_pattern(
+        "gr-{destination_node|-1}:80,{destination_node},{destination_node|+1}", "c02"
+    )
     print(x1)
 
     x2 = SequenceScenariosBase.destination_nodes_pattern("{destination_node|+1}", "c02")
