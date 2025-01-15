@@ -14,12 +14,15 @@ logger = logging.getLogger("CT.{__name__}")
 class ScenarioSequenceScenariosBase(ScenarioBase):
     def __init__(self, name: str = None):
         super().__init__(name=name)
+        self.configured = False
 
     def configure(self, config):
+        logger.info(f"Configuring {self.scenario_name}")
+        self.configured = True
         self.name = config.get("name")
         self.file = config.get("file")
         self.variables = config.get("variables", {})
-        self.destination_nodes = self.variables.get("destination_nodes")
+        self.destination_nodes = self.variables.get("destination_nodes", [])
         self.destination_vm_id_start = self.variables.get("destination_vm_id_start")
         self.destination_vm_id_increment = self.variables.get(
             "destination_vm_id_increment"
