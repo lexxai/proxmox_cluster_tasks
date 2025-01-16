@@ -9,10 +9,10 @@ Scenarios:
         variables:
           destination_nodes: "all-online"
           destination_vm_id_start: 400
-          destination_vm_id_increment: 1
+          destination_vm_id_increment: "node_digits"
           network:
-            ip_start: "192.0.2.1/24"
-            ip_increment: 1
+            ip_start: "192.0.2.0/24"
+            ip_increment: "node_digits"
           replications:
             nodes:
               - "{destination_node|-1}"

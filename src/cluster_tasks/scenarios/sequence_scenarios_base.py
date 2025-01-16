@@ -84,20 +84,43 @@ class ScenarioSequenceScenariosBase(ScenarioBase):
 
         return result
 
-    def prepare_config(self, scenario_config, node, id=0):
+    @staticmethod
+    def node_digits(node: str) -> int:
+        try:
+            result = int("".join(filter(str.isdigit, node)))
+        except ValueError:
+            result = 0
+        return result
+
+    def prepare_config(self, scenario_config: dict, node: str, id: int = 0) -> dict:
         scenarios = scenario_config["Scenarios"]
         for scenario in scenarios.values():
             config = scenario["config"]
             config["destination_node"] = node
+            destination_vm_id_increment = self.destination_vm_id_increment
+            vm_id_multiplier = id
+            if isinstance(destination_vm_id_increment, str):
+                if destination_vm_id_increment == "node_digits":
+                    destination_vm_id_increment = self.node_digits(node)
+                    vm_id_multiplier = 1
+                else:
+                    destination_vm_id_increment = int(destination_vm_id_increment)
             config["destination_vm_id"] = (
-                self.destination_vm_id_start + id * self.destination_vm_id_increment
+                self.destination_vm_id_start
+                + vm_id_multiplier * destination_vm_id_increment
             )
             network = config["network"]
             if ip := self.network.get("ip_start"):
                 network["ip"] = ip
-            if ip_increment := self.network.get("ip_increment"):
+            ip_increment = self.network.get("ip_increment")
+            if isinstance(ip_increment, str):
+                if ip_increment == "node_digits":
+                    ip_increment = self.node_digits(node)
+                else:
+                    ip_increment = int(ip_increment)
+                network["increase_ip"] = ip_increment
+            else:
                 network["increase_ip"] = ip_increment * id
-
         return scenario_config
 
 
