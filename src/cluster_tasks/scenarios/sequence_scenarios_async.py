@@ -21,8 +21,11 @@ class ScenarioSequenceScenariosAsync(ScenarioSequenceScenariosBase):
             raise Exception("Scenario not configured")
         # Perform the specific API logic for this scenario
         try:
-            if self.destination_nodes == "all-online":
-                self.destination_nodes = await proxmox_tasks.get_nodes(online=True)
+            match self.destination_nodes:
+                case "all-online":
+                    self.destination_nodes = await proxmox_tasks.get_nodes(online=True)
+                case "all":
+                    self.destination_nodes = await proxmox_tasks.get_nodes(online=False)
 
             for node in self.destination_nodes:
                 logger.info(f"Running scenario on node: {node}")
