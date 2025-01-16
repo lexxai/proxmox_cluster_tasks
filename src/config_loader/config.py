@@ -10,8 +10,10 @@ logger = logging.getLogger("CT.{__name__}")
 
 
 class ConfigLoader:
-    def __init__(self, file_path: Path = None, env_var_prefix: str = ""):
+    def __init__(self, file_path: Path | str = None, env_var_prefix: str = ""):
         self.config_folder = self.find_config_folder()
+        if isinstance(file_path, str):
+            file_path = self.config_folder / file_path
         self.file_path = file_path or self.config_folder / "config.toml"
         self.env_var_prefix = env_var_prefix
         self.settings = self.load_config()

@@ -5,7 +5,7 @@ Scenarios:
     file: "sequence_scenarios"
     config:
         name: "Scenario {id}"
-        file: "clone_template_vm"
+        file: "scenarios_configs_clone_vm.yaml"
         variables:
           destination_nodes: "all-online"
           destination_vm_id_start: 400

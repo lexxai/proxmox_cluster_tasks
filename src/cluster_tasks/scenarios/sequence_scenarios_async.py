@@ -8,6 +8,7 @@ from cluster_tasks.scenarios.sequence_scenarios_base import (
 from cluster_tasks.tasks.proxmox_tasks_async import (
     ProxmoxTasksAsync,
 )  # Assuming there's an async version of NodeTasks
+from config_loader.config import ConfigLoader
 
 logger = logging.getLogger("CT.{__name__}")
 
@@ -21,14 +22,21 @@ class ScenarioSequenceScenariosAsync(ScenarioSequenceScenariosBase):
             raise Exception("Scenario not configured")
         # Perform the specific API logic for this scenario
         try:
-            match self.destination_nodes:
-                case "all-online":
-                    self.destination_nodes = await proxmox_tasks.get_nodes(online=True)
-                case "all":
-                    self.destination_nodes = await proxmox_tasks.get_nodes(online=False)
+            if isinstance(self.destination_nodes, str):
+                match self.destination_nodes:
+                    case "all-online":
+                        self.destination_nodes = await proxmox_tasks.get_nodes(
+                            online=True
+                        )
+                    case "all":
+                        self.destination_nodes = await proxmox_tasks.get_nodes(
+                            online=False
+                        )
 
             for node in self.destination_nodes:
                 logger.info(f"Running scenario on node: {node}")
+                config = ConfigLoader(file_path=self.file)
+                logger.info(config.settings)
             return True
         except Exception as e:
             logger.error(f"Failed to run scenario '{self.scenario_name}': {e}")
