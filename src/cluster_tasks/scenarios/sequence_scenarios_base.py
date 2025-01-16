@@ -85,12 +85,58 @@ class ScenarioSequenceScenariosBase(ScenarioBase):
         return result
 
     @staticmethod
+    def destination_nodes_pattern_list(
+        input_str: str, value: str, nodes_list: list[str]
+    ) -> str:
+        # Start with the original input string
+        result = input_str
+        while True:
+            # Find the next match
+            match = re.search(r"\{([^}]+)\}", result)
+            if not match:
+                break  # No more matches
+
+            # Get the start and end of the match
+            start, end = match.span()
+
+            # Extract the prefix and suffix based on the match location
+            prefix = result[:start]  # String before the match
+            suffix = result[end:]  # String after the match
+            content = match.group(1)
+            parts = content.split("|")
+            key = parts[0]
+            delta = int(parts[1]) if len(parts) > 1 else 0
+            if key == "destination_node":
+                if delta != 0:
+                    # Use your existing function for pattern increment (you can modify this logic)
+                    pattern_increment = ScenarioSequenceScenariosBase.get_node_by_shift(
+                        nodes_list, value, delta
+                    )
+                    context = pattern_increment
+                else:
+                    context = value
+            else:
+                context = content
+            result = prefix + context + suffix
+
+        return result
+
+    @staticmethod
     def node_digits(node: str) -> int:
         try:
             result = int("".join(filter(str.isdigit, node)))
         except ValueError:
             result = 0
         return result
+
+    @staticmethod
+    def get_node_by_shift(id_list: list[str], current_id: str, delta: int = 0) -> str:
+        try:
+            current_index = id_list.index(current_id)
+            new_index = (current_index + delta) % len(id_list)
+            return id_list[new_index]
+        except ValueError:
+            return current_id
 
     def prepare_config(self, scenario_config: dict, node: str, id: int = 0) -> dict:
         scenarios = scenario_config["Scenarios"]
@@ -123,6 +169,18 @@ class ScenarioSequenceScenariosBase(ScenarioBase):
                 network["increase_ip"] = ip_increment
             else:
                 network["increase_ip"] = ip_increment * id
+            # Configure ha
+            ha = config["ha"]
+            ha_group = ha.get("group")
+            if ha_group:
+                seq_ha_group = self.ha.get("group")
+                if seq_ha_group:
+                    ha_group["name"] = self.destination_nodes_pattern_list(
+                        seq_ha_group.get("name"), node, self.destination_nodes
+                    )
+                    ha_group["nodes"] = self.destination_nodes_pattern_list(
+                        seq_ha_group.get("nodes"), node, self.destination_nodes
+                    )
         return scenario_config
 
 
@@ -137,3 +195,16 @@ if __name__ == "__main__":
         "c02",
     )
     print(x2)
+
+    x3 = ScenarioSequenceScenariosBase.get_node_by_shift(
+        ["c01", "c02", "c03"], "c03", 1
+    )
+    print(x3)
+
+    x4 = ScenarioSequenceScenariosBase.destination_nodes_pattern_list(
+        "gr-{destination_node|-1}-{destination_node}f-{destination_node|+1}",
+        "c01",
+        ["c01", "c02", "c03"],
+    )
+
+    print(x4)
