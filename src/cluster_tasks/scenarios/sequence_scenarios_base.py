@@ -143,6 +143,7 @@ class ScenarioSequenceScenariosBase(ScenarioBase):
         for scenario in scenarios.values():
             config = scenario["config"]
             config["destination_node"] = node
+
             # Configure destination_vm_id
             destination_vm_id_increment = self.destination_vm_id_increment
             vm_id_multiplier = id
@@ -156,6 +157,7 @@ class ScenarioSequenceScenariosBase(ScenarioBase):
                 self.destination_vm_id_start
                 + vm_id_multiplier * destination_vm_id_increment
             )
+
             # Configure network
             network = config["network"]
             if ip := self.network.get("ip_start"):
