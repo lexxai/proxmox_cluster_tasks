@@ -84,6 +84,22 @@ class ScenarioSequenceScenariosBase(ScenarioBase):
 
         return result
 
+    def prepare_config(self, scenario_config, node, id=0):
+        scenarios = scenario_config["Scenarios"]
+        for scenario in scenarios.values():
+            config = scenario["config"]
+            config["destination_node"] = node
+            config["destination_vm_id"] = (
+                self.destination_vm_id_start + id * self.destination_vm_id_increment
+            )
+            network = config["network"]
+            if ip := self.network.get("ip_start"):
+                network["ip"] = ip
+            if ip_increment := self.network.get("ip_increment"):
+                network["increase_ip"] = ip_increment * id
+
+        return scenario_config
+
 
 if __name__ == "__main__":
     x1 = ScenarioSequenceScenariosBase.destination_nodes_pattern(

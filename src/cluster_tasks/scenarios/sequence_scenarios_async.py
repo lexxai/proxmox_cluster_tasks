@@ -1,3 +1,4 @@
+import copy
 import logging
 import asyncio
 
@@ -33,10 +34,15 @@ class ScenarioSequenceScenariosAsync(ScenarioSequenceScenariosBase):
                             online=False
                         )
 
-            for node in self.destination_nodes:
+            config = ConfigLoader(file_path=self.file)
+            for id, node in enumerate(self.destination_nodes):
                 logger.info(f"Running scenario on node: {node}")
-                config = ConfigLoader(file_path=self.file)
                 logger.info(config.settings)
+                config_scenario = self.prepare_config(
+                    copy.deepcopy(config.settings), node, id
+                )
+                logger.info(config_scenario)
+                # await self.run_scenario(proxmox_tasks, config_scenario)
             return True
         except Exception as e:
             logger.error(f"Failed to run scenario '{self.scenario_name}': {e}")
