@@ -169,6 +169,22 @@ class ScenarioSequenceScenariosBase(ScenarioBase):
                 network["increase_ip"] = ip_increment
             else:
                 network["increase_ip"] = ip_increment * id
+
+            # Configure replications
+            replications = config["replications"]
+            seq_replications_nodes = self.replications.get("nodes")
+            if seq_replications_nodes:
+                for replication, seq_node in zip(replications, seq_replications_nodes):
+                    if seq_node:
+                        replication["node"] = self.destination_nodes_pattern_list(
+                            seq_node, node, self.destination_nodes
+                        )
+                        comment = replication.get("comment")
+                        if comment:
+                            replication["comment"] = comment.format(
+                                node=replication["node"]
+                            )
+
             # Configure ha
             ha = config["ha"]
             ha_group = ha.get("group")

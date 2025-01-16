@@ -20,11 +20,9 @@ Scenarios:
         - node: "c04"
           schedule: "*/30"
           rate: 50.0
-          comment: "Replication to c04"
+          comment: "Replication to {node}"
           disable: False
         - node: "c05"
-        - node: "c07"
-          schedule: "*/30"
       ha:
         group:
           name: "gr-02f-04-05-07"
