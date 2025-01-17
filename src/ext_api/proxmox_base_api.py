@@ -1,6 +1,6 @@
 import logging
 
-from config.config import configuration
+from config_loader.config import configuration
 from ext_api.backends.backend_abstract import ProxmoxBackend
 from ext_api.backends.registry import register_backends
 from ext_api.backends.backend_registry import (

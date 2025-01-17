@@ -59,6 +59,12 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             # Replication jobs for VM
             self.vm_replication(proxmox_tasks)
 
+            # setup HA VM
+            self.vm_ha_setup(proxmox_tasks)
+
+            # setup pool for VM
+            self.vm_pool_setup(proxmox_tasks)
+
             logger.info(f"*** Scenario '{self.scenario_name}' completed successfully")
             return True
         except Exception as e:
@@ -188,3 +194,55 @@ class ScenarioCloneTemplateVmSync(ScenarioCloneTemplateVmBase):
             logger.info(
                 f"Created replication job VM {vm_id} for node '{target_node}' with result: {result}"
             )
+
+    def vm_ha_setup(self, proxmox_tasks):
+        if not self.destination_vm_id:
+            return
+        logger.info(f"Setup HA for VM {self.destination_vm_id}")
+        # setup HA Group
+        group = self.ha.get("group")
+        if group:
+            group_name = group.get("name")
+            nodes = group.get("nodes")
+            if group_name and nodes:
+                overwrite = self.ha.get("overwrite", False)
+                logger.info(f"HA Group '{group_name}' creating with nodes '{nodes}'")
+                result = proxmox_tasks.ha_group_create(
+                    group_name, nodes, overwrite=overwrite
+                )
+                if not result:
+                    raise Exception(
+                        f"Failed to create HA Group for VM {self.destination_vm_id}"
+                    )
+            resource = self.ha.get("resource", {})
+            if resource and group_name:
+                overwrite = resource.get("overwrite", False)
+                logger.info(
+                    f"HA Resource for '{self.destination_vm_id}' with group '{group_name}' creating ..."
+                )
+                data = {
+                    "comment": resource.get("comment"),
+                    "state": resource.get("state"),
+                    "max_relocate": resource.get("max_relocate"),
+                    "max_restart": resource.get("max_restart"),
+                }
+                data = {k: v for k, v in data.items() if v is not None}
+
+                result = proxmox_tasks.ha_resources_create(
+                    self.destination_vm_id, group_name, overwrite=overwrite, data=data
+                )
+                if not result:
+                    raise Exception(
+                        f"Failed to create HA Resource for VM {self.destination_vm_id}"
+                    )
+
+    def vm_pool_setup(self, proxmox_tasks):
+        if not self.destination_vm_id:
+            return
+        logger.info(f"Setup Pool for VM {self.destination_vm_id}")
+
+        result = proxmox_tasks.create_pool_member(
+            self.pool_id, vm_id=self.destination_vm_id
+        )
+        if not result:
+            raise Exception(f"Failed to create Pool for VM {self.destination_vm_id}")

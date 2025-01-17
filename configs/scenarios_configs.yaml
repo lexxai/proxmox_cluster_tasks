@@ -1,5 +1,5 @@
 API:
-  backend: "ssh"
+  backend: "https"
 Scenarios:
   CloneTemplateVM-2:
     file: "clone_template_vm"
@@ -15,6 +15,7 @@ Scenarios:
         ip: "192.0.2.0/24"
         increase_ip: 2
       tags: ["tag1", "dot-{vm_dot_ip}","ip-{vm_ip}"]
+      pool_id: "cxx"
       replications:
         - node: "c04"
           schedule: "*/30"
@@ -24,6 +25,17 @@ Scenarios:
         - node: "c05"
         - node: "c07"
           schedule: "*/30"
+      ha:
+        group:
+          name: "gr-02f-04-05-07"
+          nodes: "c02:100,c04,c05,c07"
+          overwrite: True
+        resource:
+          overwrite: True
+          state: "ignored"
+          comment: "HA resource for VM 202"
+
+
 #  CloneTemplateVM-3:
 #    file: "clone_template_vm"
 #    config:

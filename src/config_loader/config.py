@@ -11,12 +11,34 @@ logger = logging.getLogger("CT.{__name__}")
 
 class ConfigLoader:
     def __init__(self, file_path: Path = None, env_var_prefix: str = ""):
-        self.file_path = (
-            file_path or Path(__file__).parent.parent.parent / "config.toml"
-        )
+        self.config_folder = self.find_config_folder()
+        self.file_path = file_path or self.config_folder / "config.toml"
         self.env_var_prefix = env_var_prefix
         self.settings = self.load_config()
         self.build_token()
+
+    @staticmethod
+    def find_config_folder():
+        run_folder = Path(os.getcwd() or ".")
+        config_folder = Path("configs")
+        config_folders = [
+            run_folder,
+            Path(__file__).parent.parent.parent.parent,
+            Path(__file__).parent.parent.parent,
+            Path(__file__).parent.parent,
+            Path(__file__).parent,
+        ]
+        for folder in config_folders:
+            folder = folder.joinpath(config_folder)
+            if folder.is_dir():
+                config_folder = folder
+                break
+        if config_folder.exists() is False:
+            logger.error(f"Config folder not found")
+            config_folder = None
+        # else:
+        #     print(f"*** Config folder found in '{config_folder}'")
+        return config_folder
 
     def build_token(self):
         if "API" not in self.settings:
@@ -38,16 +60,16 @@ class ConfigLoader:
                 with self.file_path.open("rb") as f:
                     config = yaml.safe_load(f)
                 return config
-            except yaml.YAMLError as e:
+            except Exception as e:
                 logger.error(f"Error of parsing config file {e}")
         elif self.file_path.suffix == ".toml":
             try:
                 with self.file_path.open("rb") as f:
                     config = toml.load(f)
                 config = self.override_with_env_vars(config)
-            except toml.TOMLDecodeError:
+            except Exception:
                 logger.error("Error of parsing config file")
-            return config
+        return config
 
     @staticmethod
     def convert_to_bool(value: str) -> bool | str:
@@ -126,6 +148,17 @@ class ConfigLoader:
 
 
 configuration = ConfigLoader()
+# configuration = None
+
+
+def initialize(file_path: Path = None):
+    global configuration
+    if not file_path or file_path.is_file() is False:
+        logger.error(f"Config file ({file_path}) not found")
+        return None
+    configuration = ConfigLoader(file_path=file_path)
+    return len(configuration.settings.keys())
+
 
 if __name__ == "__main__":
     # print(configuration.settings)

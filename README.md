@@ -4,6 +4,8 @@
 
 The **Proxmox Cluster Tasks** repository is designed to simplify and automate daily administrative tasks within a Proxmox Virtual Environment (VE) cluster. The project focuses on enhancing the efficiency of cluster management by providing tools and wrappers for interacting with Proxmox through various backends and APIs.
 
+Inspired by the principles of **Terraform actions**, this project emphasizes modularity, repeatability, and declarative configuration management. It allows administrators to define and execute cluster tasks in a structured and consistent manner, reducing the complexity and potential for errors in day-to-day operations.
+
 ### Key Features
 
 #### Daily Task Automation

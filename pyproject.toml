@@ -1,10 +1,16 @@
 [tool.poetry]
 name = "proxmox-cluster-tasks"
-version = "0.6.4"
+version = "0.8.2"
 description = ""
 authors = ["lexxai <lexxai@gmail.com>"]
 readme = "README.md"
-packages = [{include = "cluster_tasks", from = "src"}]
+packages = [{include = "cluster_tasks", from = "src",  to = "proxmox_cluster_tasks"},
+            {include = "config_loader", from = "src",  to = "proxmox_cluster_tasks"},
+            {include = "ext_api", from = "src",  to = "proxmox_cluster_tasks"},
+            {include = "*.py", from = "src", to = "proxmox_cluster_tasks"},
+            ]
+
+include = [ "configs/*" ]
 
 
 [tool.poetry.dependencies]
@@ -24,8 +30,6 @@ pytest-mock = "^3.14.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-#[tool.pytest.ini_options]
-#python_paths = ["src"]
 
 [tool.pytest.ini_options]
 addopts = [
@@ -37,6 +41,6 @@ log_cli = true
 
 
 [tool.poetry.scripts]
-proxmox-cluster-tasks = "cluster_tasks:main"
+proxmox-cluster-tasks = "proxmox_cluster_tasks.main:cli"
 
 # Correct placement for package inclusion

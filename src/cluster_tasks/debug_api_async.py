@@ -1,10 +1,9 @@
 import asyncio
 import logging
 from datetime import timedelta
-from importlib.metadata import version
 
 from cluster_tasks.configure_logging import config_logger
-from config.config import configuration
+from config_loader.config import configuration
 from ext_api.backends.registry import register_backends
 from ext_api.proxmox_api import ProxmoxAPI
 

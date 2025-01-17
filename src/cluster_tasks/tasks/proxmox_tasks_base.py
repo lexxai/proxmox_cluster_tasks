@@ -167,3 +167,14 @@ class ProxmoxTasksBase(BaseTasks):
     def shorten_upid(upid: str, start: int = 0, length: int = 7) -> str | None:
         if upid:
             return ":".join(upid.split(":")[start:length])
+
+    @staticmethod
+    def extract_pool_members(get_pools: list, pool_id: str) -> list:
+        if not get_pools:
+            return []
+        get_pools = get_pools[0]
+        if get_pools and pool_id:
+            members = get_pools.get("members")
+            members_vms = [r.get("vmid") for r in members if isinstance(r, dict)]
+            return members_vms
+        return []

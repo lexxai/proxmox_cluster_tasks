@@ -2,6 +2,8 @@ import asyncio
 import ipaddress
 import logging
 import time
+import urllib
+from tokenize import group
 
 from cluster_tasks.tasks.proxmox_tasks_base import ProxmoxTasksBase
 
@@ -46,7 +48,13 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         return int(status_vm) if status_vm else 0
 
     async def vm_delete(
-        self, node: str, vm_id: int, wait: bool = True, with_replications: bool = True
+        self,
+        node: str,
+        vm_id: int,
+        wait: bool = True,
+        with_replications: bool = True,
+        force_stop: bool = True,
+        force_remove_resource: bool = True,
     ) -> str | bool | None:
         """
         Deletes a virtual machine and optionally waits for the deletion task to complete.
@@ -56,7 +64,8 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
             vm_id (int): The ID of the virtual machine.
             wait (bool): Whether to wait for the task to complete (default is True).
             with_replications (bool): Before delete try to remove all replications of VM (default is True).
-
+            force_stop (bool): Before delete try to stop VM (default is True).
+            force_remove_resource (bool): Before delete try to remove resource (default is True).
 
         Returns:
             str | bool | None: The task UPID if `wait` is False;
@@ -65,6 +74,10 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
         """
         if with_replications:
             await self.remove_replication_job(vm_id, wait=True)
+        if force_remove_resource:
+            await self.ha_resources_delete(vid_id=vm_id)
+        if force_stop:
+            await self.vm_status_set(vm_id, node, "stop", wait=True)
         upid = await self.api.nodes(node).qemu(vm_id).delete()
         if wait:
             return await self.wait_task_done_async(upid, node)
@@ -314,3 +327,175 @@ class ProxmoxTasksAsync(ProxmoxTasksBase):
                 )
                 break
         return False
+
+    async def ha_groups_get(self):
+        return await self.api.cluster.ha.groups.get(filter_keys="group")
+
+    async def ha_group_delete(self, group) -> bool:
+        await self.api.cluster.ha.groups(group).delete()
+        return True
+
+    async def ha_group_create(
+        self,
+        group: str,
+        nodes: str,
+        data: dict = None,
+        overwrite: bool = False,
+    ) -> bool:
+        groups = await self.ha_groups_get()
+        exist = groups and (group in groups)
+        if exist and not overwrite:
+            return True
+        if not data:
+            data = {}
+        data["nodes"] = nodes
+        if exist and overwrite:
+            await self.api.cluster.ha.groups(group).put(data=data)
+            return True
+        data["group"] = group
+        await self.api.cluster.ha.groups.post(data=data)
+        return True
+
+    async def vm_status_current_get(self, vm_id: int, target_node: str) -> str:
+        return (
+            await self.api.nodes(target_node)
+            .qemu(vm_id)
+            .status.current.get(filter_keys="status")
+        )
+
+    async def vm_status_set(
+        self, vm_id: int, node: str, status: str, wait: bool = True
+    ) -> bool:
+        status = status.strip().lower()
+        status_current = await self.vm_status_current_get(vm_id, node)
+        upid = None
+        match status:
+            case "start":
+                if status_current and status_current == "running":
+                    return True
+                logger.info(f"VM {vm_id} starting on {node} ...")
+                upid = await self.api.nodes(node).qemu(vm_id).status.start.post()
+            case "stop":
+                if status_current and status_current == "stopped":
+                    return True
+                logger.info(f"VM {vm_id} stopping on {node} ...")
+                upid = await self.api.nodes(node).qemu(vm_id).status.stop.post()
+            case _:
+                logger.error(f"vm_status_set : Unknown status {status}")
+        if wait and upid:
+            return await self.wait_task_done_async(upid, node) is not None
+        return upid is not None
+
+    async def ha_resources_get(
+        self,
+        type_resource: str = "vm",
+        vid_id: int = None,
+        return_group_only: bool = False,
+    ):
+        if vid_id is None:
+            resources = await self.api.cluster.ha.resources.get(
+                params={"type": type_resource}
+            )
+            return resources
+
+        sid = f"{type_resource}:{vid_id}"
+        resources = await self.api.cluster.ha.resources(sid).get()
+        if resources and return_group_only:
+            return resources.get("group")
+        else:
+            return resources
+
+    async def ha_resources_create(
+        self,
+        vid_id: int,
+        group: str,
+        type_resource: str = "vm",
+        data: dict = None,
+        overwrite: bool = False,
+    ):
+        sid = f"{type_resource}:{vid_id}"
+        data = data.copy() if data is not None else {}
+        data["group"] = group
+        if overwrite:
+            exist_group = await self.ha_resources_get(
+                vid_id=vid_id, type_resource=type_resource, return_group_only=True
+            )
+            if exist_group:
+                if exist_group == group:
+                    return True
+                logger.info(f"VM {vid_id} updating resource ...")
+                result = await self.api.cluster.ha.resources(sid).put(
+                    data=data, filter_keys="_raw_"
+                )
+                return result.get("success") if result else False
+        data["sid"] = sid
+        logger.info(f"VM {vid_id} creating resource ...")
+        result = await self.api.cluster.ha.resources.post(
+            data=data, filter_keys="_raw_"
+        )
+        return result.get("success") if result else False
+
+    async def ha_resources_delete(self, vid_id: int, type_resource: str = "vm"):
+        sid = f"{type_resource}:{vid_id}"
+        exist_group = await self.ha_resources_get(
+            vid_id=vid_id, type_resource=type_resource, return_group_only=True
+        )
+        if not exist_group:
+            return True
+        logger.info(f"VM {vid_id} deleting resource ...")
+        result = await self.api.cluster.ha.resources(sid).delete(filter_keys="_raw_")
+        return result.get("success") if result else False
+
+    async def get_pools(self, pool_type: str = "qemu", pool_id: str = None) -> list:
+        params = {}
+        filter_keys = None
+        if pool_type and pool_id:
+            params["type"] = pool_type
+        if pool_id:
+            params["poolid"] = pool_id
+            # filter_keys = "members"
+        result = await self.api.pools.get(params=params, filter_keys=filter_keys)
+        return result
+
+    async def create_pool_member(
+        self, pool_id, vm_id=None, overwrite: bool = False, data: dict = None
+    ) -> bool:
+        get_pools = await self.get_pools(pool_id=pool_id)
+        # print(get_pools)
+        if get_pools:
+            members_vms = self.extract_pool_members(get_pools, pool_id)
+            vm_exist = vm_id in members_vms if vm_id else True
+            if vm_exist and not overwrite:
+                return True
+        data = data.copy() if data is not None else {}
+        data["poolid"] = pool_id
+        if not get_pools:
+            logger.info(f"Creating pool '{pool_id}' ...")
+            result = await self.api.pools.post(data=data, filter_keys="_raw_")
+            # print(result, data)
+            created = result.get("success") if result else False
+        else:
+            created = True
+        if created and vm_id:
+            data["vms"] = vm_id
+            data["allow-move"] = 1
+            logger.info(f"Update pool '{pool_id}' members with VM '{vm_id}' ...")
+            result = await self.api.pools.put(data=data, filter_keys="_raw_")
+            return result.get("success") if result else False
+        return created
+
+    async def delete_pool_member(self, pool_id: str, vm_id: int = None) -> bool:
+        if not pool_id or not vm_id:
+            logger.debug(f"Deleting pool requires pool_id and vm_id. Skipping ...")
+            return False
+        pools = await self.get_pools(pool_id=pool_id)
+        if not pools:
+            return True
+        members_vms = self.extract_pool_members(pools, pool_id)
+        vm_exist = vm_id in members_vms if vm_id else False
+        if vm_exist:
+            logger.info(f"Deleting pool '{pool_id}' member '{vm_id}' ...")
+            data = {"poolid": pool_id, "vms": vm_id, "delete": 1}
+            result = await self.api.pools.put(data=data, filter_keys="_raw_")
+            return result.get("success") if result else False
+        return True

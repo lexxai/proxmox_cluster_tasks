@@ -1,6 +1,6 @@
 import logging
 
-from config.config import configuration
+from config_loader.config import configuration
 
 
 class ColoredFormatter(logging.Formatter):
